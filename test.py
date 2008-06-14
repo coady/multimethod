@@ -1,5 +1,5 @@
 import unittest
-from multimethod import multimethod
+from multimethod import multimethod, strict_multimethod, DispatchError
 
 # roshambo
 class rock(object):
@@ -57,18 +57,20 @@ def join(seq, sep):
     return join(seq.walk(), sep)
 
 class TestCase(unittest.TestCase):
+
     def testRoshambo(self):
         r, p, s = rock(), paper(), scissors()
+        assert len(roshambo) == 7 and not roshambo.cache
         assert roshambo(r, p) == 'paper covers rock'
         assert roshambo(p, r) == 'paper covers rock'
         assert roshambo(r, s) == 'rock smashes scissors'
         assert roshambo(p, s) == 'scissors cut paper'
-        assert len(roshambo) == 7 and not roshambo.cache
         assert roshambo(r, r) == 'tie'
         assert roshambo.cache
         del roshambo[object, object]
-        assert not roshambo.cache
+        assert len(roshambo) == 6 and not roshambo.cache
         self.assertRaises(TypeError, roshambo, r, r)
+
     def testJoin(self):
         sep = '<>'
         seq = [0, tree([1]), 2]
@@ -77,6 +79,14 @@ class TestCase(unittest.TestCase):
         assert join(tree(seq), sep) == '0<>1<>2'
         assert join(seq, bracket(*sep)) == '<0><[1]><2>'
         assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
+
+    def testStrict(self):
+        @strict_multimethod(int, object)
+        @strict_multimethod(object, int)
+        def func(x, y):
+            pass
+        assert func(0, None) is func(None, 0) is None
+        self.assertRaises(DispatchError, func, 0, 0)
 
 if __name__ == '__main__':
     unittest.main()

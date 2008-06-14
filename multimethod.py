@@ -18,18 +18,21 @@ See tests for more example usage.
 """
 
 import sys
-from itertools import imap as map, izip as zip
+from itertools import imap, izip
+
+class DispatchError(TypeError):
+    pass
 
 class signature(tuple):
     "A tuple of types that supports partial ordering."
     __slots__ = ()
     def __le__(self, other):
-        return len(self) <= len(other) and all(map(issubclass, other, self))
+        return len(self) <= len(other) and all(imap(issubclass, other, self))
     def __lt__(self, other):
         return self != other and self <= other
     def __sub__(self, other):
         "Return relative distances, assuming self >= other."
-        return [list(left.__mro__).index(right) for left, right in zip(self, other)]
+        return [list(left.__mro__).index(right) for left, right in izip(self, other)]
 
 class multimethod(dict):
     "A callable directed acyclic graph of methods."
@@ -59,12 +62,13 @@ class multimethod(dict):
         return dict.__getitem__(self, types)[0]
     def __setitem__(self, types, func):
         self.cache.clear()
+        types = signature(types)
         parents = self.parents(types)
         for key, (value, superkeys) in self.items():
             if types < key and (not parents or parents & superkeys):
                 superkeys -= parents
                 superkeys.add(types)
-        dict.__setitem__(self, signature(types), (func, parents))
+        dict.__setitem__(self, types, (func, parents))
     def __delitem__(self, types):
         self.cache.clear()
         dict.__delitem__(self, types)
@@ -73,17 +77,25 @@ class multimethod(dict):
                 dict.__setitem__(self, key, (value, self.parents(key)))
     def super(self, *types):
         "Return the next applicable method of given types."
+        types = signature(types)
         keys = self.parents(types)
         if keys:
-            return self[min(keys, key=signature(types).__sub__)]
-        raise TypeError("%s%s: no methods found" % (self.__name__, types))
+            return self[min(keys, key=types.__sub__)]
+        raise DispatchError("%s%s: no methods found" % (self.__name__, types))
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
-        types = tuple(map(type, args))
-        if types in self:
-            func = self[types]
-        elif types in self.cache:
+        types = tuple(imap(type, args))
+        try:
             func = self.cache[types]
-        else:
-            func = self.cache[types] = self.super(*types)
+        except KeyError:
+            func = self.cache[types] = self[types] if types in self else self.super(*types)
         return func(*args, **kwargs)
+
+class strict_multimethod(multimethod):
+    "A multimethod which requires a single unambiguous best match."
+    def super(self, *types):
+        "Return the next applicable method of given types."
+        keys = self.parents(signature(types))
+        if len(keys) == 1:
+            return self[keys.pop()]
+        raise DispatchError("%s%s: %d methods found" % (self.__name__, types, len(keys)))
