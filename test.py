@@ -74,7 +74,7 @@ class TestCase(unittest.TestCase):
     def testJoin(self):
         sep = '<>'
         seq = [0, tree([1]), 2]
-        assert list(tree(seq).walk()) == range(3)
+        assert list(tree(seq).walk()) == list(range(3))
         assert join(seq, sep) == '0<>[1]<>2'
         assert join(tree(seq), sep) == '0<>1<>2'
         assert join(seq, bracket(*sep)) == '<0><[1]><2>'

@@ -15,10 +15,10 @@ can't be found, the next closest method will be called (and cached).
 A function can have more than one multimethod decorator.
 
 See tests for more example usage.
+Supported on Python 2.5 or higher, including Python 3.x.
 """
 
 import sys
-from itertools import imap, izip
 
 class DispatchError(TypeError):
     pass
@@ -27,12 +27,12 @@ class signature(tuple):
     "A tuple of types that supports partial ordering."
     __slots__ = ()
     def __le__(self, other):
-        return len(self) <= len(other) and all(imap(issubclass, other, self))
+        return len(self) <= len(other) and all(map(issubclass, other, self))
     def __lt__(self, other):
         return self != other and self <= other
     def __sub__(self, other):
         "Return relative distances, assuming self >= other."
-        return [list(left.__mro__).index(right) for left, right in izip(self, other)]
+        return [list(left.__mro__).index(right) for left, right in zip(self, other)]
 
 class multimethod(dict):
     "A callable directed acyclic graph of methods."
@@ -84,7 +84,7 @@ class multimethod(dict):
         raise DispatchError("%s%s: no methods found" % (self.__name__, types))
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
-        types = tuple(imap(type, args))
+        types = tuple(map(type, args))
         try:
             func = self.cache[types]
         except KeyError:

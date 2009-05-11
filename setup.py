@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='multimethod',
-    version='0.2',
+    version='0.2.1',
     description='Multiple argument dispacthing.',
     long_description=open('multimethod.py').read().split('"""\n')[1],
     author='Aric Coady',
