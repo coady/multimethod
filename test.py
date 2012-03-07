@@ -11,10 +11,6 @@ class paper(object):
 class scissors(object):
     pass
 
-@multimethod(object, object)
-def roshambo(left, right):
-    return 'tie'
-
 @multimethod(scissors, rock)
 @multimethod(rock, scissors)
 def roshambo(left, right):
@@ -29,6 +25,10 @@ def roshambo(left, right):
 @multimethod(paper, rock)
 def roshambo(left, right):
     return 'paper covers rock'
+
+@multimethod(object, object)
+def roshambo(left, right):
+    return 'tie'
 
 # string join
 class tree(list):
@@ -68,7 +68,8 @@ class TestCase(unittest.TestCase):
         assert roshambo(r, r) == 'tie'
         assert roshambo.cache
         del roshambo[object, object]
-        assert len(roshambo) == 6 and not roshambo.cache
+        del roshambo[rock, paper]
+        assert len(roshambo) == 5 and not roshambo.cache
         self.assertRaises(TypeError, roshambo, r, r)
 
     def testJoin(self):
