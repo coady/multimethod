@@ -17,10 +17,14 @@ If *strict* is enabled, and there are multiple candidate methods, a TypeError is
 A function can have more than one multimethod decorator.
 
 See tests for more example usage.
-Supported on Python 2.5 or higher, including Python 3.
+Supported on Python 2.6 or higher, including Python 3.
 """
 
 import sys
+try:
+    from future_builtins import map, zip
+except ImportError:
+    pass
 
 class DispatchError(TypeError):
     pass
@@ -34,7 +38,7 @@ class signature(tuple):
         return self != other and self <= other
     def __sub__(self, other):
         "Return relative distances, assuming self >= other."
-        return [list(left.__mro__).index(right) for left, right in zip(self, other)]
+        return [left.__mro__.index(right if right in left.__mro__ else object) for left, right in zip(self, other)]
 
 class multimethod(dict):
     "A callable directed acyclic graph of methods."
@@ -88,7 +92,7 @@ class multimethod(dict):
         keys = self.parents(types)
         if keys and (len(keys) == 1 or not self.strict):
             return self[min(keys, key=types.__sub__)]
-        raise DispatchError("%s%s: %d methods found" % (self.__name__, types, len(keys)))
+        raise DispatchError("{0}{1}: {2} methods found".format(self.__name__, types, len(keys)))
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
         types = tuple(map(type, args))

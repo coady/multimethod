@@ -1,4 +1,5 @@
 import unittest
+import collections
 from multimethod import multimethod, DispatchError
 
 # roshambo
@@ -44,7 +45,7 @@ class bracket(tuple):
     def __new__(cls, left, right):
         return tuple.__new__(cls, (left, right))
 
-@multimethod(object, str)
+@multimethod(collections.Iterable, str)
 def join(seq, sep):
     return sep.join(map(str, seq))
 
