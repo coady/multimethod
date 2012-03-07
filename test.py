@@ -1,5 +1,5 @@
 import unittest
-from multimethod import multimethod, strict_multimethod, DispatchError
+from multimethod import multimethod, DispatchError
 
 # roshambo
 class rock(object):
@@ -82,8 +82,9 @@ class TestCase(unittest.TestCase):
         assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
 
     def testStrict(self):
-        @strict_multimethod(int, object)
-        @strict_multimethod(object, int)
+        func = multimethod.new(strict=True)
+        @multimethod(int, object)
+        @multimethod(object, int)
         def func(x, y):
             pass
         assert func(0, None) is func(None, 0) is None

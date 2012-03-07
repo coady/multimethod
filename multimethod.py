@@ -2,8 +2,7 @@
 **Multiple argument dispatching**
 
 Call *multimethod* on a variable number of types.
-It returns a decorator which finds the multimethod of the same name,
-creating it if necessary, and adds that function to it.
+It returns a decorator which finds the multimethod of the same name, creating it if necessary, and adds that function to it.
 For example::
 
     @multimethod(*types)
@@ -12,9 +11,9 @@ For example::
 
 |
 
-*func* is now a multimethod which will delegate to the above function,
-when called with arguments of the specified types.  If an exact match
-can't be found, the next closest method will be called (and cached).
+*func* is now a multimethod which will delegate to the above function, when called with arguments of the specified types.
+If an exact match can't be found, the next closest method is called (and cached).
+If *strict* is enabled, and there are multiple candidate methods, a TypeError is raised.
 A function can have more than one multimethod decorator.
 
 See tests for more example usage.
@@ -39,6 +38,12 @@ class signature(tuple):
 
 class multimethod(dict):
     "A callable directed acyclic graph of methods."
+    @classmethod
+    def new(cls, name='', strict=False):
+        "Explicitly create a new multimethod.  Assign to local name in order to use decorator."
+        self = dict.__new__(cls)
+        self.__name__, self.strict, self.cache = name, strict, {}
+        return self
     def __new__(cls, *types):
         "Return a decorator which will add the function."
         namespace = sys._getframe(1).f_locals
@@ -48,8 +53,7 @@ class multimethod(dict):
             elif func.__name__ in namespace:
                 self = namespace[func.__name__]
             else:
-                self = dict.__new__(cls)
-                self.__name__, self.cache = func.__name__, {}
+                self = cls.new(func.__name__)
             self[types] = self.last = func
             return self
         return decorator
@@ -82,9 +86,9 @@ class multimethod(dict):
         "Return the next applicable method of given types."
         types = signature(types)
         keys = self.parents(types)
-        if keys:
+        if keys and (len(keys) == 1 or not self.strict):
             return self[min(keys, key=types.__sub__)]
-        raise DispatchError("%s%s: no methods found" % (self.__name__, types))
+        raise DispatchError("%s%s: %d methods found" % (self.__name__, types, len(keys)))
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
         types = tuple(map(type, args))
@@ -93,12 +97,3 @@ class multimethod(dict):
         except KeyError:
             func = self.cache[types] = self[types] if types in self else self.super(*types)
         return func(*args, **kwargs)
-
-class strict_multimethod(multimethod):
-    "A multimethod which requires a single unambiguous best match."
-    def super(self, *types):
-        "Return the next applicable method of given types."
-        keys = self.parents(signature(types))
-        if len(keys) == 1:
-            return self[keys.pop()]
-        raise DispatchError("%s%s: %d methods found" % (self.__name__, types, len(keys)))
