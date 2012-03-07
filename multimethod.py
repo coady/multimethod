@@ -54,13 +54,17 @@ class multimethod(dict):
         def decorator(func):
             if isinstance(func, cls):
                 self, func = func, func.last
-            elif func.__name__ in namespace:
-                self = namespace[func.__name__]
             else:
-                self = cls.new(func.__name__)
+                self = namespace.get(func.__name__, cls.new(func.__name__))
             self[types] = self.last = func
             return self
+        if len(types) == 1 and hasattr(types[0], '__annotations__'):
+            func, = types
+            types = tuple(map(func.__annotations__.__getitem__, func.__code__.co_varnames[:len(func.__annotations__)]))
+            return decorator(func)
         return decorator
+    def __init__(self, *types):
+        dict.__init__(self)
     def parents(self, types):
         "Find immediate parents of potential key."
         parents, ancestors = set(), set()

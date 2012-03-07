@@ -91,5 +91,14 @@ class TestCase(unittest.TestCase):
         assert func(0, None) is func(None, 0) is None
         self.assertRaises(DispatchError, func, 0, 0)
 
+    def testAnnotations(self):
+        self.assertRaises(DispatchError, annotated, 0, 0)
+        assert annotated(1, 2.0) == 2
+
+try:
+    exec('@multimethod\ndef annotated(x:int, y:float, z=None): return x * y')
+except SyntaxError:
+    del TestCase.testAnnotations
+
 if __name__ == '__main__':
     unittest.main()
