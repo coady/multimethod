@@ -3,7 +3,7 @@ import multimethod
 
 setup(
     name='multimethod',
-    version='0.3',
+    version=multimethod.__version__,
     description='Multiple argument dispatching.',
     long_description=multimethod.__doc__,
     author='Aric Coady',

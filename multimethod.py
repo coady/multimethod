@@ -18,6 +18,9 @@ A function can have more than one multimethod decorator.
 
 See tests for more example usage.
 Supported on Python 2.6 or higher, including Python 3.
+
+Changes in 0.4:
+ * Dispatch on python 3 annotations
 """
 
 import sys
@@ -25,6 +28,8 @@ try:
     from future_builtins import map, zip
 except ImportError:
     pass
+
+__version__ = '0.4'
 
 class DispatchError(TypeError):
     pass
