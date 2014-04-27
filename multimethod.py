@@ -36,7 +36,6 @@ class DispatchError(TypeError):
 
 class signature(tuple):
     "A tuple of types that supports partial ordering."
-    __slots__ = ()
     def __le__(self, other):
         return len(self) <= len(other) and all(map(issubclass, other, self))
     def __lt__(self, other):
@@ -51,7 +50,7 @@ class multimethod(dict):
     def new(cls, name='', strict=False):
         "Explicitly create a new multimethod.  Assign to local name in order to use decorator."
         self = dict.__new__(cls)
-        self.__name__, self.strict, self.cache = name, strict, {}
+        self.__name__, self.strict = name, strict
         return self
     def __new__(cls, *types):
         "Return a decorator which will add the function."
@@ -73,40 +72,37 @@ class multimethod(dict):
     def parents(self, types):
         "Find immediate parents of potential key."
         parents, ancestors = set(), set()
-        for key, (value, superkeys) in self.items():
-            if key < types:
+        for key in self:
+            if isinstance(key, signature) and key < types:
                 parents.add(key)
-                ancestors |= superkeys
+                ancestors |= key.parents
         return parents - ancestors
-    def __getitem__(self, types):
-        return dict.__getitem__(self, types)[0]
+    def clean(self):
+        "Empty the cache."
+        for key in list(self):
+            if not isinstance(key, signature):
+                dict.__delitem__(self, key)
     def __setitem__(self, types, func):
-        self.cache.clear()
+        self.clean()
         types = signature(types)
-        parents = self.parents(types)
-        for key, (value, superkeys) in self.items():
-            if types < key and (not parents or parents & superkeys):
-                superkeys -= parents
-                superkeys.add(types)
-        dict.__setitem__(self, types, (func, parents))
+        parents = types.parents = self.parents(types)
+        for key in self:
+            if types < key and (not parents or parents & key.parents):
+                key.parents -= parents
+                key.parents.add(types)
+        dict.__setitem__(self, types, func)
     def __delitem__(self, types):
-        self.cache.clear()
+        self.clean()
         dict.__delitem__(self, types)
-        for key, (value, superkeys) in self.items():
-            if types in superkeys:
-                dict.__setitem__(self, key, (value, self.parents(key)))
-    def super(self, *types):
-        "Return the next applicable method of given types."
-        types = signature(types)
+        for key in self:
+            if types in key.parents:
+                key.parents = self.parents(key)
+    def __missing__(self, types):
+        "Find and cache the next applicable method of given types."
         keys = self.parents(types)
         if keys and (len(keys) == 1 or not self.strict):
-            return self[min(keys, key=types.__sub__)]
+            return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
         raise DispatchError("{0}{1}: {2} methods found".format(self.__name__, types, len(keys)))
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
-        types = tuple(map(type, args))
-        try:
-            func = self.cache[types]
-        except KeyError:
-            func = self.cache[types] = self[types] if types in self else self.super(*types)
-        return func(*args, **kwargs)
+        return self[tuple(map(type, args))](*args, **kwargs)

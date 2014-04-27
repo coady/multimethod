@@ -61,16 +61,16 @@ class TestCase(unittest.TestCase):
 
     def testRoshambo(self):
         r, p, s = rock(), paper(), scissors()
-        assert len(roshambo) == 7 and not roshambo.cache
+        assert len(roshambo) == 7
         assert roshambo(r, p) == 'paper covers rock'
         assert roshambo(p, r) == 'paper covers rock'
         assert roshambo(r, s) == 'rock smashes scissors'
         assert roshambo(p, s) == 'scissors cut paper'
         assert roshambo(r, r) == 'tie'
-        assert roshambo.cache
+        assert len(roshambo) == 8
         del roshambo[object, object]
         del roshambo[rock, paper]
-        assert len(roshambo) == 5 and not roshambo.cache
+        assert len(roshambo) == 5
         self.assertRaises(TypeError, roshambo, r, r)
 
     def testJoin(self):
