@@ -2,6 +2,7 @@ import unittest
 import collections
 from multimethod import multimethod, DispatchError
 
+
 # roshambo
 class rock(object):
     pass
@@ -31,6 +32,7 @@ def roshambo(left, right):
 def roshambo(left, right):
     return 'tie'
 
+
 # string join
 class tree(list):
     def walk(self):
@@ -51,11 +53,12 @@ def join(seq, sep):
 
 @multimethod(object, bracket)
 def join(seq, sep):
-    return sep[0] + join(seq, sep[1]+sep[0]) + sep[1]
+    return sep[0] + join(seq, sep[1] + sep[0]) + sep[1]
 
 @multimethod(tree, object)
 def join(seq, sep):
     return join(seq.walk(), sep)
+
 
 class TestCase(unittest.TestCase):
 
