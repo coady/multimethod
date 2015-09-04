@@ -95,3 +95,14 @@ class multimethod(dict):
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
         return self[tuple(map(type, args))](*args, **kwargs)
+
+    def register(self, *types):
+        "A decorator for registering in the style of singledispatch."
+        return lambda func: self.__setitem__(types, func) or func
+
+
+def multidispatch(func):
+    "A decorator to creating a new multimethod from a base function in the style of singledispatch."
+    mm = multimethod.new(func.__name__)
+    mm[()] = func
+    return mm

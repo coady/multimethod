@@ -17,6 +17,17 @@ If ``strict`` mode is enabled, and there are multiple candidate methods, a TypeE
 A function can have more than one multimethod decorator.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 
+The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
+::
+
+   @multidispatch
+   def func(*args):
+      pass
+
+   @func.register(*types):
+   def _(*args):
+      pass
+
 See tests for more example usage.
 
 Installation
@@ -47,3 +58,4 @@ Changes:
 0.5
 
    * Optimized dispatching
+   * Support for ``functools.singledispatch`` syntax

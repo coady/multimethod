@@ -1,6 +1,6 @@
 import collections
 import pytest
-from multimethod import multimethod, DispatchError
+from multimethod import multimethod, multidispatch, DispatchError
 
 
 # roshambo
@@ -117,3 +117,20 @@ try:
     exec('@multimethod\ndef annotated(x:int, y:float, z=None): return x * y')
 except SyntaxError:
     del test_annotations
+
+
+def test_singledispatch():
+    @multidispatch
+    def func(arg):
+        return type(arg)
+
+    @func.register(int)
+    def _(arg):
+        return 'int'
+
+    @func.register(float)
+    def _(arg):
+        return 'float'
+    assert func(object()) == object
+    assert func(0) == 'int'
+    assert func(0.0) == 'float'
