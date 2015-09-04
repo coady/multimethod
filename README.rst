@@ -2,9 +2,10 @@ About Multimethod
 ==================
 Multiple argument dispatching.
 
-Call *multimethod* on a variable number of types.
+Call ``multimethod`` on a variable number of types.
 It returns a decorator which finds the multimethod of the same name, creating it if necessary, and adds that function to it.
-For example::
+
+.. code-block:: python
 
    @multimethod(*types)
    def func(*args):
@@ -18,7 +19,8 @@ A function can have more than one multimethod decorator.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 
 The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
-::
+
+.. code-block:: python
 
    @multidispatch
    def func(*args):
@@ -32,11 +34,10 @@ See tests for more example usage.
 
 Installation
 ==================
-Standard installation from pypi or local download.
-::
+Standard installation from pypi or local download. ::
 
-   pip install multimethod
-   python setup.py install
+   $ pip install multimethod
+   $ python setup.py install
 
 Dependencies
 ==================
@@ -44,12 +45,11 @@ Python 2.7 or 3.2+.
 
 Tests
 ==================
-100% branch coverage.
-::
+100% branch coverage. ::
 
-   py.test
+   $ py.test
 
-Changes:
+Changes
 ==================
 0.4
 
