@@ -1,28 +1,3 @@
-"""
-**Multiple argument dispatching**
-
-Call *multimethod* on a variable number of types.
-It returns a decorator which finds the multimethod of the same name, creating it if necessary, and adds that function to it.
-For example::
-
-    @multimethod(*types)
-    def func(*args):
-        pass
-
-|
-
-*func* is now a multimethod which will delegate to the above function, when called with arguments of the specified types.
-If an exact match can't be found, the next closest method is called (and cached).
-If *strict* is enabled, and there are multiple candidate methods, a TypeError is raised.
-A function can have more than one multimethod decorator.
-
-See tests for more example usage.
-Supported on Python 2.6 or higher, including Python 3.
-
-Changes in 0.4:
- * Dispatch on python 3 annotations
-"""
-
 import sys
 try:
     from future_builtins import map, zip
@@ -61,6 +36,7 @@ class multimethod(dict):
     def __new__(cls, *types):
         "Return a decorator which will add the function."
         namespace = sys._getframe(1).f_locals
+
         def decorator(func):
             if isinstance(func, cls):
                 self, func = func, func.last
