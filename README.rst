@@ -26,7 +26,7 @@ The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also s
    def func(*args):
       pass
 
-   @func.register(*types):
+   @func.register(*types)
    def _(*args):
       pass
 
@@ -47,7 +47,7 @@ Tests
 ==================
 100% branch coverage. ::
 
-   $ py.test
+   $ py.test [--cov]
 
 Changes
 ==================
