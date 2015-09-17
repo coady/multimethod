@@ -1,5 +1,11 @@
 About Multimethod
 ==================
+.. image:: https://img.shields.io/pypi/v/multimethod.svg
+   :target: https://pypi.python.org/pypi/multimethod/
+.. image:: https://img.shields.io/pypi/l/multimethod.svg
+.. image:: https://img.shields.io/pypi/pyversions/multimethod.svg
+.. image:: https://img.shields.io/pypi/status/multimethod.svg
+
 Multiple argument dispatching.
 
 Call ``multimethod`` on a variable number of types.

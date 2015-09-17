@@ -1,6 +1,6 @@
 check:
 	python setup.py $@ -mrs
-	pep8
+	flake8
 	py.test-2.7
 	py.test-3.5 --cov --cov-fail-under=100
 
