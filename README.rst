@@ -5,7 +5,9 @@ About Multimethod
 .. image:: https://img.shields.io/pypi/pyversions/multimethod.svg
 .. image:: https://img.shields.io/pypi/status/multimethod.svg
 .. image:: https://img.shields.io/travis/coady/multimethod.svg
-.. image:: https://img.shields.io/coveralls/coady/multimethod.svg
+   :target: https://travis-ci.org/coady/multimethod
+.. image:: https://img.shields.io/codecov/c/github/coady/multimethod.svg
+   :target: https://codecov.io/github/coady/multimethod
 
 Multiple argument dispatching.
 
