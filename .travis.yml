@@ -13,4 +13,4 @@ script:
   - py.test -v --cov
 
 after_success:
-  - codecov --min-coverage=100
+  - codecov
