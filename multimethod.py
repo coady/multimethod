@@ -94,7 +94,7 @@ class multimethod(dict):
         keys = self.parents(types)
         if keys and (len(keys) == 1 or not self.strict):
             return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
-        raise DispatchError("{0}{1}: {2} methods found".format(self.__name__, types, len(keys)))
+        raise DispatchError("{}{}: {} methods found".format(self.__name__, types, len(keys)))
 
     def __call__(self, *args, **kwargs):
         "Resolve and dispatch to best method."
@@ -106,7 +106,7 @@ class multimethod(dict):
 
 
 def multidispatch(func):
-    "A decorator to creating a new multimethod from a base function in the style of singledispatch."
+    "A decorator which creates a new multimethod from a base function in the style of singledispatch."
     mm = multimethod.new(func.__name__)
     mm[()] = func
     return mm

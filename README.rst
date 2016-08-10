@@ -1,5 +1,3 @@
-About Multimethod
-==================
 .. image:: https://img.shields.io/pypi/v/multimethod.svg
    :target: https://pypi.python.org/pypi/multimethod/
 .. image:: https://img.shields.io/pypi/pyversions/multimethod.svg
@@ -8,8 +6,6 @@ About Multimethod
    :target: https://travis-ci.org/coady/multimethod
 .. image:: https://img.shields.io/codecov/c/github/coady/multimethod.svg
    :target: https://codecov.io/github/coady/multimethod
-
-Multiple argument dispatching.
 
 Call ``multimethod`` on a variable number of types.
 It returns a decorator which finds the multimethod of the same name, creating it if necessary, and adds that function to it.
@@ -43,10 +39,9 @@ See tests for more example usage.
 
 Installation
 ==================
-Standard installation from pypi or local download. ::
+::
 
    $ pip install multimethod
-   $ python setup.py install
 
 Dependencies
 ==================
