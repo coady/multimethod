@@ -1,4 +1,5 @@
 import sys
+import types
 try:
     from future_builtins import map, zip
 except ImportError:
@@ -52,6 +53,9 @@ class multimethod(dict):
 
     def __init__(self, *types):
         dict.__init__(self)
+
+    def __get__(self, instance, owner):
+        return self if instance is None else types.MethodType(self, instance)
 
     def parents(self, types):
         "Find immediate parents of potential key."

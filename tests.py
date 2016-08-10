@@ -134,3 +134,19 @@ def test_singledispatch():
     assert func(object()) == object
     assert func(0) == 'int'
     assert func(0.0) == 'float'
+
+
+def test_inner():
+    class cls(object):
+        @multimethod()
+        def method(self, other):
+            pass
+
+        @multimethod(int, object)
+        @multimethod(object, int)
+        def method(self, other):
+            return int
+
+    obj = cls()
+    assert obj.method(None) is cls.method(None, None) is None
+    assert obj.method(0) is cls.method(0, None) is int
