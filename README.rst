@@ -7,33 +7,57 @@
 .. image:: https://img.shields.io/codecov/c/github/coady/multimethod.svg
    :target: https://codecov.io/github/coady/multimethod
 
-Call ``multimethod`` on a variable number of types.
-It returns a decorator which finds the multimethod of the same name, creating it if necessary, and adds that function to it.
+Multimethod provides a decorator for adding multiple argument dispatching to functions.
+The decorator finds the multimethod of the same name, creating it if necessary, and registers the function with its annotations.
 
+There are several multiple dispatch libraries on PyPI.  This one aims to be correct, simple, and fast.
+It doesn't support arbitrary predicates, for example, but should be the fastest pure Python implementation possible.
+
+Usage
+==================
 .. code-block:: python
 
-   @multimethod(*types)
-   def func(*args):
-      pass
+   from multimethod import multimethod
 
-``func`` is now a multimethod which will delegate to the above function, when called with arguments of the specified types.
+   @multimethod
+   def func(x: int, y: float):
+      ...
+
+``func`` is now a ``multimethod`` which will delegate to the above function, when called with arguments of the specified types.
+Subsequent usage will register new types and functions to the existing multimethod of the same name.
 If an exact match can't be found, the next closest method is called (and cached).
+Candidate methods are ranked based on their subclass relationships.
+If no matches are found, a custom ``TypeError`` is raised.
 
-If ``strict`` mode is enabled, and there are multiple candidate methods, a TypeError is raised.
-A function can have more than one multimethod decorator.
+A ``strict`` flag can also be set on the ``multimethod`` object,
+in which case finding multiple matches also raises a ``TypeError``.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 
-The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
+Types can instead be specified by calling ``multimethod``, thereby supporting Python 2 as well.
+This syntax also supports stacking decorators for registering multiple signatures.
 
 .. code-block:: python
+
+   @multimethod(int, float)
+   @multimethod(float, int)
+   def func(x, y):
+      ...
+
+The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
+This requires creating ``multimethod`` explicitly, and consequently doesn't rely on the name matching.
+
+.. code-block:: python
+
+   from multimethod import multidispatch
 
    @multidispatch
    def func(*args):
-      pass
+      ...
 
    @func.register(*types)
    def _(*args):
-      pass
+      ...
+
 
 See tests for more example usage.
 
@@ -55,6 +79,9 @@ Tests
 
 Changes
 ==================
+dev
+   * Multimethods can be defined inside a class
+
 0.5
 
    * Optimized dispatching

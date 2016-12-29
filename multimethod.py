@@ -13,7 +13,7 @@ class DispatchError(TypeError):
 
 
 class signature(tuple):
-    "A tuple of types that supports partial ordering."
+    """A tuple of types that supports partial ordering."""
     def __le__(self, other):
         return len(self) <= len(other) and all(map(issubclass, other, self))
 
@@ -21,21 +21,21 @@ class signature(tuple):
         return self != other and self <= other
 
     def __sub__(self, other):
-        "Return relative distances, assuming self >= other."
+        """Return relative distances, assuming self >= other."""
         return [left.__mro__.index(right if right in left.__mro__ else object) for left, right in zip(self, other)]
 
 
 class multimethod(dict):
-    "A callable directed acyclic graph of methods."
+    """A callable directed acyclic graph of methods."""
     @classmethod
     def new(cls, name='', strict=False):
-        "Explicitly create a new multimethod.  Assign to local name in order to use decorator."
+        """Explicitly create a new multimethod.  Assign to local name in order to use decorator."""
         self = dict.__new__(cls)
         self.__name__, self.strict = name, strict
         return self
 
     def __new__(cls, *types):
-        "Return a decorator which will add the function."
+        """Return a decorator which will add the function."""
         namespace = sys._getframe(1).f_locals
 
         def decorator(func):
@@ -58,16 +58,12 @@ class multimethod(dict):
         return self if instance is None else types.MethodType(self, instance)
 
     def parents(self, types):
-        "Find immediate parents of potential key."
-        parents, ancestors = set(), set()
-        for key in self:
-            if isinstance(key, signature) and key < types:
-                parents.add(key)
-                ancestors |= key.parents
-        return parents - ancestors
+        """Find immediate parents of potential key."""
+        parents = {key for key in self if isinstance(key, signature) and key < types}
+        return parents - {ancestor for parent in parents for ancestor in parent.parents}
 
     def clean(self):
-        "Empty the cache."
+        """Empty the cache."""
         for key in list(self):
             if not isinstance(key, signature):
                 dict.__delitem__(self, key)
@@ -90,23 +86,23 @@ class multimethod(dict):
                 key.parents = self.parents(key)
 
     def __missing__(self, types):
-        "Find and cache the next applicable method of given types."
+        """Find and cache the next applicable method of given types."""
         keys = self.parents(types)
-        if keys and (len(keys) == 1 or not self.strict):
+        if (len(keys) == 1 if self.strict else keys):
             return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
         raise DispatchError("{}{}: {} methods found".format(self.__name__, types, len(keys)))
 
     def __call__(self, *args, **kwargs):
-        "Resolve and dispatch to best method."
+        """Resolve and dispatch to best method."""
         return self[tuple(map(type, args))](*args, **kwargs)
 
     def register(self, *types):
-        "A decorator for registering in the style of singledispatch."
+        """A decorator for registering in the style of singledispatch."""
         return lambda func: self.__setitem__(types, func) or func
 
 
 def multidispatch(func):
-    "A decorator which creates a new multimethod from a base function in the style of singledispatch."
+    """A decorator which creates a new multimethod from a base function in the style of singledispatch."""
     mm = multimethod.new(func.__name__)
     mm[()] = func
     return mm
