@@ -44,7 +44,7 @@ This syntax also supports stacking decorators for registering multiple signature
       ...
 
 The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
-This requires creating ``multimethod`` explicitly, and consequently doesn't rely on the name matching.
+This requires creating a ``multimethod`` explicitly, and consequently doesn't rely on the name matching.
 
 .. code-block:: python
 
@@ -58,7 +58,6 @@ This requires creating ``multimethod`` explicitly, and consequently doesn't rely
    def _(*args):
       ...
 
-
 See tests for more example usage.
 
 Installation
@@ -69,7 +68,7 @@ Installation
 
 Dependencies
 ==================
-Python 2.7 or 3.3+.
+* Python 2.7, 3.3+
 
 Tests
 ==================
@@ -79,14 +78,15 @@ Tests
 
 Changes
 ==================
-dev
-   * Multimethods can be defined inside a class
+0.6
+
+* Multimethods can be defined inside a class
 
 0.5
 
-   * Optimized dispatching
-   * Support for ``functools.singledispatch`` syntax
+* Optimized dispatching
+* Support for ``functools.singledispatch`` syntax
 
 0.4
 
-   * Dispatch on Python 3 annotations
+* Dispatch on Python 3 annotations
