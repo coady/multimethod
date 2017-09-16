@@ -68,7 +68,7 @@ Installation
 
 Dependencies
 ==================
-* Python 2.7, 3.3+
+* Python 2.7, 3.4+
 
 Tests
 ==================
