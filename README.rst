@@ -78,6 +78,10 @@ Tests
 
 Changes
 ==================
+dev
+
+* Forward references allowed in type hints
+
 0.6
 
 * Multimethods can be defined inside a class

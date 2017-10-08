@@ -4,8 +4,19 @@ try:
     from future_builtins import map, zip
 except ImportError:
     pass
+try:
+    from typing import get_type_hints
+except ImportError:  # pragma: no cover
+    def get_type_hints(func):
+        return func.__annotations__
 
 __version__ = '0.6'
+
+
+def get_types(func):
+    """Return evaluated type hints in order."""
+    annotations = get_type_hints(func)
+    return tuple(map(annotations.__getitem__, func.__code__.co_varnames[:len(annotations)]))
 
 
 class DispatchError(TypeError):
@@ -31,7 +42,7 @@ class multimethod(dict):
     def new(cls, name='', strict=False):
         """Explicitly create a new multimethod.  Assign to local name in order to use decorator."""
         self = dict.__new__(cls)
-        self.__name__, self.strict = name, strict
+        self.__name__, self.strict, self.pending = name, strict, set()
         return self
 
     def __new__(cls, *types):
@@ -45,16 +56,21 @@ class multimethod(dict):
                 self = namespace.get(func.__name__, cls.new(func.__name__))
             self[types] = self.last = func
             return self
-        if len(types) == 1 and hasattr(types[0], '__annotations__'):
-            func, = types
-            types = tuple(map(func.__annotations__.__getitem__, func.__code__.co_varnames[:len(func.__annotations__)]))
-            return decorator(func)
-        return decorator
+        if not (len(types) == 1 and hasattr(types[0], '__annotations__')):
+            return decorator
+        func, = types
+        self = namespace.get(func.__name__, cls.new(func.__name__))
+        try:
+            self[get_types(func)] = self.last = func
+        except NameError:
+            self.pending.add(func)
+        return self
 
     def __init__(self, *types):
         dict.__init__(self)
 
     def __get__(self, instance, owner):
+        self.evaluate()
         return self if instance is None else types.MethodType(self, instance)
 
     def parents(self, types):
@@ -87,6 +103,7 @@ class multimethod(dict):
 
     def __missing__(self, types):
         """Find and cache the next applicable method of given types."""
+        self.evaluate()
         keys = self.parents(types)
         if (len(keys) == 1 if self.strict else keys):
             return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
@@ -99,6 +116,16 @@ class multimethod(dict):
     def register(self, *types):
         """A decorator for registering in the style of singledispatch."""
         return lambda func: self.__setitem__(types, func) or func
+
+    def evaluate(self):
+        """Evaluate any pending forward references.
+
+        It is recommended to call this explicly when using forward references,
+        otherwise cache misses will be forced to evaluate.
+        """
+        while self.pending:
+            func = self.pending.pop()
+            self[get_types(func)] = func
 
 
 def multidispatch(func):
