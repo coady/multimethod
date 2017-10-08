@@ -108,17 +108,6 @@ def test_strict():
         func(0, 0)
 
 
-def test_annotations():
-    with pytest.raises(DispatchError):
-        annotated(0, 0)
-    assert annotated(1, 2.0) == 2
-
-try:
-    exec('@multimethod\ndef annotated(x:int, y:float, z=None): return x * y')
-except SyntaxError:
-    del test_annotations
-
-
 def test_singledispatch():
     @multidispatch
     def func(arg):
