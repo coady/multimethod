@@ -70,7 +70,6 @@ class multimethod(dict):
         dict.__init__(self)
 
     def __get__(self, instance, owner):
-        self.evaluate()
         return self if instance is None else types.MethodType(self, instance)
 
     def parents(self, types):
@@ -104,6 +103,8 @@ class multimethod(dict):
     def __missing__(self, types):
         """Find and cache the next applicable method of given types."""
         self.evaluate()
+        if types in self:
+            return self[types]
         keys = self.parents(types)
         if (len(keys) == 1 if self.strict else keys):
             return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
