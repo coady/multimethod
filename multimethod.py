@@ -121,7 +121,7 @@ class multimethod(dict):
     def evaluate(self):
         """Evaluate any pending forward references.
 
-        It is recommended to call this explicly when using forward references,
+        It is recommended to call this explicitly when using forward references,
         otherwise cache misses will be forced to evaluate.
         """
         while self.pending:
