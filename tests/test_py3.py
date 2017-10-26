@@ -6,8 +6,9 @@ type_hints = sys.version_info >= (3, 5)
 
 class cls:
     @multimethod
-    def method(x: object, y: int):
-        return object, int
+    def method(x: object, y: int) -> tuple:
+        result = object, int
+        return result
 
     if type_hints:
         @multimethod

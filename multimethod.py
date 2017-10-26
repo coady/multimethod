@@ -1,3 +1,4 @@
+import inspect
 import sys
 import types
 try:
@@ -16,7 +17,8 @@ __version__ = '0.6'
 def get_types(func):
     """Return evaluated type hints in order."""
     annotations = get_type_hints(func)
-    return tuple(map(annotations.__getitem__, func.__code__.co_varnames[:len(annotations)]))
+    params = inspect.signature(func).parameters.values()
+    return tuple(annotations[param.name] for param in params if param.annotation != param.empty)
 
 
 class DispatchError(TypeError):
