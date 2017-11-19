@@ -1,6 +1,7 @@
+import functools
 import inspect
-import sys
 import types
+import warnings
 try:
     from future_builtins import map, zip
 except ImportError:
@@ -9,7 +10,7 @@ try:
     from typing import get_type_hints
 except ImportError:  # pragma: no cover
     def get_type_hints(func):
-        return func.__annotations__
+        return getattr(func, '__annotations__', {})
 
 __version__ = '0.6'
 
@@ -17,8 +18,8 @@ __version__ = '0.6'
 def get_types(func):
     """Return evaluated type hints in order."""
     annotations = get_type_hints(func)
-    params = inspect.signature(func).parameters.values()
-    return tuple(annotations[param.name] for param in params if param.annotation != param.empty)
+    params = annotations and inspect.signature(func).parameters
+    return tuple(annotations[name] for name in params if name in annotations)
 
 
 class DispatchError(TypeError):
@@ -40,36 +41,32 @@ class signature(tuple):
 
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
-    @classmethod
-    def new(cls, name='', strict=False):
-        """Explicitly create a new multimethod.  Assign to local name in order to use decorator."""
-        self = dict.__new__(cls)
-        self.__name__, self.strict, self.pending = name, strict, set()
-        return self
 
-    def __new__(cls, *types):
-        """Return a decorator which will add the function."""
-        namespace = sys._getframe(1).f_locals
+    def __new__(cls, *types, **attrs):
+        namespace = inspect.currentframe().f_back.f_locals
+
+        def new(func):
+            self = functools.update_wrapper(dict.__new__(cls), func)
+            self.strict, self.pending = attrs.get('strict', False), set()
+            return namespace.get(func.__name__, self)
+        if not all(map(inspect.isclass, types)):
+            return new(*types)
 
         def decorator(func):
             if isinstance(func, cls):
                 self, func = func, func.last
             else:
-                self = namespace.get(func.__name__, cls.new(func.__name__))
+                self = new(func)
             self[types] = self.last = func
             return self
-        if not (len(types) == 1 and hasattr(types[0], '__annotations__')):
-            return decorator
-        func, = types
-        self = namespace.get(func.__name__, cls.new(func.__name__))
+        warnings.warn("Consider using annotations or multidispatch.register.", PendingDeprecationWarning)
+        return decorator
+
+    def __init__(self, func, strict=False):
         try:
-            self[get_types(func)] = self.last = func
+            self[get_types(func)] = func
         except NameError:
             self.pending.add(func)
-        return self
-
-    def __init__(self, *types):
-        dict.__init__(self)
 
     def __get__(self, instance, owner):
         return self if instance is None else types.MethodType(self, instance)
@@ -116,10 +113,6 @@ class multimethod(dict):
         """Resolve and dispatch to best method."""
         return self[tuple(map(type, args))](*args, **kwargs)
 
-    def register(self, *types):
-        """A decorator for registering in the style of singledispatch."""
-        return lambda func: self.__setitem__(types, func) or func
-
     def evaluate(self):
         """Evaluate any pending forward references.
 
@@ -131,8 +124,7 @@ class multimethod(dict):
             self[get_types(func)] = func
 
 
-def multidispatch(func):
-    """A decorator which creates a new multimethod from a base function in the style of singledispatch."""
-    mm = multimethod.new(func.__name__)
-    mm[()] = func
-    return mm
+class multidispatch(multimethod):
+    def register(self, *types):
+        """A decorator for registering in the style of singledispatch."""
+        return lambda func: self.__setitem__(types, func) or func

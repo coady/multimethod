@@ -97,12 +97,11 @@ def test_join():
 
 
 def test_strict():
-    func = multimethod.new(strict=True)
-
     @multimethod(int, object)
-    @multimethod(object, int)
+    @multimethod(object, int, strict=True)
     def func(x, y):
         pass
+    assert func.__name__ == 'func'
     assert func(0, None) is func(None, 0) is None
     with pytest.raises(DispatchError):
         func(0, 0)

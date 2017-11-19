@@ -10,8 +10,8 @@
 Multimethod provides a decorator for adding multiple argument dispatching to functions.
 The decorator finds the multimethod of the same name, creating it if necessary, and registers the function with its annotations.
 
-There are several multiple dispatch libraries on PyPI.  This one aims to be correct, simple, and fast.
-It doesn't support arbitrary predicates, for example, but should be the fastest pure Python implementation possible.
+There are several multiple dispatch libraries on PyPI.  This one aims for simplicity and speed.
+With caching of argument types, it should be the fastest pure Python implementation possible.
 
 Usage
 ==================
@@ -33,18 +33,9 @@ A ``strict`` flag can also be set on the ``multimethod`` object,
 in which case finding multiple matches also raises a ``TypeError``.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 
-Types can instead be specified by calling ``multimethod``, thereby supporting Python 2 as well.
-This syntax also supports stacking decorators for registering multiple signatures.
-
-.. code-block:: python
-
-   @multimethod(int, float)
-   @multimethod(float, int)
-   def func(x, y):
-      ...
-
-The ``functools.singledispatch`` style syntax introduced in Python 3.4 is also supported.
-This requires creating a ``multimethod`` explicitly, and consequently doesn't rely on the name matching.
+The `functools.singledispatch`_ style syntax introduced in Python 3.4 is also supported.
+This requires creating a ``multidispatch`` object explicitly, and consequently doesn't rely on the name matching.
+The ``register`` method returns a decorator for given types, thereby supporting Python 2 and stacking of multiple signatures.
 
 .. code-block:: python
 
@@ -54,7 +45,8 @@ This requires creating a ``multimethod`` explicitly, and consequently doesn't re
    def func(*args):
       ...
 
-   @func.register(*types)
+   @func.register(object, int)
+   @func.register(int, object)
    def _(*args):
       ...
 
@@ -68,7 +60,7 @@ Installation
 
 Dependencies
 ==================
-* Python 2.7, 3.4+
+* Python ~=2.7, >=3.4
 
 Tests
 ==================
@@ -94,3 +86,5 @@ dev
 0.4
 
 * Dispatch on Python 3 annotations
+
+.. _functools.singledispatch: https://docs.python.org/3/library/functools.html#functools.singledispatch

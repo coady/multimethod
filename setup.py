@@ -11,6 +11,7 @@ setup(
     url='https://bitbucket.org/coady/multimethod',
     license='Apache Software License',
     py_modules=['multimethod'],
+    python_requires='~=2.7, >=3.4',
     tests_require=['pytest-cov'],
     keywords='multiple dispatch multidispatch generic functions methods',
     classifiers=[
