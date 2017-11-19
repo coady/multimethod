@@ -68,6 +68,11 @@ class multimethod(dict):
         except NameError:
             self.pending.add(func)
 
+    def register(self, func):
+        """Decorator for registering function."""
+        self.__init__(func)
+        return self if self.__name__ == func.__name__ else func
+
     def __get__(self, instance, owner):
         return self if instance is None else types.MethodType(self, instance)
 
@@ -126,5 +131,5 @@ class multimethod(dict):
 
 class multidispatch(multimethod):
     def register(self, *types):
-        """A decorator for registering in the style of singledispatch."""
+        """Return a decorator for registering in the style of singledispatch."""
         return lambda func: self.__setitem__(types, func) or func

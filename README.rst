@@ -33,6 +33,14 @@ A ``strict`` flag can also be set on the ``multimethod`` object,
 in which case finding multiple matches also raises a ``TypeError``.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 
+Multimethods are implemented as mappings from signatures to functions, and can be introspected as such.
+
+.. code-block:: python
+
+   method[type,...]           # get registered function
+   method[type,...] = func    # register function by explicit types
+   method.register(func)      # decorator to register annotated function (with any __name__)
+
 The `functools.singledispatch`_ style syntax introduced in Python 3.4 is also supported.
 This requires creating a ``multidispatch`` object explicitly, and consequently doesn't rely on the name matching.
 The ``register`` method returns a decorator for given types, thereby supporting Python 2 and stacking of multiple signatures.

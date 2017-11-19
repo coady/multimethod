@@ -27,3 +27,19 @@ def test_annotations():
     assert cls.method(None, 0) == (object, int)
     with pytest.raises(DispatchError):
         cls.method(None, 0.0)
+
+
+def test_register():
+    @multimethod
+    def func(x):
+        pass
+
+    @func.register
+    def func(x: int):
+        pass
+
+    @func.register
+    def _(y: float):
+        pass
+    assert func(0) is func(0.0) is None
+    set(func) == {(), (int,), (float,)}
