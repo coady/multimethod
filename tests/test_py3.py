@@ -2,6 +2,7 @@ import sys
 import pytest
 from multimethod import isa, multimethod, overload, DispatchError
 type_hints = sys.version_info >= (3, 5)
+skip34 = pytest.mark.skipif(not type_hints, reason="requires Python >=3.5")
 
 
 class cls:
@@ -45,6 +46,7 @@ def test_register():
     set(func) == {(), (int,), (float,)}
 
 
+@skip34
 def test_overloads():
     @overload
     def func(x):

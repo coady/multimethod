@@ -58,7 +58,7 @@ The ``register`` method returns a decorator for given types, thereby supporting 
    def _(*args):
       ...
 
-Overloads dispatch on annotated predicates.
+Overloads dispatch on annotated predicates (Python >=3.5 required).
 Each predicate is checked in the reverse order of registration.
 
 The implementation is separate from ``multimethod`` due to the different performance characteristics.
