@@ -58,6 +58,28 @@ The ``register`` method returns a decorator for given types, thereby supporting 
    def _(*args):
       ...
 
+Overloads dispatch on annotated predicates.
+Each predicate is checked in the reverse order of registration.
+
+The implementation is separate from ``multimethod`` due to the different performance characteristics.
+Instead a simple ``isa`` predicate is provided for checking instance type.
+
+.. code-block:: python
+
+   from multimethod import overload
+
+   @overload
+   def func(obj):
+      # optional base implementation, i.e., no annotations always match
+
+   @overload
+   def func(obj: isa(str)):
+      ...
+
+   @overload
+   def func(obj: str.isdigit):
+      ...
+
 See tests for more example usage.
 
 Installation
@@ -81,6 +103,8 @@ Changes
 dev
 
 * Forward references allowed in type hints
+* Register method
+* Overloads with predicate dispatch
 
 0.6
 

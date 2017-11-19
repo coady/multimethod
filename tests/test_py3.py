@@ -1,6 +1,6 @@
 import sys
 import pytest
-from multimethod import multimethod, DispatchError
+from multimethod import isa, multimethod, overload, DispatchError
 type_hints = sys.version_info >= (3, 5)
 
 
@@ -43,3 +43,23 @@ def test_register():
         pass
     assert func(0) is func(0.0) is None
     set(func) == {(), (int,), (float,)}
+
+
+def test_overloads():
+    @overload
+    def func(x):
+        return x
+
+    @overload
+    def func(x: isa(int, float)):
+        return -x
+
+    @func.register
+    def _(x: isa(str)):
+        return x.upper()
+    assert func(None) is None
+    assert func(1) == -1
+    assert func('hi') == 'HI'
+    del func[next(iter(func))]
+    with pytest.raises(DispatchError):
+        func(None)

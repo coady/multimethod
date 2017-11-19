@@ -1,3 +1,4 @@
+import collections
 import functools
 import inspect
 import types
@@ -133,3 +134,30 @@ class multidispatch(multimethod):
     def register(self, *types):
         """Return a decorator for registering in the style of singledispatch."""
         return lambda func: self.__setitem__(types, func) or func
+
+
+def isa(*types):
+    """Partially bound isinstance."""
+    return lambda arg: isinstance(arg, types)
+
+
+class overload(collections.OrderedDict):
+    """Ordered functions which dispatch based on their annotated predicates."""
+    __get__ = multimethod.__get__
+    register = multimethod.register
+
+    def __new__(cls, func):
+        namespace = inspect.currentframe().f_back.f_locals
+        self = functools.update_wrapper(super().__new__(cls), func)
+        return namespace.get(func.__name__, self)
+
+    def __init__(self, func):
+        self[inspect.signature(func)] = func
+
+    def __call__(self, *args, **kwargs):
+        """Dispatch to first matching function."""
+        for sig, func in reversed(self.items()):
+            arguments = sig.bind(*args, **kwargs).arguments
+            if all(predicate(arguments[name]) for name, predicate in func.__annotations__.items()):
+                return func(*args, **kwargs)
+        raise DispatchError("No matching functions found")
