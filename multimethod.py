@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
     def get_type_hints(func):
         return getattr(func, '__annotations__', {})
 
-__version__ = '0.6'
+__version__ = '0.7'
 
 
 def get_types(func):
@@ -42,7 +42,6 @@ class signature(tuple):
 
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
-
     def __new__(cls, *types, **attrs):
         namespace = inspect.currentframe().f_back.f_locals
 
@@ -60,7 +59,7 @@ class multimethod(dict):
                 self = new(func)
             self[types] = self.last = func
             return self
-        warnings.warn("Consider using annotations or multidispatch.register.", PendingDeprecationWarning)
+        warnings.warn("Consider using annotations or multidispatch.register.", DeprecationWarning)
         return decorator
 
     def __init__(self, func, strict=False):

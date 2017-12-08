@@ -13,7 +13,7 @@ setup(
     py_modules=['multimethod'],
     python_requires='~=2.7, >=3.4',
     tests_require=['pytest-cov'],
-    keywords='multiple dispatch multidispatch generic functions methods',
+    keywords='multiple dispatch multidispatch generic functions methods overload',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

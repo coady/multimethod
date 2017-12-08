@@ -100,7 +100,7 @@ Tests
 
 Changes
 ==================
-dev
+0.7
 
 * Forward references allowed in type hints
 * Register method
