@@ -1,5 +1,5 @@
 .. image:: https://img.shields.io/pypi/v/multimethod.svg
-   :target: https://pypi.python.org/pypi/multimethod/
+   :target: https://pypi.org/project/multimethod/
 .. image:: https://img.shields.io/pypi/pyversions/multimethod.svg
 .. image:: https://img.shields.io/pypi/status/multimethod.svg
 .. image:: https://img.shields.io/travis/coady/multimethod.svg
@@ -87,10 +87,6 @@ Installation
 ::
 
    $ pip install multimethod
-
-Dependencies
-==================
-* Python ~=2.7, >=3.4
 
 Tests
 ==================

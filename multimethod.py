@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
     def get_type_hints(func):
         return getattr(func, '__annotations__', {})
 
-__version__ = '0.7'
+__version__ = '0.7.1'
 
 
 def get_types(func):
