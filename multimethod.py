@@ -2,7 +2,6 @@ import collections
 import functools
 import inspect
 import types
-import warnings
 try:
     from future_builtins import map, zip
 except ImportError:
@@ -42,25 +41,11 @@ class signature(tuple):
 
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
-    def __new__(cls, *types, **attrs):
+    def __new__(cls, func, strict=False):
         namespace = inspect.currentframe().f_back.f_locals
-
-        def new(func):
-            self = functools.update_wrapper(dict.__new__(cls), func)
-            self.strict, self.pending = attrs.get('strict', False), set()
-            return namespace.get(func.__name__, self)
-        if not all(map(inspect.isclass, types)):
-            return new(*types)
-
-        def decorator(func):
-            if isinstance(func, cls):
-                self, func = func, func.last
-            else:
-                self = new(func)
-            self[types] = self.last = func
-            return self
-        warnings.warn("Consider using annotations or multidispatch.register.", DeprecationWarning)
-        return decorator
+        self = functools.update_wrapper(dict.__new__(cls), func)
+        self.strict, self.pending = bool(strict), set()
+        return namespace.get(func.__name__, self)
 
     def __init__(self, func, strict=False):
         try:
