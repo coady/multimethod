@@ -45,7 +45,7 @@ def test_join():
 # type hints
 class cls:
     @multimethod
-    def method(x: object, y: int) -> tuple:
+    def method(x, y: int, z=None) -> tuple:
         return object, int
 
     @multimethod

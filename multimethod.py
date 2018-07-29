@@ -14,9 +14,10 @@ def get_types(func):
     """Return evaluated type hints in order."""
     if not hasattr(func, '__annotations__'):
         return ()
-    annotations = typing.get_type_hints(func)
-    params = annotations and inspect.signature(func).parameters
-    return tuple(annotations[name] for name in params if name in annotations)
+    annotations = dict(typing.get_type_hints(func))
+    annotations.pop('return', None)
+    params = inspect.signature(func).parameters
+    return tuple(annotations.pop(name, object) for name in params if annotations)
 
 
 class DispatchError(TypeError):
