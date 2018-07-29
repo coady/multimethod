@@ -1,8 +1,5 @@
-import sys
 import pytest
 from multimethod import isa, multimethod, overload, DispatchError
-type_hints = sys.version_info >= (3, 5)
-skip34 = pytest.mark.skipif(not type_hints, reason="requires Python >=3.5")
 
 
 # string join
@@ -51,19 +48,14 @@ class cls:
     def method(x: object, y: int) -> tuple:
         return object, int
 
-    if type_hints:
-        @multimethod
-        def method(x: 'cls', y: float):
-            return type(x), float
+    @multimethod
+    def method(x: 'cls', y: float):
+        return type(x), float
 
 
 def test_annotations():
     obj = cls()
-    if type_hints:  # run first to check exact match post-evaluation
-        assert obj.method(0.0) == (cls, float)
-    else:
-        with pytest.raises(DispatchError):
-            obj.method(0.0)
+    assert obj.method(0.0) == (cls, float)  # run first to check exact match post-evaluation
     assert obj.method(0) == (object, int)
     assert cls.method(None, 0) == (object, int)
     with pytest.raises(DispatchError):
@@ -93,7 +85,6 @@ def test_register():
     assert func(False) is bool
 
 
-@skip34
 def test_overloads():
     @overload
     def func(x):

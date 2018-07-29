@@ -3,21 +3,18 @@ import functools
 import inspect
 import types
 try:
-    from future_builtins import map, zip
+    import typing
 except ImportError:
-    pass
-try:
-    from typing import get_type_hints
-except ImportError:  # pragma: no cover
-    def get_type_hints(func):
-        return getattr(func, '__annotations__', {})
+    from future_builtins import map, zip
 
 __version__ = '0.7.1'
 
 
 def get_types(func):
     """Return evaluated type hints in order."""
-    annotations = get_type_hints(func)
+    if not hasattr(func, '__annotations__'):
+        return ()
+    annotations = typing.get_type_hints(func)
     params = annotations and inspect.signature(func).parameters
     return tuple(annotations[name] for name in params if name in annotations)
 
