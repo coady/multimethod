@@ -9,7 +9,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Aric Coady',
     author_email='aric.coady@gmail.com',
-    url='https://bitbucket.org/coady/multimethod',
+    url='https://github.com/coady/multimethod',
     license='Apache Software License',
     py_modules=['multimethod'],
     python_requires='>=2.7',
