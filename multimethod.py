@@ -114,12 +114,12 @@ class multimethod(dict):
 
 class multidispatch(multimethod):
     def register(self, *types):
-        """Return a decorator for registering in the style of singledispatch."""
+        """Return a decorator for registering in the style of `functools.singledispatch`."""
         return lambda func: self.__setitem__(types, func) or func
 
 
 def isa(*types):
-    """Partially bound isinstance."""
+    """Partially bound `isinstance`."""
     return lambda arg: isinstance(arg, types)
 
 

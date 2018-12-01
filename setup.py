@@ -10,10 +10,16 @@ setup(
     author='Aric Coady',
     author_email='aric.coady@gmail.com',
     url='https://github.com/coady/multimethod',
+    project_urls={
+        'Documentation': 'https://multimethod.readthedocs.io',
+    },
     license='Apache Software License',
     py_modules=['multimethod'],
+    extras_require={
+        'docs': ['m2r'],
+    },
     python_requires='>=2.7',
-    tests_require=['pytest-cov'],
+    tests_require=['pytest>=3.7.2', 'pytest-cov'],
     keywords='multiple dispatch multidispatch generic functions methods overload',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

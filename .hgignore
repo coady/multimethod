@@ -2,3 +2,4 @@ syntax: glob
 *.pyc
 .coverage
 .pytest_cache
+docs/_build
