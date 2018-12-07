@@ -7,7 +7,7 @@ try:
 except ImportError:
     from future_builtins import map, zip
 
-__version__ = '0.7.1'
+__version__ = '1.0'
 
 
 def get_types(func):

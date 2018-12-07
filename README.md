@@ -100,7 +100,7 @@ def func(obj: str.isdigit):
     $ pytest [--cov]
 
 # Changes
-dev
+1.0
 * Missing annotations default to object
 * Removed deprecated dispatch stacking
 
