@@ -1,5 +1,5 @@
 [![image](https://img.shields.io/pypi/v/multimethod.svg)](https://pypi.org/project/multimethod/)
-![image](https://img.shields.io/pypi/pyversions/multimethod.svg)
+[![image](https://img.shields.io/pypi/pyversions/multimethod.svg)](https://python3statement.org)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
 ![image](https://img.shields.io/pypi/dm/multimethod.svg)
 [![image](https://img.shields.io/travis/coady/multimethod.svg)](https://travis-ci.org/coady/multimethod)
@@ -42,8 +42,8 @@ Multimethods are implemented as mappings from signatures to functions,
 and can be introspected as such.
 
 ```python
-method[type,... ]           # get registered function
-method[type,... ] = func    # register function by explicit types
+method[type, ...]           # get registered function
+method[type, ...] = func    # register function by explicit types
 method.register(func)       # decorator to register annotated function (with any __name__)
 ```
 
@@ -52,7 +52,7 @@ The [functools.singledispatch](https://docs.python.org/3/library/functools.html#
 style syntax is also supported. This requires creating a `multidispatch` object explicitly,
 and consequently doesn't rely on the name matching.
 The `register` method returns a decorator for given types,
-thereby supporting Python 2 and stacking of multiple signatures.
+thereby supporting [Python 2](https://python3statement.org) and stacking of multiple signatures.
 
 ```python
 from multimethod import multidispatch
@@ -89,8 +89,6 @@ def func(obj: str.isalnum):
 def func(obj: str.isdigit):
     ...
 ```
-
-See tests for more example usage.
 
 # Installation
 
