@@ -11,6 +11,7 @@ Welcome to waiter's documentation.
 
    readme
    reference
+   examples
 
 Indices and tables
 ==================

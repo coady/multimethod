@@ -16,7 +16,7 @@ setup(
     license='Apache Software License',
     py_modules=['multimethod'],
     extras_require={
-        'docs': ['m2r'],
+        'docs': ['m2r', 'nbsphinx', 'jupyter'],
     },
     python_requires='>=2.7',
     tests_require=['pytest>=3.7.2', 'pytest-cov'],

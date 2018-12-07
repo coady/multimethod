@@ -4,6 +4,7 @@
 ![image](https://img.shields.io/pypi/dm/multimethod.svg)
 [![image](https://img.shields.io/travis/coady/multimethod.svg)](https://travis-ci.org/coady/multimethod)
 [![image](https://img.shields.io/codecov/c/github/coady/multimethod.svg)](https://codecov.io/github/coady/multimethod)
+[![image](https://readthedocs.org/projects/multimethod/badge)](https://multimethod.readthedocs.io)
 [![image](https://requires.io/github/coady/multimethod/requirements.svg)](https://requires.io/github/coady/multimethod/requirements/)
 [![image](https://api.codeclimate.com/v1/badges/5a3ddcd54e550eee27f9/maintainability)](https://codeclimate.com/github/coady/multimethod/maintainability)
 
