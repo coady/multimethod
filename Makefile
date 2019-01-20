@@ -8,6 +8,7 @@ check:
 	pytest --cov --cov-append --cov-fail-under=100
 
 clean:
+	make -C docs $@
 	hg st -in | xargs rm
 	rm -rf build dist multimethod.egg-info
 

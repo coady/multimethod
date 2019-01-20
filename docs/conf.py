@@ -14,14 +14,14 @@
 
 import os
 import sys
-sys.path.append(os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('..'))
 import multimethod
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'multimethod'
-copyright = '2018, Aric Coady'
+copyright = '2019, Aric Coady'
 author = 'Aric Coady'
 
 # The short X.Y version

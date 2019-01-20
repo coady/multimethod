@@ -1,7 +1,7 @@
 [![image](https://img.shields.io/pypi/v/multimethod.svg)](https://pypi.org/project/multimethod/)
 [![image](https://img.shields.io/pypi/pyversions/multimethod.svg)](https://python3statement.org)
+[![image](https://pepy.tech/badge/multimethod)](https://pepy.tech/project/multimethod)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
-![image](https://img.shields.io/pypi/dm/multimethod.svg)
 [![image](https://img.shields.io/travis/coady/multimethod.svg)](https://travis-ci.org/coady/multimethod)
 [![image](https://img.shields.io/codecov/c/github/coady/multimethod.svg)](https://codecov.io/github/coady/multimethod)
 [![image](https://readthedocs.org/projects/multimethod/badge)](https://multimethod.readthedocs.io)
@@ -46,6 +46,9 @@ method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
 method.register(func)       # decorator to register annotated function (with any __name__)
 ```
+
+Multimethods support any types that satisfy the `issubclass` relation,
+including abstract base classes in `collections` and `typing`.
 
 ## multidispatch
 The [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch)
