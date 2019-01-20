@@ -3,9 +3,9 @@ import functools
 import inspect
 import types
 try:
-    import typing
-except ImportError:
     from future_builtins import map, zip
+except ImportError:
+    import typing
 
 __version__ = '1.0'
 
