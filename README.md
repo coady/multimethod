@@ -133,9 +133,6 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
-1.1
-* Python 3 metaclass
-
 1.0
 * Missing annotations default to object
 * Removed deprecated dispatch stacking

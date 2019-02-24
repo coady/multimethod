@@ -8,7 +8,7 @@ try:
 except ImportError:
     import typing
 
-__version__ = '1.1'
+__version__ = '1.0'
 
 
 def get_types(func):
