@@ -149,15 +149,16 @@ class overload(collections.OrderedDict):
 
 
 class multimeta(type):
+    """Convert all callables in namespace to multimethods"""
     class multidict(dict):
         def __setitem__(self, key, value):
             curr = self.get(key, None)
 
             if callable(value):
-                if curr is None:
-                    value = multimethod(value)
-                elif callable(curr) and hasattr(curr, 'register'):
+                if callable(curr) and hasattr(curr, 'register'):
                     value = curr.register(value)
+                else:
+                    value = multimethod(value)
 
             dict.__setitem__(self, key, value)
 
