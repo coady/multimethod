@@ -2,6 +2,7 @@ import collections
 import functools
 import inspect
 import types
+
 try:
     from future_builtins import map, zip
 except ImportError:
@@ -26,6 +27,7 @@ class DispatchError(TypeError):
 
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
+
     def __le__(self, other):
         return len(self) <= len(other) and all(map(issubclass, other, self))
 
@@ -39,6 +41,7 @@ class signature(tuple):
 
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
+
     def __new__(cls, func, strict=False):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
@@ -143,3 +146,21 @@ class overload(collections.OrderedDict):
             if all(predicate(arguments[name]) for name, predicate in func.__annotations__.items()):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
+
+
+class multimeta(type):
+    class multidict(dict):
+        def __setitem__(self, key, value):
+            curr = self.get(key, None)
+
+            if callable(value):
+                if curr is None:
+                    value = multimethod(value)
+                elif callable(curr) and hasattr(curr, 'register'):
+                    value = curr.register(value)
+
+            dict.__setitem__(self, key, value)
+
+    @classmethod
+    def __prepare__(mcs, name, bases):
+        return mcs.multidict()
