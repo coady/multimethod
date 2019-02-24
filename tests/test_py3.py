@@ -130,6 +130,7 @@ def test_meta():
 
     assert isinstance(meta.method, multimethod)
     assert isinstance(meta.normal, multimethod)
+    assert isinstance(meta.rebind, multimethod)
 
     m = meta()
 
