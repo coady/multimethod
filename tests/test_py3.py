@@ -1,5 +1,5 @@
 import pytest
-from multimethod import isa, multimethod, overload, DispatchError
+from multimethod import isa, multimethod, overload, multimeta, DispatchError
 
 
 # string join
@@ -97,9 +97,44 @@ def test_overloads():
     @func.register
     def _(x: isa(str)):
         return x.upper()
+
     assert func(None) is None
     assert func(1) == -1
     assert func('hi') == 'HI'
     del func[next(iter(func))]
     with pytest.raises(DispatchError):
         func(None)
+
+
+# multimeta
+
+
+def test_meta():
+    class meta(metaclass=multimeta):
+        def method(self, x: str):
+            return 'STR'
+
+        def method(self, x: int):
+            return 'INT'
+
+        def normal(self, y):
+            return 'OBJECT'
+
+        def rebind(self, x: str):
+            return 'INITIAL'
+
+        rebind = 2
+
+        def rebind(self, x):
+            return 'REBOUND'
+
+    assert isinstance(meta.method, multimethod)
+    assert isinstance(meta.normal, multimethod)
+    assert isinstance(meta.rebind, multimethod)
+
+    m = meta()
+
+    assert m.method('') == 'STR'
+    assert m.method(12) == 'INT'
+    assert m.normal('') == 'OBJECT'
+    assert m.rebind('') == 'REBOUND'

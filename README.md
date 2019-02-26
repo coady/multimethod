@@ -93,6 +93,36 @@ def func(obj: str.isdigit):
     ...
 ```
 
+## multimeta
+
+In Python 3, use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
+
+```python
+from multimethod import multimeta
+
+class Foo(metaclass=multimeta):
+    def bar(self, x: str):
+        ...
+        
+    def bar(self, x: int):
+        ...
+```
+
+Equivalent to:
+
+```python
+from multimethod import multimethod
+
+class Foo:
+    @multimethod
+    def bar(self, x: str):
+        ...
+        
+    @bar.register
+    def bar(self, x: int):
+        ...
+```
+
 # Installation
 
     $ pip install multimethod
