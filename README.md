@@ -134,7 +134,7 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
-dev
+1.1
 * Fix for Python 2 typing backport
 * Metaclass for automatic multimethods
 
