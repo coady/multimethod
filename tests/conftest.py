@@ -1,4 +1,5 @@
 import sys
+
 py2 = sys.version_info < (3,)
 
 

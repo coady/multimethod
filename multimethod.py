@@ -36,7 +36,10 @@ class signature(tuple):
 
     def __sub__(self, other):
         """Return relative distances, assuming self >= other."""
-        return [left.__mro__.index(right if right in left.__mro__ else object) for left, right in zip(self, other)]
+        return [
+            left.mro().index(right if right in left.mro() else object)
+            for left, right in zip(self, other)
+        ]
 
 
 class multimethod(dict):
@@ -96,7 +99,7 @@ class multimethod(dict):
         if types in self:
             return self[types]
         keys = self.parents(types)
-        if (len(keys) == 1 if self.strict else keys):
+        if len(keys) == 1 if self.strict else keys:
             return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
         raise DispatchError("{}{}: {} methods found".format(self.__name__, types, len(keys)))
 
@@ -128,6 +131,7 @@ def isa(*types):
 
 class overload(collections.OrderedDict):
     """Ordered functions which dispatch based on their annotated predicates."""
+
     __get__ = multimethod.__get__
     register = multimethod.register
 
@@ -150,6 +154,7 @@ class overload(collections.OrderedDict):
 
 class multimeta(type):
     """Convert all callables in namespace to multimethods"""
+
     class multidict(dict):
         def __setitem__(self, key, value):
             curr = self.get(key, None)

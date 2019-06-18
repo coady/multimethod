@@ -7,6 +7,7 @@
 [![image](https://readthedocs.org/projects/multimethod/badge)](https://multimethod.readthedocs.io)
 [![image](https://requires.io/github/coady/multimethod/requirements.svg)](https://requires.io/github/coady/multimethod/requirements/)
 [![image](https://api.codeclimate.com/v1/badges/5a3ddcd54e550eee27f9/maintainability)](https://codeclimate.com/github/coady/multimethod/maintainability)
+[![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 
 Multimethod provides a decorator for adding multiple argument dispatching to functions.
 The decorator finds the multimethod of the same name, creating it if necessary,
@@ -78,7 +79,7 @@ The implementation is separate from `multimethod` due to the different performan
 Instead a simple `isa` predicate is provided for checking instance type.
 
 ```python
-from multimethod import overload
+from multimethod import isa, overload
 
 @overload
 def func(obj: isa(str)):
@@ -133,6 +134,10 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
+dev
+* Fix for Python 2 typing backport
+* Metaclass for automatic multimethods
+
 1.0
 * Missing annotations default to object
 * Removed deprecated dispatch stacking
