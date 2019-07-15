@@ -1,8 +1,7 @@
-build:
-  image: latest
+version: 2
 
 python:
-  version: 3.6
-  pip_install: true
-  extra_requirements:
-    - docs
+  install:
+    - path: .
+      extra_requirements:
+        - docs
