@@ -1,5 +1,10 @@
 import pytest
-from multimethod import multidispatch, DispatchError
+from multimethod import multidispatch, signature, DispatchError
+
+
+def test_signature():
+    with pytest.raises(TypeError):
+        signature([list]) <= signature([None])
 
 
 # roshambo

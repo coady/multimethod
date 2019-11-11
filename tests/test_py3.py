@@ -1,5 +1,6 @@
 import pytest
-from multimethod import isa, multimethod, overload, multimeta, DispatchError
+from typing import List
+from multimethod import isa, multimethod, overload, multimeta, signature, DispatchError
 
 
 # string join
@@ -43,6 +44,15 @@ def test_join():
 
 
 # type hints
+def test_signature():
+    assert signature([List]) <= signature([list])
+    assert signature([list]) <= signature([List])
+    assert signature([List[int]]) <= signature([list])
+    assert signature([list]) <= signature([List[int]])
+    assert signature([List[int]]) - signature([list]) == [0]
+    assert signature([list]) - signature([List[int]]) == [1]
+
+
 class cls:
     @multimethod
     def method(x, y: int, z=None) -> tuple:

@@ -3,10 +3,13 @@ import functools
 import inspect
 import types
 
+origin = ''
 try:
     from future_builtins import map, zip
 except ImportError:
     import typing
+
+    origin = '__extra__' if hasattr(typing.Type, '__extra__') else '__origin__'
 
 __version__ = '1.1'
 
@@ -25,11 +28,21 @@ class DispatchError(TypeError):
     pass
 
 
+def issubtype(*args):
+    """`issubclass` with support for generics."""
+    try:
+        return issubclass(*args)
+    except TypeError:
+        if not origin:
+            raise
+    return issubclass(*(getattr(cls, origin, cls) for cls in args))
+
+
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
     def __le__(self, other):
-        return len(self) <= len(other) and all(map(issubclass, other, self))
+        return len(self) <= len(other) and all(map(issubtype, other, self))
 
     def __lt__(self, other):
         return self != other and self <= other

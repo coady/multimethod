@@ -49,7 +49,8 @@ method.register(func)       # decorator to register annotated function (with any
 ```
 
 Multimethods support any types that satisfy the `issubclass` relation,
-including abstract base classes in `collections` and `typing`.
+including abstract base classes in `collections.abc` and `typing`.
+Subscripted generics are provisionally supported, but do not check the contained types.
 
 ## multidispatch
 The [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch)
@@ -134,6 +135,9 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
+dev
+* Support for typing generics
+
 1.1
 * Fix for Python 2 typing backport
 * Metaclass for automatic multimethods
