@@ -1,5 +1,3 @@
 *.pyc
 .coverage
-.pytest_cache
 docs/_build
-.ipynb_checkpoints

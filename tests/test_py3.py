@@ -49,7 +49,7 @@ def test_signature():
     assert signature([list]) <= signature([List])
     assert signature([List[int]]) <= signature([list])
     assert signature([list]) <= signature([List[int]])
-    assert signature([List[int]]) - signature([list]) == [0]
+    assert signature([List[int]]) - signature([list])
     assert signature([list]) - signature([List[int]]) == [1]
 
 
