@@ -1,15 +1,16 @@
 import collections
 import functools
 import inspect
+import itertools
 import types
 
-origin = ''
+typing = None
 try:
     from future_builtins import map, zip
+    from collections import Iterable, Iterator, Mapping
 except ImportError:
     import typing
-
-    origin = '__extra__' if hasattr(typing.Type, '__extra__') else '__origin__'
+    from collections.abc import Iterable, Iterator, Mapping
 
 __version__ = '1.1'
 
@@ -28,21 +29,56 @@ class DispatchError(TypeError):
     pass
 
 
-def issubtype(*args):
-    """`issubclass` with support for generics."""
-    try:
-        return issubclass(*args)
-    except TypeError:
-        if not origin:
-            raise
-    return issubclass(*(getattr(cls, origin, cls) for cls in args))
+class subtype(type):
+    """A normalized generic type which checks subscripts."""
+
+    def __new__(cls, tp, *args):
+        if typing is None:
+            return tp
+        if tp is typing.Any or isinstance(tp, typing.TypeVar):
+            return object
+        origin = getattr(tp, '__extra__', getattr(tp, '__origin__', tp))
+        args = tuple(map(cls, getattr(tp, '__args__', None) or args))
+        if set(args) <= {object} and not (origin is tuple and args):
+            return origin
+        bases = (origin,) if isinstance(origin, type) else ()
+        namespace = {'__origin__': origin, '__args__': args}
+        return type.__new__(cls, str(tp), bases, namespace)
+
+    def __init__(self, tp, *args):
+        pass
+
+    def __getstate__(self):
+        return self.__origin__, self.__args__
+
+    def __eq__(self, other):
+        return isinstance(other, subtype) and self.__getstate__() == other.__getstate__()
+
+    def __hash__(self):
+        return hash(self.__getstate__())
+
+    def __subclasscheck__(self, subclass):
+        origin = getattr(subclass, '__extra__', getattr(subclass, '__origin__', subclass))
+        args = getattr(subclass, '__args__', ())
+        if origin is typing.Union:
+            return all(issubclass(cls, self) for cls in args)
+        if self.__origin__ is typing.Union:
+            return issubclass(subclass, self.__args__)
+        return (
+            issubclass(origin, self.__origin__)
+            and len(args) == len(self.__args__)
+            and all(map(issubclass, args, self.__args__))
+        )
 
 
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
+    def __new__(cls, types):
+        return tuple.__new__(cls, map(subtype, types))
+
     def __le__(self, other):
-        return len(self) <= len(other) and all(map(issubtype, other, self))
+        return len(self) <= len(other) and all(map(issubclass, other, self))
 
     def __lt__(self, other):
         return self != other and self <= other
@@ -62,6 +98,7 @@ class multimethod(dict):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.strict, self.pending = bool(strict), set()
+        self.get_type = type  # default type checker
         return namespace.get(func.__name__, self)
 
     def __init__(self, func, strict=False):
@@ -97,6 +134,8 @@ class multimethod(dict):
             if types < key and (not parents or parents & key.parents):
                 key.parents -= parents
                 key.parents.add(types)
+        if any(isinstance(cls, subtype) for cls in types):
+            self.get_type = get_type  # switch to slower generic type checker
         dict.__setitem__(self, types, func)
 
     def __delitem__(self, types):
@@ -118,7 +157,7 @@ class multimethod(dict):
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
-        return self[tuple(map(type, args))](*args, **kwargs)
+        return self[tuple(map(self.get_type, args))](*args, **kwargs)
 
     def evaluate(self):
         """Evaluate any pending forward references.
@@ -135,6 +174,29 @@ class multidispatch(multimethod):
     def register(self, *types):
         """Return a decorator for registering in the style of `functools.singledispatch`."""
         return lambda func: self.__setitem__(types, func) or func
+
+
+get_type = multidispatch(type)
+get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
+get_type.register(Iterator)(type)
+
+
+@get_type.register(tuple)
+def _(arg):
+    """Return generic type checking all values."""
+    return subtype(type(arg), *map(get_type, arg))
+
+
+@get_type.register(Mapping)
+def _(arg):
+    """Return generic type checking first item."""
+    return subtype(type(arg), *map(get_type, next(iter(arg.items()), ())))
+
+
+@get_type.register(Iterable)
+def _(arg):
+    """Return generic type checking first value."""
+    return subtype(type(arg), *map(get_type, itertools.islice(arg, 1)))
 
 
 def isa(*types):

@@ -35,9 +35,9 @@ Candidate methods are ranked based on their subclass relationships.
 If no matches are found, a custom `TypeError` is raised.
 
 A `strict` flag can also be set on the `multimethod` object,
-in which case finding multiple matches also raises a `TypeError`.
+in which case finding multiple ambiguous matches also raises a `TypeError`.
 Keyword arguments can be used when calling, but won't affect the dispatching.
-If no annotations are specified, it will inherently match any aruments.
+If no annotations are specified, it will inherently match any arguments.
 
 Multimethods are implemented as mappings from signatures to functions,
 and can be introspected as such.
@@ -50,7 +50,14 @@ method.register(func)       # decorator to register annotated function (with any
 
 Multimethods support any types that satisfy the `issubclass` relation,
 including abstract base classes in `collections.abc` and `typing`.
-Subscripted generics are provisionally supported, but do not check the contained types.
+Subscripted generics are provisionally supported:
+* `Union[...]`
+* `Mapping[...]` - the first key-value pair is checked
+* `Tuple[...]` - all args are checked
+* `Iterable[...]` - the first arg is checked
+
+Naturally checking subscripts is slower, but the implementation is optimized, cached,
+and bypassed if no subscripts are in use in the multimethod.
 
 ## multidispatch
 The [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch)

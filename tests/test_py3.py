@@ -1,6 +1,15 @@
 import pytest
-from typing import List
-from multimethod import isa, multimethod, overload, multimeta, signature, DispatchError
+from typing import Any, Dict, List, Tuple, Union
+from multimethod import (
+    DispatchError,
+    get_type,
+    isa,
+    multimeta,
+    multimethod,
+    overload,
+    signature,
+    subtype,
+)
 
 
 # string join
@@ -44,10 +53,28 @@ def test_join():
 
 
 # type hints
+def test_subtype():
+    assert len({subtype(List[int]), subtype(List[int])}) == 1
+    assert len({subtype(List[bool]), subtype(List[int])}) == 2
+    assert issubclass(int, subtype(Union[int, float]))
+    assert issubclass(Union[float, int], subtype(Union[int, float]))
+    assert issubclass(List[bool], subtype(List[int]))
+    assert not issubclass(Tuple[int], subtype(Tuple[int, float]))
+
+    assert get_type(0) is int
+    assert not isinstance(get_type(iter('')), subtype)
+    assert get_type(()) is tuple
+    assert get_type((0, 0.0)) == subtype(tuple, int, float)
+    assert get_type([]) is list
+    assert get_type([0, 0.0]) == subtype(list, int)
+    assert get_type({}) is dict
+    assert get_type({'': 0}) == subtype(dict, str, int)
+
+
 def test_signature():
+    assert signature([Any, List]) == (object, list)
     assert signature([List]) <= signature([list])
     assert signature([list]) <= signature([List])
-    assert signature([List[int]]) <= signature([list])
     assert signature([list]) <= signature([List[int]])
     assert signature([List[int]]) - signature([list])
     assert signature([list]) - signature([List[int]]) == [1]
@@ -88,11 +115,18 @@ def _(arg: int):
     return int
 
 
+@func.register
+def _(arg: Union[List[int], Tuple[float], Dict[str, int]]):
+    return 'union'
+
+
 def test_register():
     func.strict = True
     assert func(0.0) is object
     assert func(0) is int
     assert func(False) is bool
+    assert func([0]) == func((0.0,)) == func({'': 0}) == 'union'
+    assert func([0.0]) == func((0.0, 1.0)) == func({}) == object
 
 
 def test_overloads():
