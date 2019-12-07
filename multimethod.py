@@ -121,10 +121,14 @@ class multimethod(dict):
 
     strict = property(fset=strict)
 
-    def register(self, func):
-        """Decorator for registering function."""
-        self.__init__(func)
-        return self if self.__name__ == func.__name__ else func
+    def register(self, *args):
+        """Decorator for registering a function.
+
+        Optionally call with types to return a decorator for unannotated functions.
+        """
+        if len(args) == 1 and hasattr(args[0], '__annotations__'):
+            return overload.register(self, *args)
+        return lambda func: self.__setitem__(args, func) or func
 
     def __get__(self, instance, owner):
         return self if instance is None else types.MethodType(self, instance)
@@ -187,12 +191,10 @@ class multimethod(dict):
 
 
 class multidispatch(multimethod):
-    def register(self, *types):
-        """Return a decorator for registering in the style of `functools.singledispatch`."""
-        return lambda func: self.__setitem__(types, func) or func
+    """Provisional wrapper for future compatibility with `functools.singledispatch`."""
 
 
-get_type = multidispatch(type)
+get_type = multimethod(type)
 get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
 get_type.register(Iterator)(type)
 
@@ -224,7 +226,6 @@ class overload(collections.OrderedDict):
     """Ordered functions which dispatch based on their annotated predicates."""
 
     __get__ = multimethod.__get__
-    register = multimethod.register
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
@@ -241,6 +242,11 @@ class overload(collections.OrderedDict):
             if all(predicate(arguments[name]) for name, predicate in func.__annotations__.items()):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
+
+    def register(self, func):
+        """Decorator for registering a function."""
+        self.__init__(func)
+        return self if self.__name__ == func.__name__ else func
 
 
 class multimeta(type):

@@ -10,8 +10,7 @@
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 
 Multimethod provides a decorator for adding multiple argument dispatching to functions.
-The decorator finds the multimethod of the same name, creating it if necessary,
-and registers the function with its annotations.
+The decorator creates a multimethod object as needed, and registers the function with its annotations.
 
 There are several multiple dispatch libraries on PyPI.
 This one aims for simplicity and speed. With caching of argument types,
@@ -30,12 +29,27 @@ def func(x: int, y: float):
 `func` is now a `multimethod` which will delegate to the above function,
 when called with arguments of the specified types.
 Subsequent usage will register new types and functions to the existing multimethod of the same name.
-If an exact match isn't registered, the next closest method is called (and cached).
-Candidate methods are ranked based on their subclass relationships.
-If no matches - or multiple ambiguous matches - are found, a custom `TypeError` is raised.
 
-Keyword arguments can be used when calling, but won't affect the dispatching.
-If no annotations are specified, it will inherently match any arguments.
+```python
+@multimethod
+def func(x: float, y: int):
+    ...
+```
+
+Alternatively, functions can be explicitly registered in the same style as
+[functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch).
+
+```python
+@func.register
+def _(x: bool, y: bool):
+    ...
+
+
+@func.register(object, bool)
+@func.register(bool, object)
+def _(x, y):  # stackable without annotations
+    ...
+```
 
 Multimethods are implemented as mappings from signatures to functions,
 and can be introspected as such.
@@ -43,7 +57,6 @@ and can be introspected as such.
 ```python
 method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
-method.register(func)       # decorator to register annotated function (with any __name__)
 ```
 
 Multimethods support any types that satisfy the `issubclass` relation,
@@ -57,25 +70,14 @@ Subscripted generics are provisionally supported:
 Naturally checking subscripts is slower, but the implementation is optimized, cached,
 and bypassed if no subscripts are in use in the multimethod.
 
-## multidispatch
-The [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch)
-style syntax is also supported. This requires creating a `multidispatch` object explicitly,
-and consequently doesn't rely on the name matching.
-The `register` method returns a decorator for given types,
-thereby supporting [Python 2](https://python3statement.org) and stacking of multiple signatures.
-
-```python
-from multimethod import multidispatch
-
-@multidispatch
-def func(*args):
-    ...
-
-@func.register(object, int)
-@func.register(int, object)
-def _(*args):
-    ...
-```
+Dispatch resolution details:
+* If an exact match isn't registered, the next closest method is called (and cached).
+* If the `issubclass` relation is ambiguous,
+[mro](https://docs.python.org/3/library/stdtypes.html?highlight=mro#class.mro) position is used as a tie-breaker.
+* If there are still ambiguous methods - or none - a custom `TypeError` is raised.
+* Additional `*args` or `**kwargs` may be used when calling, but won't affect the dispatching.
+* A skipped annotation is equivalent to `: object`, which implicitly supports methods by leaving `self` blank.
+* If no types are specified, it will inherently match all arguments.
 
 ## overload
 Overloads dispatch on annotated predicates.
@@ -142,6 +144,7 @@ class Foo:
 # Changes
 dev
 * Support for typing generics
+* Stricter dispatching consistent with singledispatch
 
 1.1
 * Fix for Python 2 typing backport
