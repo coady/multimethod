@@ -1,5 +1,5 @@
 import pytest
-from multimethod import multidispatch, signature, DispatchError
+from multimethod import multidispatch, signature, DispatchError, Iterable
 
 
 def test_signature():
@@ -47,23 +47,30 @@ def test_roshambo():
     del roshambo[()]
     del roshambo[rock, paper]
     assert len(roshambo) == 5
-    with pytest.raises(DispatchError):
+    with pytest.raises(DispatchError, match="0 methods"):
         roshambo(r, r)
 
 
 # methods
 class cls(object):
-    method = multidispatch(lambda self, other: None, strict=True)
+    with pytest.warns(DeprecationWarning):
+        method = multidispatch(lambda self, other: None, strict=True)
 
-    @method.register(int, object)
-    @method.register(object, int)
+    @method.register(Iterable, object)
     def _(self, other):
-        return int
+        return 'left'
+
+    @method.register(object, Iterable)
+    def _(self, other):
+        return 'right'
 
 
 def test_cls():
     obj = cls()
     assert obj.method(None) is cls.method(None, None) is None
-    assert obj.method(0) is cls.method(0, None) is int
-    with pytest.raises(DispatchError):
-        print(cls.method(0, 0))
+    assert obj.method('') == 'right'
+    assert cls.method('', None) == 'left'
+    with pytest.raises(DispatchError, match="2 methods"):
+        cls.method('', '')
+    cls.method[object, Iterable] = cls.method[Iterable, object]
+    assert cls.method('', '') == 'left'

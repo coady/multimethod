@@ -32,10 +32,8 @@ when called with arguments of the specified types.
 Subsequent usage will register new types and functions to the existing multimethod of the same name.
 If an exact match isn't registered, the next closest method is called (and cached).
 Candidate methods are ranked based on their subclass relationships.
-If no matches are found, a custom `TypeError` is raised.
+If no matches - or multiple ambiguous matches - are found, a custom `TypeError` is raised.
 
-A `strict` flag can also be set on the `multimethod` object,
-in which case finding multiple ambiguous matches also raises a `TypeError`.
 Keyword arguments can be used when calling, but won't affect the dispatching.
 If no annotations are specified, it will inherently match any arguments.
 

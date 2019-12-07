@@ -77,7 +77,7 @@ def test_signature():
     assert signature([list]) <= signature([List])
     assert signature([list]) <= signature([List[int]])
     assert signature([List[int]]) - signature([list])
-    assert signature([list]) - signature([List[int]]) == [1]
+    assert signature([list]) - signature([List[int]]) == (1,)
 
 
 class cls:
@@ -121,7 +121,6 @@ def _(arg: Union[List[int], Tuple[float], Dict[str, int]]):
 
 
 def test_register():
-    func.strict = True
     assert func(0.0) is object
     assert func(0) is int
     assert func(False) is bool

@@ -3,6 +3,7 @@ import functools
 import inspect
 import itertools
 import types
+import warnings
 
 typing = None
 try:
@@ -13,6 +14,14 @@ except ImportError:
     from collections.abc import Iterable, Iterator, Mapping
 
 __version__ = '1.1'
+
+
+def groupby(func, values):
+    """Return mapping of key function to values."""
+    groups = collections.defaultdict(list)
+    for value in values:
+        groups[func(value)].append(value)
+    return groups
 
 
 def get_types(func):
@@ -85,27 +94,32 @@ class signature(tuple):
 
     def __sub__(self, other):
         """Return relative distances, assuming self >= other."""
-        return [
-            left.mro().index(right if right in left.mro() else object)
-            for left, right in zip(self, other)
-        ]
+        mros = (subclass.mro() for subclass in self)
+        return tuple(mro.index(cls if cls in mro else object) for mro, cls in zip(mros, other))
 
 
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
-    def __new__(cls, func, strict=False):
+    def __new__(cls, func, strict=None):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
-        self.strict, self.pending = bool(strict), set()
+        self.pending = set()
         self.get_type = type  # default type checker
         return namespace.get(func.__name__, self)
 
-    def __init__(self, func, strict=False):
+    def __init__(self, func, strict=None):
         try:
             self[get_types(func)] = func
         except NameError:
             self.pending.add(func)
+        if strict is not None:
+            self.strict = strict
+
+    def strict(*args):
+        warnings.warn("no longer in use; dispatch resolution is strict", DeprecationWarning)
+
+    strict = property(fset=strict)
 
     def register(self, func):
         """Decorator for registering function."""
@@ -150,10 +164,12 @@ class multimethod(dict):
         self.evaluate()
         if types in self:
             return self[types]
-        keys = self.parents(types)
-        if len(keys) == 1 if self.strict else keys:
-            return self.setdefault(types, self[min(keys, key=signature(types).__sub__)])
-        raise DispatchError("{}{}: {} methods found".format(self.__name__, types, len(keys)))
+        groups = groupby(signature(types).__sub__, self.parents(types))
+        keys = groups[min(groups)] if groups else []
+        funcs = {self[key] for key in keys}
+        if len(funcs) == 1:
+            return self.setdefault(types, *funcs)
+        raise DispatchError("{}: {} methods found".format(self.__name__, len(keys)), types, keys)
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
