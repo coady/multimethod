@@ -142,7 +142,7 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
-dev
+1.2
 * Support for typing generics
 * Stricter dispatching consistent with singledispatch
 

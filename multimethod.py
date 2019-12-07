@@ -13,7 +13,7 @@ except ImportError:
     import typing
     from collections.abc import Iterable, Iterator, Mapping
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 
 def groupby(func, values):
