@@ -54,8 +54,7 @@ def test_roshambo():
 
 # methods
 class cls(object):
-    with pytest.warns(DeprecationWarning):
-        method = multidispatch(lambda self, other: None, strict=True)
+    method = multidispatch(lambda self, other: None)
 
     @method.register(Iterable, object)
     def _(self, other):

@@ -4,7 +4,6 @@ import inspect
 import itertools
 import types
 import typing
-import warnings
 from typing import Iterable, Iterator, Mapping
 
 __version__ = '1.2'
@@ -93,25 +92,18 @@ class signature(tuple):
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
-    def __new__(cls, func, strict=None):
+    def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.pending = set()
         self.get_type = type  # default type checker
         return namespace.get(func.__name__, self)
 
-    def __init__(self, func, strict=None):
+    def __init__(self, func):
         try:
             self[get_types(func)] = func
         except NameError:
             self.pending.add(func)
-        if strict is not None:
-            self.strict = strict
-
-    def strict(*args):
-        warnings.warn("no longer in use; dispatch resolution is strict", DeprecationWarning)
-
-    strict = property(fset=strict)
 
     def register(self, *args):
         """Decorator for registering a function.
