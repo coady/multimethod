@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 import pytest
-from multimethod import multidispatch, signature, DispatchError, Iterable
+from multimethod import multidispatch, signature, DispatchError
 
 
 def test_signature():

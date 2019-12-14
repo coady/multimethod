@@ -3,15 +3,9 @@ import functools
 import inspect
 import itertools
 import types
+import typing
 import warnings
-
-typing = None
-try:
-    from future_builtins import map, zip
-    from collections import Iterable, Iterator, Mapping
-except ImportError:
-    import typing
-    from collections.abc import Iterable, Iterator, Mapping
+from typing import Iterable, Iterator, Mapping
 
 __version__ = '1.2'
 
@@ -42,8 +36,6 @@ class subtype(type):
     """A normalized generic type which checks subscripts."""
 
     def __new__(cls, tp, *args):
-        if typing is None:
-            return tp
         if tp is typing.Any or isinstance(tp, typing.TypeVar):
             return object
         origin = getattr(tp, '__extra__', getattr(tp, '__origin__', tp))
@@ -142,7 +134,7 @@ class multimethod(dict):
         """Empty the cache."""
         for key in list(self):
             if not isinstance(key, signature):
-                dict.__delitem__(self, key)
+                super().__delitem__(key)
 
     def __setitem__(self, types, func):
         self.clean()
@@ -154,11 +146,11 @@ class multimethod(dict):
                 key.parents.add(types)
         if any(isinstance(cls, subtype) for cls in types):
             self.get_type = get_type  # switch to slower generic type checker
-        dict.__setitem__(self, types, func)
+        super().__setitem__(types, func)
 
     def __delitem__(self, types):
         self.clean()
-        dict.__delitem__(self, types)
+        super().__delitem__(types)
         for key in self:
             if types in key.parents:
                 key.parents = self.parents(key)
@@ -196,23 +188,23 @@ class multidispatch(multimethod):
 
 get_type = multimethod(type)
 get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
-get_type.register(Iterator)(type)
+get_type[Iterator,] = type
 
 
-@get_type.register(tuple)
-def _(arg):
+@multimethod
+def get_type(arg: tuple):
     """Return generic type checking all values."""
     return subtype(type(arg), *map(get_type, arg))
 
 
-@get_type.register(Mapping)
-def _(arg):
+@multimethod
+def get_type(arg: Mapping):
     """Return generic type checking first item."""
     return subtype(type(arg), *map(get_type, next(iter(arg.items()), ())))
 
 
-@get_type.register(Iterable)
-def _(arg):
+@multimethod
+def get_type(arg: Iterable):
     """Return generic type checking first value."""
     return subtype(type(arg), *map(get_type, itertools.islice(arg, 1)))
 
@@ -262,7 +254,7 @@ class multimeta(type):
                 else:
                     value = multimethod(value)
 
-            dict.__setitem__(self, key, value)
+            super().__setitem__(key, value)
 
     @classmethod
     def __prepare__(mcs, name, bases):

@@ -1,5 +1,5 @@
 [![image](https://img.shields.io/pypi/v/multimethod.svg)](https://pypi.org/project/multimethod/)
-[![image](https://img.shields.io/pypi/pyversions/multimethod.svg)](https://python3statement.org)
+![image](https://img.shields.io/pypi/pyversions/multimethod.svg)
 [![image](https://pepy.tech/badge/multimethod)](https://pepy.tech/project/multimethod)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
 [![image](https://img.shields.io/travis/coady/multimethod.svg)](https://travis-ci.org/coady/multimethod)
@@ -104,7 +104,7 @@ def func(obj: str.isdigit):
 
 ## multimeta
 
-In Python 3, use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
+Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
 
 ```python
 from multimethod import multimeta
@@ -142,6 +142,9 @@ class Foo:
     $ pytest [--cov]
 
 # Changes
+dev
+* Python 3 required
+
 1.2
 * Support for typing generics
 * Stricter dispatching consistent with singledispatch
