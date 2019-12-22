@@ -8,6 +8,7 @@
 [![image](https://requires.io/github/coady/multimethod/requirements.svg)](https://requires.io/github/coady/multimethod/requirements/)
 [![image](https://api.codeclimate.com/v1/badges/5a3ddcd54e550eee27f9/maintainability)](https://codeclimate.com/github/coady/multimethod/maintainability)
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
+[![image](http://mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 
 Multimethod provides a decorator for adding multiple argument dispatching to functions.
 The decorator creates a multimethod object as needed, and registers the function with its annotations.

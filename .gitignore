@@ -1,3 +1,4 @@
 __pycache__/
 .coverage
 docs/_build
+.mypy_cache/

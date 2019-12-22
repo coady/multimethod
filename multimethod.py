@@ -4,20 +4,20 @@ import inspect
 import itertools
 import types
 import typing
-from typing import Iterable, Iterator, Mapping
+from typing import Callable, Iterable, Iterator, Mapping
 
 __version__ = '1.2'
 
 
-def groupby(func, values):
+def groupby(func: Callable, values: Iterable) -> dict:
     """Return mapping of key function to values."""
-    groups = collections.defaultdict(list)
+    groups = collections.defaultdict(list)  # type: dict
     for value in values:
         groups[func(value)].append(value)
     return groups
 
 
-def get_types(func):
+def get_types(func: Callable) -> tuple:
     """Return evaluated type hints in order."""
     if not hasattr(func, '__annotations__'):
         return ()
@@ -74,16 +74,18 @@ class subtype(type):
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
-    def __new__(cls, types):
+    parents = None  # type: set
+
+    def __new__(cls, types: Iterable):
         return tuple.__new__(cls, map(subtype, types))
 
-    def __le__(self, other):
+    def __le__(self, other) -> bool:
         return len(self) <= len(other) and all(map(issubclass, other, self))
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return self != other and self <= other
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> tuple:
         """Return relative distances, assuming self >= other."""
         mros = (subclass.mro() for subclass in self)
         return tuple(mro.index(cls if cls in mro else object) for mro, cls in zip(mros, other))
@@ -92,6 +94,8 @@ class signature(tuple):
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
+    pending = None  # type: set
+
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
@@ -99,7 +103,7 @@ class multimethod(dict):
         self.get_type = type  # default type checker
         return namespace.get(func.__name__, self)
 
-    def __init__(self, func):
+    def __init__(self, func: Callable):
         try:
             self[get_types(func)] = func
         except NameError:
@@ -117,7 +121,7 @@ class multimethod(dict):
     def __get__(self, instance, owner):
         return self if instance is None else types.MethodType(self, instance)
 
-    def parents(self, types):
+    def parents(self, types: tuple) -> set:
         """Find immediate parents of potential key."""
         parents = {key for key in self if isinstance(key, signature) and key < types}
         return parents - {ancestor for parent in parents for ancestor in parent.parents}
@@ -128,7 +132,7 @@ class multimethod(dict):
             if not isinstance(key, signature):
                 super().__delitem__(key)
 
-    def __setitem__(self, types, func):
+    def __setitem__(self, types: tuple, func: Callable):
         self.clean()
         types = signature(types)
         parents = types.parents = self.parents(types)
@@ -140,14 +144,14 @@ class multimethod(dict):
             self.get_type = get_type  # switch to slower generic type checker
         super().__setitem__(types, func)
 
-    def __delitem__(self, types):
+    def __delitem__(self, types: tuple):
         self.clean()
         super().__delitem__(types)
         for key in self:
             if types in key.parents:
                 key.parents = self.parents(key)
 
-    def __missing__(self, types):
+    def __missing__(self, types: tuple) -> Callable:
         """Find and cache the next applicable method of given types."""
         self.evaluate()
         if types in self:
@@ -157,7 +161,8 @@ class multimethod(dict):
         funcs = {self[key] for key in keys}
         if len(funcs) == 1:
             return self.setdefault(types, *funcs)
-        raise DispatchError("{}: {} methods found".format(self.__name__, len(keys)), types, keys)
+        msg = "{}: {} methods found".format(self.__name__, len(keys))  # type: ignore
+        raise DispatchError(msg, types, keys)
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
@@ -183,25 +188,25 @@ get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
 get_type[Iterator,] = type
 
 
-@multimethod
+@multimethod  # type: ignore[no-redef]
 def get_type(arg: tuple):
     """Return generic type checking all values."""
     return subtype(type(arg), *map(get_type, arg))
 
 
-@multimethod
+@multimethod  # type: ignore[no-redef]
 def get_type(arg: Mapping):
     """Return generic type checking first item."""
     return subtype(type(arg), *map(get_type, next(iter(arg.items()), ())))
 
 
-@multimethod
+@multimethod  # type: ignore[no-redef]
 def get_type(arg: Iterable):
     """Return generic type checking first value."""
     return subtype(type(arg), *map(get_type, itertools.islice(arg, 1)))
 
 
-def isa(*types):
+def isa(*types) -> Callable:
     """Partially bound `isinstance`."""
     return lambda arg: isinstance(arg, types)
 
@@ -216,7 +221,7 @@ class overload(collections.OrderedDict):
         self = functools.update_wrapper(super().__new__(cls), func)
         return namespace.get(func.__name__, self)
 
-    def __init__(self, func):
+    def __init__(self, func: Callable):
         self[inspect.signature(func)] = func
 
     def __call__(self, *args, **kwargs):
@@ -227,10 +232,10 @@ class overload(collections.OrderedDict):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
 
-    def register(self, func):
+    def register(self, func: Callable) -> Callable:
         """Decorator for registering a function."""
-        self.__init__(func)
-        return self if self.__name__ == func.__name__ else func
+        self.__init__(func)  # type: ignore
+        return self if self.__name__ == func.__name__ else func  # type: ignore
 
 
 class multimeta(type):
