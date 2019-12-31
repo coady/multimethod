@@ -135,12 +135,16 @@ class Foo:
 
 # Installation
 
-    $ pip install multimethod
+```console
+% pip install multimethod
+```
 
 # Tests
 100% branch coverage.
 
-    $ pytest [--cov]
+```console
+% pytest [--cov]
+```
 
 # Changes
 dev

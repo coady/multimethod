@@ -41,7 +41,7 @@ class subtype(type):
         args = tuple(map(cls, getattr(tp, '__args__', None) or args))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
-        bases = (origin,) if isinstance(origin, type) else ()
+        bases = (origin,) if type(origin) is type else ()
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 

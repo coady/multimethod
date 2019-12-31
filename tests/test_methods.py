@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, Iterable, List, Tuple, Union
 from multimethod import (
     DispatchError,
     get_type,
@@ -60,6 +60,7 @@ def test_subtype():
     assert issubclass(Union[float, int], subtype(Union[int, float]))
     assert issubclass(List[bool], subtype(List[int]))
     assert not issubclass(Tuple[int], subtype(Tuple[int, float]))
+    assert issubclass(Iterable[bool], subtype(Iterable[int]))
 
     assert get_type(0) is int
     assert not isinstance(get_type(iter('')), subtype)
