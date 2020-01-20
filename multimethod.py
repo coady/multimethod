@@ -1,3 +1,4 @@
+import abc
 import collections
 import functools
 import inspect
@@ -46,7 +47,8 @@ class subtype(type):
         return type.__new__(cls, str(tp), bases, namespace)
 
     def __init__(self, tp, *args):
-        pass
+        if isinstance(self.__origin__, abc.ABCMeta):
+            self.__origin__.register(self)
 
     def __getstate__(self):
         return self.__origin__, self.__args__
@@ -64,9 +66,9 @@ class subtype(type):
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ is typing.Union:
             return issubclass(subclass, self.__args__)
-        return (
-            issubclass(origin, self.__origin__)
-            and len(args) == len(self.__args__)
+        return (  # check args first to avoid a recursion error in ABCMeta
+            len(args) == len(self.__args__)
+            and issubclass(origin, self.__origin__)
             and all(map(issubclass, args, self.__args__))
         )
 

@@ -61,6 +61,8 @@ def test_subtype():
     assert issubclass(List[bool], subtype(List[int]))
     assert not issubclass(Tuple[int], subtype(Tuple[int, float]))
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
+    assert issubclass(subtype(Iterable[int]), subtype(Iterable))
+    assert issubclass(subtype(List[int]), subtype(Iterable))
 
     assert get_type(0) is int
     assert not isinstance(get_type(iter('')), subtype)

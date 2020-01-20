@@ -149,6 +149,7 @@ class Foo:
 # Changes
 dev
 * Python 3 required
+* Support for subscripted ABCs
 
 1.2
 * Support for typing generics
