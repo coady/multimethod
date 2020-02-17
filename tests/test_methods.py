@@ -71,7 +71,7 @@ def test_subtype():
     assert get_type([]) is list
     assert get_type([0, 0.0]) == subtype(list, int)
     assert get_type({}) is dict
-    assert get_type({'': 0}) == subtype(dict, str, int)
+    assert get_type({' ': 0}) == subtype(dict, str, int)
 
 
 def test_signature():
