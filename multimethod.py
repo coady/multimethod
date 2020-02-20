@@ -7,7 +7,7 @@ import types
 import typing
 from typing import Callable, Iterable, Iterator, Mapping
 
-__version__ = '1.2'
+__version__ = '1.3'
 
 
 def groupby(func: Callable, values: Iterable) -> dict:

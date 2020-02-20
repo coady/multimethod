@@ -147,7 +147,7 @@ class Foo:
 ```
 
 # Changes
-dev
+1.3
 * Python 3 required
 * Support for subscripted ABCs
 
