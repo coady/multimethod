@@ -179,6 +179,31 @@ class multimethod(dict):
         while self.pending:
             func = self.pending.pop()
             self[get_types(func)] = func
+            
+    @property
+    def __doc__(self):
+        docs = []
+        if any([f.__doc__ is not None for f in set(self.values())]):
+            docs.append('Signatures with a docstring:')
+
+        other = []
+        for func in set(self.values()):
+            if func.__doc__:
+                s = f'{func.__name__}{inspect.signature(func)}'
+                s += '\n' + '-' * len(s)
+                s += '\n'.join([line.strip() for line in func.__doc__.split('\n')])
+                docs.append(s)
+            else:
+                other.append(f'{func.__name__}{inspect.signature(func)}')
+                
+        if other:
+            docs.append('Signatures without a docstring:\n    ' + '\n    '.join(other))
+            
+        return '\n\n'.join(docs)
+
+    @__doc__.setter
+    def __doc__(self, value):
+        pass
 
 
 class multidispatch(multimethod):
