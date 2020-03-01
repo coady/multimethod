@@ -163,7 +163,7 @@ class multimethod(dict):
         funcs = {self[key] for key in keys}
         if len(funcs) == 1:
             return self.setdefault(types, *funcs)
-        msg = "{}: {} methods found".format(self.__name__, len(keys))  # type: ignore
+        msg = f"{self.__name__}: {len(keys)} methods found"  # type: ignore
         raise DispatchError(msg, types, keys)
 
     def __call__(self, *args, **kwargs):

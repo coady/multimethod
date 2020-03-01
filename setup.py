@@ -14,7 +14,7 @@ setup(
     license='Apache Software License',
     py_modules=['multimethod'],
     extras_require={'docs': ['m2r', 'nbsphinx', 'jupyter']},
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     tests_require=['pytest-cov'],
     keywords='multiple dispatch multidispatch generic functions methods overload',
     classifiers=[
@@ -23,7 +23,6 @@ setup(
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
