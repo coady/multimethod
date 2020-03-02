@@ -8,6 +8,7 @@ def foo(bar: int):
     """
     pass
 
+
 @multimethod
 def foo(bar: str):
     """

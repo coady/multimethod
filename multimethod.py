@@ -145,6 +145,7 @@ class multimethod(dict):
         if any(isinstance(cls, subtype) for cls in types):
             self.get_type = get_type  # switch to slower generic type checker
         super().__setitem__(types, func)
+        self.__doc__ = self.docstring
 
     def __delitem__(self, types: tuple):
         self.clean()
@@ -152,6 +153,7 @@ class multimethod(dict):
         for key in self:
             if types in key.parents:
                 key.parents = self.parents(key)
+        self.__doc__ = self.docstring
 
     def __missing__(self, types: tuple) -> Callable:
         """Find and cache the next applicable method of given types."""
@@ -173,37 +175,25 @@ class multimethod(dict):
     def evaluate(self):
         """Evaluate any pending forward references.
 
-        It is recommended to call this explicitly when using forward references,
-        otherwise cache misses will be forced to evaluate.
+        This can be called explicitly when using forward references,
+        otherwise cache misses will evaluate.
         """
         while self.pending:
             func = self.pending.pop()
             self[get_types(func)] = func
-            
+
     @property
-    def __doc__(self):
+    def docstring(self):
+        """a descriptive docstring of all registered functions"""
         docs = []
-        if any([f.__doc__ is not None for f in set(self.values())]):
-            docs.append('Signatures with a docstring:')
-
-        other = []
         for func in set(self.values()):
-            if func.__doc__:
-                s = f'{func.__name__}{inspect.signature(func)}'
-                s += '\n' + '-' * len(s)
-                s += '\n'.join([line.strip() for line in func.__doc__.split('\n')])
-                docs.append(s)
-            else:
-                other.append(f'{func.__name__}{inspect.signature(func)}')
-                
-        if other:
-            docs.append('Signatures without a docstring:\n    ' + '\n    '.join(other))
-            
+            try:
+                sig = inspect.signature(func)
+            except ValueError:
+                sig = ''
+            doc = func.__doc__ or ''
+            docs.append(f'{func.__name__}{sig}\n    {doc}')
         return '\n\n'.join(docs)
-
-    @__doc__.setter
-    def __doc__(self, value):
-        pass
 
 
 class multidispatch(multimethod):
@@ -267,20 +257,13 @@ class overload(collections.OrderedDict):
 
 
 class multimeta(type):
-    """Convert all callables in namespace to multimethods"""
+    """Convert all callables in namespace to multimethods."""
 
-    class multidict(dict):
+    class __prepare__(dict):
+        def __init__(*args):
+            pass
+
         def __setitem__(self, key, value):
-            curr = self.get(key, None)
-
             if callable(value):
-                if callable(curr) and hasattr(curr, 'register'):
-                    value = curr.register(value)
-                else:
-                    value = multimethod(value)
-
+                value = getattr(self.get(key), 'register', multimethod)(value)
             super().__setitem__(key, value)
-
-    @classmethod
-    def __prepare__(mcs, name, bases):
-        return mcs.multidict()
