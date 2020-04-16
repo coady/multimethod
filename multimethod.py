@@ -36,8 +36,12 @@ class subtype(type):
     """A normalized generic type which checks subscripts."""
 
     def __new__(cls, tp, *args):
-        if tp is typing.Any or isinstance(tp, typing.TypeVar):
+        if tp is typing.Any:
             return object
+        if isinstance(tp, typing.TypeVar):
+            if not tp.__constraints__:
+                return object
+            tp, args = typing.Union, tp.__constraints__
         origin = getattr(tp, '__extra__', getattr(tp, '__origin__', tp))
         args = tuple(map(cls, getattr(tp, '__args__', None) or args))
         if set(args) <= {object} and not (origin is tuple and args):
