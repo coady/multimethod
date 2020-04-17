@@ -13,7 +13,7 @@ setup(
     project_urls={'Documentation': 'https://multimethod.readthedocs.io'},
     license='Apache Software License',
     py_modules=['multimethod'],
-    extras_require={'docs': ['m2r', 'nbsphinx', 'jupyter']},
+    extras_require={'docs': ['m2r', 'nbsphinx', 'jupyter', 'sphinx<3']},
     python_requires='>=3.6',
     tests_require=['pytest-cov'],
     keywords='multiple dispatch multidispatch generic functions methods overload',
