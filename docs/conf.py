@@ -34,7 +34,7 @@ release = multimethod.__version__
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    'm2r',
+    'recommonmark',
     'nbsphinx',
 ]
 
