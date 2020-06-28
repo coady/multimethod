@@ -39,6 +39,8 @@ def func(x: float, y: int):
 
 Alternatively, functions can be explicitly registered in the same style as
 [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch).
+This syntax is also compatible with [mypy](http://mypy-lang.org), which by default checks that
+[each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
 
 ```python
 @func.register

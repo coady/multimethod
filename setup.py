@@ -12,7 +12,9 @@ setup(
     url='https://github.com/coady/multimethod',
     project_urls={'Documentation': 'https://multimethod.readthedocs.io'},
     license='Apache Software License',
-    py_modules=['multimethod'],
+    packages=['multimethod'],
+    package_data={'multimethod': ['py.typed']},
+    zip_safe=False,
     extras_require={'docs': ['recommonmark', 'nbsphinx', 'jupyter', 'sphinx']},
     python_requires='>=3.6',
     tests_require=['pytest-cov'],
@@ -27,5 +29,6 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries :: Python Modules',
+        'Typing :: Typed',
     ],
 )
