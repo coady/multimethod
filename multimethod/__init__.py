@@ -5,7 +5,7 @@ import inspect
 import itertools
 import types
 import typing
-from typing import Callable, Iterable, Iterator, Mapping
+from typing import Callable, Iterable, Iterator, Mapping, Union
 
 __version__ = '1.3'
 
@@ -74,6 +74,13 @@ class subtype(type):
             len(args) == len(self.__args__)
             and issubclass(origin, self.__origin__)
             and all(map(issubclass, args, self.__args__))
+        )
+
+    @classmethod
+    def subcheck(cls, tp):
+        """Return whether type requires checking subscripts using `get_type`."""
+        return isinstance(tp, cls) and (
+            tp.__origin__ is not Union or any(map(cls.subcheck, tp.__args__))
         )
 
 
@@ -146,7 +153,7 @@ class multimethod(dict):
             if types < key and (not parents or parents & key.parents):
                 key.parents -= parents
                 key.parents.add(types)
-        if any(isinstance(cls, subtype) for cls in types):
+        if any(map(subtype.subcheck, types)):
             self.get_type = get_type  # switch to slower generic type checker
         super().__setitem__(types, func)
         self.__doc__ = self.docstring

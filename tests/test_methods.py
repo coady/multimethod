@@ -84,6 +84,23 @@ def test_signature():
     assert signature([list]) - signature([List[int]]) == (1,)
 
 
+def test_get_type():
+    method = multimethod(lambda: None)
+    assert method.get_type is type
+
+    @method.register
+    def _(x: Union[int, type(None)]):
+        pass
+
+    assert method.get_type is type
+
+    @method.register
+    def _(x: List[int]):
+        pass
+
+    assert method.get_type is get_type
+
+
 class cls:
     @multimethod
     def method(x, y: int, z=None) -> tuple:
