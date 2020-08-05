@@ -257,9 +257,16 @@ class overload(collections.OrderedDict):
         """Dispatch to first matching function."""
         for sig, func in reversed(self.items()):
             arguments = sig.bind(*args, **kwargs).arguments
-            if all(predicate(arguments[name]) for name, predicate in func.__annotations__.items()):
+            if all(predicate(arguments[name]) for name, predicate in overload.__get_predicates(sig.parameters)):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
+
+    @staticmethod
+    def __get_predicates(parameters):
+        for name, parameter in parameters.items():
+            annotation = parameter.annotation
+            if annotation is not inspect.Parameter.empty:
+                yield name, annotation
 
     def register(self, func: Callable) -> Callable:
         """Decorator for registering a function."""
