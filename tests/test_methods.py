@@ -159,7 +159,7 @@ def test_overloads():
         return -x
 
     @func.register
-    def _(x: isa(str)):
+    def _(x: isa(str)) -> str:
         return x.upper()
 
     assert func(None) is None

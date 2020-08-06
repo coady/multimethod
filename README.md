@@ -149,8 +149,9 @@ class Foo:
 ```
 
 # Changes
-dev
+1.4
 * Python >=3.6 required
+* Expanded support for subscripted type hints
 
 1.3
 * Python 3 required

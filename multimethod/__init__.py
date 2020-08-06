@@ -7,7 +7,7 @@ import types
 import typing
 from typing import Callable, Iterable, Iterator, Mapping, Union
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 
 def groupby(func: Callable, values: Iterable) -> dict:
@@ -257,7 +257,10 @@ class overload(collections.OrderedDict):
         """Dispatch to first matching function."""
         for sig, func in reversed(self.items()):
             arguments = sig.bind(*args, **kwargs).arguments
-            if all(predicate(arguments[name]) for name, predicate in overload.__get_predicates(sig.parameters)):
+            if all(
+                predicate(arguments[name])
+                for name, predicate in overload.__get_predicates(sig.parameters)
+            ):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
 
