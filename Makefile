@@ -1,5 +1,5 @@
 all: check
-	make -C docs html SPHINXOPTS=-W
+	PYTHONPATH=$(PWD) mkdocs build
 
 check:
 	python3 setup.py $@ -ms

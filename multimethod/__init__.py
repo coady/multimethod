@@ -214,7 +214,7 @@ class multidispatch(multimethod):
 get_type = multimethod(type)
 get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
 for atomic in (Iterator, str, bytes):
-    get_type[atomic,] = type
+    get_type[(atomic,)] = type
 
 
 @multimethod  # type: ignore[no-redef]

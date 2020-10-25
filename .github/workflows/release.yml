@@ -1,0 +1,23 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+    - run: |
+        pip install -r docs/requirements.txt
+        python setup.py sdist bdist_wheel
+        PYTHONPATH=$PWD mkdocs gh-deploy --force
+    - uses: pypa/gh-action-pypi-publish@v1.4.1
+      with:
+        password: ${{ secrets.PYPI_TOKEN }}
+        verbose: true

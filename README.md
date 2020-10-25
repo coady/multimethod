@@ -2,10 +2,9 @@
 ![image](https://img.shields.io/pypi/pyversions/multimethod.svg)
 [![image](https://pepy.tech/badge/multimethod)](https://pepy.tech/project/multimethod)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
-[![image](https://img.shields.io/travis/coady/multimethod.svg)](https://travis-ci.org/coady/multimethod)
+[![image](https://github.com/coady/multimethod/workflows/build/badge.svg)](https://github.com/coady/multimethod/actions)
 [![image](https://img.shields.io/codecov/c/github/coady/multimethod.svg)](https://codecov.io/github/coady/multimethod)
-[![image](https://readthedocs.org/projects/multimethod/badge)](https://multimethod.readthedocs.io)
-[![image](https://requires.io/github/coady/multimethod/requirements.svg)](https://requires.io/github/coady/multimethod/requirements/)
+[![image](https://requires.io/github/coady/multimethod/requirements.svg?branch=main)](https://requires.io/github/coady/multimethod/requirements/)
 [![image](https://api.codeclimate.com/v1/badges/5a3ddcd54e550eee27f9/maintainability)](https://codeclimate.com/github/coady/multimethod/maintainability)
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![image](http://mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
@@ -17,8 +16,8 @@ There are several multiple dispatch libraries on PyPI.
 This one aims for simplicity and speed. With caching of argument types,
 it should be the fastest pure Python implementation possible.
 
-# Usage
-## multimethod
+## Usage
+### multimethod
 ```python
 from multimethod import multimethod
 
@@ -82,7 +81,7 @@ Dispatch resolution details:
 * A skipped annotation is equivalent to `: object`, which implicitly supports methods by leaving `self` blank.
 * If no types are specified, it will inherently match all arguments.
 
-## overload
+### overload
 Overloads dispatch on annotated predicates.
 Each predicate is checked in the reverse order of registration.
 
@@ -105,7 +104,7 @@ def func(obj: str.isdigit):
     ...
 ```
 
-## multimeta
+### multimeta
 
 Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
 
@@ -135,51 +134,60 @@ class Foo:
         ...
 ```
 
-# Installation
+## Installation
 
 ```console
 % pip install multimethod
 ```
 
-# Tests
+## Tests
 100% branch coverage.
 
 ```console
 % pytest [--cov]
 ```
 
-# Changes
+## Changes
 1.4
+
 * Python >=3.6 required
 * Expanded support for subscripted type hints
 
 1.3
+
 * Python 3 required
 * Support for subscripted ABCs
 
 1.2
+
 * Support for typing generics
 * Stricter dispatching consistent with singledispatch
 
 1.1
+
 * Fix for Python 2 typing backport
 * Metaclass for automatic multimethods
 
 1.0
+
 * Missing annotations default to object
 * Removed deprecated dispatch stacking
 
 0.7
+
 * Forward references allowed in type hints
 * Register method
 * Overloads with predicate dispatch
 
 0.6
+
 * Multimethods can be defined inside a class
 
 0.5
+
 * Optimized dispatching
 * Support for `functools.singledispatch` syntax
 
 0.4
+
 * Dispatch on Python 3 annotations

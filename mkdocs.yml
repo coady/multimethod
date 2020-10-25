@@ -1,0 +1,22 @@
+site_name: multimethod
+site_description: Multiple argument dispatching.
+theme: material
+
+repo_name: coady/multimethod
+repo_url: https://github.com/coady/multimethod
+edit_uri: ""
+
+nav:
+  - Introduction: index.md
+  - Reference: reference.md
+  - Examples: examples.ipynb
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_root_heading: true
+  - mkdocs-jupyter:
+      execute: True
