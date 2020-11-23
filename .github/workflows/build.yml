@@ -17,10 +17,9 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - run: |
-        pip install pytest-cov codecov
-        pytest -v --cov
-        codecov
+    - run: pip install multimethod pytest-cov
+    - run: make check
+    - uses: codecov/codecov-action@v1
 
   lint:
     runs-on: ubuntu-latest
@@ -29,11 +28,8 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.x
-    - run: |
-        pip install black flake8 mypy
-        black --check .
-        flake8
-        mypy -p multimethod
+    - run: pip install black flake8 mypy
+    - run: make lint
 
   docs:
     runs-on: ubuntu-latest
@@ -42,6 +38,5 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: 3.x
-    - run: |
-        pip install -r docs/requirements.txt
-        PYTHONPATH=$PWD mkdocs build
+    - run: pip install -r docs/requirements.txt
+    - run: make html

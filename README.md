@@ -3,9 +3,8 @@
 [![image](https://pepy.tech/badge/multimethod)](https://pepy.tech/project/multimethod)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
 [![image](https://github.com/coady/multimethod/workflows/build/badge.svg)](https://github.com/coady/multimethod/actions)
-[![image](https://img.shields.io/codecov/c/github/coady/multimethod.svg)](https://codecov.io/github/coady/multimethod)
-[![image](https://requires.io/github/coady/multimethod/requirements.svg?branch=main)](https://requires.io/github/coady/multimethod/requirements/)
-[![image](https://api.codeclimate.com/v1/badges/5a3ddcd54e550eee27f9/maintainability)](https://codeclimate.com/github/coady/multimethod/maintainability)
+[![image](https://codecov.io/gh/coady/multimethod/branch/main/graph/badge.svg)](https://codecov.io/gh/coady/multimethod/)
+[![image](https://github.com/coady/multimethod/workflows/codeql/badge.svg)](https://github.com/coady/multimethod/security/code-scanning)
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![image](http://mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 

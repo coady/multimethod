@@ -1,9 +1,11 @@
-all: check
-	PYTHONPATH=$(PWD) mkdocs build
-
 check:
-	python3 setup.py $@ -ms
-	black -q --$@ .
+	pytest --cov
+
+lint:
+	python3 setup.py check -ms
+	black --check .
 	flake8
 	mypy -p multimethod
-	pytest --cov --cov-fail-under=100
+
+html:
+	PYTHONPATH=$(PWD) mkdocs build

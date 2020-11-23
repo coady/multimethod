@@ -1,2 +1,2 @@
-include LICENSE.txt pyproject.toml
+include LICENSE.txt
 recursive-include tests *.py
