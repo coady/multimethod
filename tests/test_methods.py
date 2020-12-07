@@ -101,6 +101,10 @@ def test_get_type():
     assert method.get_type is get_type
 
 
+class namespace:
+    pass
+
+
 class cls:
     @multimethod
     def method(x, y: int, z=None) -> tuple:
@@ -108,6 +112,10 @@ class cls:
 
     @multimethod
     def method(x: 'cls', y: float):
+        return type(x), float
+
+    @multimethod
+    def dotted(x: 'namespace.cls'):
         return type(x), float
 
 

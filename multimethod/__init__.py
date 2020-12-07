@@ -119,7 +119,7 @@ class multimethod(dict):
     def __init__(self, func: Callable):
         try:
             self[get_types(func)] = func
-        except NameError:
+        except (NameError, AttributeError):
             self.pending.add(func)
 
     def register(self, *args):

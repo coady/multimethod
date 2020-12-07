@@ -15,7 +15,6 @@ setup(
     packages=['multimethod'],
     package_data={'multimethod': ['py.typed']},
     zip_safe=False,
-    extras_require={'docs': open('docs/requirements.txt').read().splitlines()},
     python_requires='>=3.6',
     tests_require=['pytest-cov'],
     keywords='multiple dispatch multidispatch generic functions methods overload',
