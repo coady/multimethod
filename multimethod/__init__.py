@@ -33,6 +33,20 @@ def get_types(func: Callable) -> tuple:
     )
 
 
+def get_number_non_default(func: Callable) -> int:
+    """Return number of positional arguments without default value"""
+    if not hasattr(func, '__annotations__'):
+        return 0
+    params = inspect.signature(func).parameters
+    valid_kind = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+    effective_name = [
+        name
+        for name, param in params.items()
+        if param.kind in valid_kind and param.default is inspect._empty
+    ]
+    return len(effective_name)
+
+
 class DispatchError(TypeError):
     pass
 
@@ -127,7 +141,10 @@ class multimethod(dict):
 
     def __init__(self, func: Callable):
         try:
-            self[get_types(func)] = func
+            all_types = get_types(func)
+            min_number = get_number_non_default(func)
+            for argument_number in range(min_number, len(all_types) + 1):
+                self[all_types[:argument_number]] = func
         except (NameError, AttributeError):
             self.pending.add(func)
 
