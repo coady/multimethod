@@ -147,6 +147,11 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* Postponed evaluation of nested annotations
+* Variable-length tuples of homogeneous type
+
 1.4
 
 * Python >=3.6 required

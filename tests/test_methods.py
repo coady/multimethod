@@ -210,3 +210,18 @@ def test_meta():
     assert m.method(12) == 'INT'
     assert m.normal('') == 'OBJECT'
     assert m.rebind('') == 'REBOUND'
+
+
+def test_ellipsis():
+    @multimethod
+    def func(arg: Tuple[Tuple[int, int], ...]):
+        return arg
+
+    tup = ((0, 1),)
+    assert func(tup) == tup
+    tup = ((0, 1), (2, 3))
+    assert func(tup) == tup
+    with pytest.raises(DispatchError):
+        func(())
+    with pytest.raises(DispatchError):
+        func(((0, 1.0),))

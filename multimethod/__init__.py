@@ -70,8 +70,12 @@ class subtype(type):
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ is typing.Union:
             return issubclass(subclass, self.__args__)
+        nargs = len(self.__args__)
+        if self.__origin__ is tuple and self.__args__[-1:] == (Ellipsis,):
+            nargs -= 1
+            args = args[:nargs]
         return (  # check args first to avoid a recursion error in ABCMeta
-            len(args) == len(self.__args__)
+            len(args) == nargs
             and issubclass(origin, self.__origin__)
             and all(map(issubclass, args, self.__args__))
         )
