@@ -25,7 +25,12 @@ def get_types(func: Callable) -> tuple:
     annotations = dict(typing.get_type_hints(func))
     annotations.pop('return', None)
     params = inspect.signature(func).parameters
-    return tuple(annotations.pop(name, object) for name in params if annotations)
+    valid_kind = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+    return tuple(
+        annotations.pop(name, object)
+        for name, param in params.items()
+        if annotations and param.kind in valid_kind
+    )
 
 
 class DispatchError(TypeError):
