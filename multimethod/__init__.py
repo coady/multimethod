@@ -19,13 +19,17 @@ def groupby(func: Callable, values: Iterable) -> dict:
 
 
 def get_types(func: Callable) -> tuple:
-    """Return evaluated type hints in order."""
+    """Return evaluated type hints for positional required parameters in order."""
     if not hasattr(func, '__annotations__'):
         return ()
-    annotations = dict(typing.get_type_hints(func))
-    annotations.pop('return', None)
-    params = inspect.signature(func).parameters
-    return tuple(annotations.pop(name, object) for name in params if annotations)
+    type_hints = typing.get_type_hints(func)
+    positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+    annotations = [
+        type_hints.get(param.name, object)
+        for param in inspect.signature(func).parameters.values()
+        if param.default is param.empty and param.kind in positionals
+    ]  # missing annotations are padded with `object`, but trailing objects are unnecessary
+    return tuple(itertools.dropwhile(lambda cls: cls is object, reversed(annotations)))[::-1]
 
 
 class DispatchError(TypeError):
