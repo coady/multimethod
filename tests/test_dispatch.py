@@ -1,6 +1,7 @@
+import sys
 from collections.abc import Iterable
 import pytest
-from multimethod import multidispatch, signature, DispatchError
+from multimethod import get_types, multidispatch, signature, DispatchError
 
 
 def test_signature():
@@ -74,3 +75,12 @@ def test_cls():
         cls.method('', '')
     cls.method[object, Iterable] = cls.method[Iterable, object]
     assert cls.method('', '') == 'left'
+
+
+def test_arguments():
+    def func(a, b: int, c: int, d, e: int = 0, *, f: int):
+        pass
+
+    if sys.version_info >= (3, 8):
+        exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
+    assert get_types(func) == (object, int, int)
