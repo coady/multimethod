@@ -138,6 +138,7 @@ dev
 * Postponed evaluation of nested annotations
 * Variable-length tuples of homogeneous type
 * Ignore default and keyword arguments
+* Resolved ambiguous `Union` types
 
 1.4
 

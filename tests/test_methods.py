@@ -1,5 +1,5 @@
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, List, Tuple, Union
+from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
 from multimethod import (
     DispatchError,
     get_type,
@@ -77,6 +77,8 @@ def test_subtype():
 def test_signature():
     assert signature([Any, List]) == (object, list)
     assert signature([AnyStr]) == signature([Union[bytes, str]])
+    assert signature([TypeVar('T')]) == signature([object])
+    assert signature([int]) - signature([Union[int, float]]) == (0,)
     assert signature([List]) <= signature([list])
     assert signature([list]) <= signature([List])
     assert signature([list]) <= signature([List[int]])

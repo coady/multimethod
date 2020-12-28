@@ -92,6 +92,14 @@ class subtype(type):
         )
 
 
+def distance(cls, subclass):
+    """Return estimated distance between classes for tie-breaking."""
+    if getattr(cls, '__origin__', None) is typing.Union:
+        return min(distance(arg, subclass) for arg in cls.__args__)
+    mro = subclass.mro()
+    return mro.index(cls if cls in mro else object)
+
+
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
@@ -108,8 +116,7 @@ class signature(tuple):
 
     def __sub__(self, other) -> tuple:
         """Return relative distances, assuming self >= other."""
-        mros = (subclass.mro() for subclass in self)
-        return tuple(mro.index(cls if cls in mro else object) for mro, cls in zip(mros, other))
+        return tuple(map(distance, other, self))
 
 
 class multimethod(dict):
