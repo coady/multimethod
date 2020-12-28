@@ -8,12 +8,9 @@
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
 [![image](http://mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 
-Multimethod provides a decorator for adding multiple argument dispatching to functions.
-The decorator creates a multimethod object as needed, and registers the function with its annotations.
+Multimethod provides a decorator for adding multiple argument dispatching to functions. The decorator creates a multimethod object as needed, and registers the function with its annotations.
 
-There are several multiple dispatch libraries on PyPI.
-This one aims for simplicity and speed. With caching of argument types,
-it should be the fastest pure Python implementation possible.
+There are several multiple dispatch libraries on PyPI. This one aims for simplicity and speed. With caching of argument types, it should be the fastest pure Python implementation possible.
 
 ## Usage
 ### multimethod
@@ -25,9 +22,7 @@ def func(x: int, y: float):
     ...
 ```
 
-`func` is now a `multimethod` which will delegate to the above function,
-when called with arguments of the specified types.
-Subsequent usage will register new types and functions to the existing multimethod of the same name.
+`func` is now a `multimethod` which will delegate to the above function, when called with arguments of the specified types. Subsequent usage will register new types and functions to the existing multimethod of the same name.
 
 ```python
 @multimethod
@@ -35,10 +30,7 @@ def func(x: float, y: int):
     ...
 ```
 
-Alternatively, functions can be explicitly registered in the same style as
-[functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch).
-This syntax is also compatible with [mypy](http://mypy-lang.org), which by default checks that
-[each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
+Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). This syntax is also compatible with [mypy](http://mypy-lang.org), which by default checks that [each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
 
 ```python
 @func.register
@@ -52,24 +44,20 @@ def _(x, y):  # stackable without annotations
     ...
 ```
 
-Multimethods are implemented as mappings from signatures to functions,
-and can be introspected as such.
+Multimethods are implemented as mappings from signatures to functions, and can be introspected as such.
 
 ```python
 method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
 ```
 
-Multimethods support any types that satisfy the `issubclass` relation,
-including abstract base classes in `collections.abc` and `typing`.
-Subscripted generics are provisionally supported:
+Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc` and `typing`. Subscripted generics are provisionally supported:
 * `Union[...]`
 * `Mapping[...]` - the first key-value pair is checked
 * `Tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
 
-Naturally checking subscripts is slower, but the implementation is optimized, cached,
-and bypassed if no subscripts are in use in the multimethod.
+Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the multimethod.
 
 Dispatch resolution details:
 * If an exact match isn't registered, the next closest method is called (and cached).
@@ -81,11 +69,9 @@ Dispatch resolution details:
 * If no types are specified, it will inherently match all arguments.
 
 ### overload
-Overloads dispatch on annotated predicates.
-Each predicate is checked in the reverse order of registration.
+Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
 
-The implementation is separate from `multimethod` due to the different performance characteristics.
-Instead a simple `isa` predicate is provided for checking instance type.
+The implementation is separate from `multimethod` due to the different performance characteristics. Instead a simple `isa` predicate is provided for checking instance type.
 
 ```python
 from multimethod import isa, overload
