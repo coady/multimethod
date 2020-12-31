@@ -236,3 +236,27 @@ def test_ellipsis():
         func(())
     with pytest.raises(DispatchError):
         func(((0, 1.0),))
+
+
+def test_meta_types():
+    @multimethod
+    def f(x):
+        return "object"
+
+    @f.register
+    def f(x: type):
+        return "type"
+
+    @f.register
+    def f(x: enum.EnumMeta):
+        return "enum"
+
+    @f.register
+    def f(x: enum.Enum):
+        return "member"
+
+    dummy_enum = enum.Enum("DummyEnum", names="SPAM EGGS HAM")
+    assert f(123) == "object"
+    assert f(int) == "type"
+    assert f(dummy_enum) == "enum"
+    assert f(dummy_enum.EGGS) == "member"
