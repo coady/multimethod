@@ -1,3 +1,5 @@
+import enum
+
 import pytest
 from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
 from multimethod import (
@@ -84,6 +86,13 @@ def test_signature():
     assert signature([list]) <= signature([List[int]])
     assert signature([List[int]]) - signature([list])
     assert signature([list]) - signature([List[int]]) == (1,)
+
+    # with metaclasses:
+    assert signature([type]) - signature([type]) == (0,)
+    assert signature([type]) - signature([object]) == (1,)
+    # using EnumMeta because it is a standard, stable, metaclass
+    assert signature([enum.EnumMeta]) - signature([object]) == (2,)
+    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (1,)
 
 
 def test_get_type():
