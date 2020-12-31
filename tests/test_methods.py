@@ -227,3 +227,21 @@ def test_ellipsis():
         func(())
     with pytest.raises(DispatchError):
         func(((0, 1.0),))
+
+
+def test_name_shadowing():
+    # an object with the same name appearing previously in the same namespace
+    temp = 123  # noqa
+
+    # a multimethod shadowing that name
+    @multimethod
+    def temp(x: int):  # noqa
+        return "int"
+
+    @multimethod
+    def temp(x: float):
+        return "float"
+
+    assert isinstance(temp, multimethod)
+    assert temp(0) == "int"
+    assert temp(0.0) == "float"

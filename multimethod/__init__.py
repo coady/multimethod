@@ -129,7 +129,8 @@ class multimethod(dict):
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.pending = set()
         self.get_type = type  # default type checker
-        return namespace.get(func.__name__, self)
+        homonym = namespace.get(func.__name__, self)
+        return homonym if isinstance(homonym, multimethod) else self
 
     def __init__(self, func: Callable):
         try:
