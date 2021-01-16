@@ -39,6 +39,9 @@ class DispatchError(TypeError):
 class subtype(type):
     """A normalized generic type which checks subscripts."""
 
+    __origin__: type
+    __args__: tuple
+
     def __new__(cls, tp, *args):
         if tp is typing.Any:
             return object
@@ -58,16 +61,16 @@ class subtype(type):
         if isinstance(self.__origin__, abc.ABCMeta):
             self.__origin__.register(self)
 
-    def __getstate__(self):
+    def __getstate__(self) -> tuple:
         return self.__origin__, self.__args__
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         return isinstance(other, subtype) and self.__getstate__() == other.__getstate__()
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__getstate__())
 
-    def __subclasscheck__(self, subclass):
+    def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__extra__', getattr(subclass, '__origin__', subclass))
         args = getattr(subclass, '__args__', ())
         if origin is typing.Union:
@@ -85,14 +88,14 @@ class subtype(type):
         )
 
     @classmethod
-    def subcheck(cls, tp):
+    def subcheck(cls, tp: type) -> bool:
         """Return whether type requires checking subscripts using `get_type`."""
         return isinstance(tp, cls) and (
             tp.__origin__ is not Union or any(map(cls.subcheck, tp.__args__))
         )
 
 
-def distance(cls, subclass):
+def distance(cls, subclass: type) -> int:
     """Return estimated distance between classes for tie-breaking."""
     if getattr(cls, '__origin__', None) is typing.Union:
         return min(distance(arg, subclass) for arg in cls.__args__)
@@ -103,7 +106,7 @@ def distance(cls, subclass):
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
-    parents = None  # type: set
+    parents: set
 
     def __new__(cls, types: Iterable):
         return tuple.__new__(cls, map(subtype, types))
@@ -122,7 +125,7 @@ class signature(tuple):
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
-    pending = None  # type: set
+    pending: set
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
@@ -138,13 +141,13 @@ class multimethod(dict):
         except (NameError, AttributeError):
             self.pending.add(func)
 
-    def register(self, *args):
+    def register(self, *args) -> Callable:
         """Decorator for registering a function.
 
         Optionally call with types to return a decorator for unannotated functions.
         """
         if len(args) == 1 and hasattr(args[0], '__annotations__'):
-            return overload.register(self, *args)
+            return overload.register(self, *args)  # type: ignore
         return lambda func: self.__setitem__(args, func) or func
 
     def __get__(self, instance, owner):
@@ -257,7 +260,7 @@ def get_type(arg: Iterable):
     return subtype(type(arg), *map(get_type, itertools.islice(arg, 1)))
 
 
-def isa(*types) -> Callable:
+def isa(*types: type) -> Callable:
     """Partially bound `isinstance`."""
     return lambda arg: isinstance(arg, types)
 
@@ -280,18 +283,12 @@ class overload(collections.OrderedDict):
         for sig, func in reversed(self.items()):
             arguments = sig.bind(*args, **kwargs).arguments
             if all(
-                predicate(arguments[name])
-                for name, predicate in overload.__get_predicates(sig.parameters)
+                param.annotation(arguments[name])
+                for name, param in sig.parameters.items()
+                if param.annotation is not param.empty
             ):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")
-
-    @staticmethod
-    def __get_predicates(parameters):
-        for name, parameter in parameters.items():
-            annotation = parameter.annotation
-            if annotation is not inspect.Parameter.empty:
-                yield name, annotation
 
     def register(self, func: Callable) -> Callable:
         """Decorator for registering a function."""
