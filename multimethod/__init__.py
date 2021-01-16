@@ -161,6 +161,12 @@ class multimethod(dict):
             if not isinstance(key, signature):
                 super().__delitem__(key)
 
+    def copy(self):
+        """Return a new multimethod with the same methods."""
+        other = dict.__new__(type(self))
+        other.update(self)
+        return other
+
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()
         types = signature(types)
