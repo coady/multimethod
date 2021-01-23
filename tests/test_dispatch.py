@@ -51,6 +51,9 @@ def test_roshambo():
     assert len(roshambo) == 5
     with pytest.raises(DispatchError, match="0 methods"):
         roshambo(r, r)
+    r = roshambo.copy()
+    assert isinstance(r, multidispatch)
+    assert r == roshambo
 
 
 # methods

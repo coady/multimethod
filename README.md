@@ -139,6 +139,7 @@ dev
 * Variable-length tuples of homogeneous type
 * Ignore default and keyword arguments
 * Resolved ambiguous `Union` types
+* Fixed an issue with name collision when defining a multimethod
 * Resolved dispatch errors when annotating parameters with meta-types such as `type`
 
 1.4
