@@ -278,3 +278,15 @@ def test_name_shadowing():
     assert isinstance(temp, multimethod)
     assert temp(0) == "int"
     assert temp(0.0) == "float"
+
+
+def test_keywords():
+    @multimethod
+    def func(arg):
+        pass
+
+    @func.register
+    def _(arg: int):
+        return int
+
+    assert func(0) is func(arg=0) is int

@@ -1,11 +1,12 @@
 import abc
 import collections
+import contextlib
 import functools
 import inspect
 import itertools
 import types
 import typing
-from typing import Callable, Iterable, Iterator, Mapping, Union
+from typing import Callable, Iterable, Iterator, Mapping, Optional, Union
 
 __version__ = '1.4'
 
@@ -126,6 +127,7 @@ class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
     pending: set
+    signature: Optional[inspect.Signature] = None
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
@@ -182,6 +184,9 @@ class multimethod(dict):
             self.get_type = get_type  # switch to slower generic type checker
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
+        if not types:  # a base implementation defines the signature; used for keywords
+            with contextlib.suppress(ValueError):
+                self.signature = inspect.signature(func)
 
     def __delitem__(self, types: tuple):
         self.clean()
@@ -206,7 +211,8 @@ class multimethod(dict):
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
-        return self[tuple(map(self.get_type, args))](*args, **kwargs)
+        params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
+        return self[tuple(map(self.get_type, params))](*args, **kwargs)
 
     def evaluate(self):
         """Evaluate any pending forward references.
