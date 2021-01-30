@@ -64,7 +64,7 @@ Dispatch resolution details:
 * If the `issubclass` relation is ambiguous,
 [mro](https://docs.python.org/3/library/stdtypes.html?highlight=mro#class.mro) position is used as a tie-breaker.
 * If there are still ambiguous methods - or none - a custom `TypeError` is raised.
-* Default and keyword arguments may be used, but won't affect the dispatching.
+* Default and keyword-only parameters may be annotated, but won't affect dispatching.
 * A skipped annotation is equivalent to `: object`, which implicitly supports methods by leaving `self` blank.
 * If no types are specified, it will inherently match all arguments.
 
@@ -133,11 +133,11 @@ class Foo:
 ```
 
 ## Changes
-dev
+1.5
 
 * Postponed evaluation of nested annotations
 * Variable-length tuples of homogeneous type
-* Ignore default and keyword arguments
+* Ignore default and keyword-only parameters
 * Resolved ambiguous `Union` types
 * Fixed an issue with name collision when defining a multimethod
 * Resolved dispatch errors when annotating parameters with meta-types such as `type`
