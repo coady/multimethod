@@ -16,7 +16,7 @@ jobs:
     - run: pip install wheel -r docs/requirements.txt
     - run: python setup.py sdist bdist_wheel
     - run: PYTHONPATH=$PWD mkdocs gh-deploy --force
-    - uses: pypa/gh-action-pypi-publish@v1.4.1
+    - uses: pypa/gh-action-pypi-publish@v1.4.2
       with:
         password: ${{ secrets.PYPI_TOKEN }}
         verbose: true
