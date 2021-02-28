@@ -206,7 +206,11 @@ class multimethod(dict):
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
-        return self[tuple(map(self.get_type, args))](*args, **kwargs)
+        func = self[tuple(map(self.get_type, args))]
+        try:
+            return func(*args, **kwargs)
+        except TypeError as ex:
+            raise DispatchError("Function {func.__code__}") from ex
 
     def evaluate(self):
         """Evaluate any pending forward references.
