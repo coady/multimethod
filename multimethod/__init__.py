@@ -210,7 +210,7 @@ class multimethod(dict):
         try:
             return func(*args, **kwargs)
         except TypeError as ex:
-            raise DispatchError("Function {func.__code__}") from ex
+            raise DispatchError("Function {func.__code__}".format(func=func)) from ex
 
     def evaluate(self):
         """Evaluate any pending forward references.
