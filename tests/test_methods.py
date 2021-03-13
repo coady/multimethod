@@ -278,3 +278,17 @@ def test_name_shadowing():
     assert isinstance(temp, multimethod)
     assert temp(0) == "int"
     assert temp(0.0) == "float"
+
+
+def test_dispatch_exception():
+    @multimethod
+    def temp(x: int):  # noqa
+        return "int"
+
+    @multimethod
+    def temp(x: float):  # noqa
+        return "float"
+
+    with pytest.raises(DispatchError, match="file.*line"):
+        # invalid number of args
+        temp(1, 1)
