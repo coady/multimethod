@@ -292,5 +292,3 @@ def test_dispatch_exception():
     with pytest.raises(DispatchError, match="test_methods.py"):
         # invalid number of args, check source file is part of the exception args
         temp(1, foo=1)
-
-

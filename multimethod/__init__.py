@@ -30,11 +30,16 @@ def get_types(func: Callable) -> Iterable[tuple]:
     assert get_types(foo) == [(object, object), (object,)]
     """
 
-    if not hasattr(func, '__annotations__'):
-        return ()
     type_hints = typing.get_type_hints(func)
     positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
-    params = [p for p in inspect.signature(func).parameters.values() if p.kind in positionals]
+
+    try:
+        params = list(inspect.signature(func).parameters.values())
+    except ValueError as ex:
+        if 'no signature' in ex.args[0]:
+            return ()
+
+    params = [p for p in params if p.kind in positionals]
 
     while True:
         annotations = [type_hints.get(p.name, object) for p in params]
@@ -155,8 +160,8 @@ class multimethod(dict):
 
     def __init__(self, func: Callable):
         try:
-            for types in get_types(func):
-                self[types] = func
+            for _types in get_types(func):
+                self[_types] = func
         except (NameError, AttributeError):
             self.pending.add(func)
 
@@ -239,8 +244,8 @@ class multimethod(dict):
         """
         while self.pending:
             func = self.pending.pop()
-            for types in get_types(func):
-                self[types] = func
+            for _types in get_types(func):
+                self[_types] = func
 
     @property
     def docstring(self):

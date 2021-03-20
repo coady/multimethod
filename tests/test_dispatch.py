@@ -119,8 +119,20 @@ def test_kwargs():
         pass
 
     @multimethod
-    def temp(a, b=1):
+    def temp(a, b=1, **kwargs):
         return f"a={a} b={b}"
 
     assert temp(1) == "a=1 b=1"
     assert temp(1, 2) == "a=1 b=2"
+    assert temp(1, b=3, c=1) == "a=1 b=3"
+
+
+def test_div():
+    from multimethod import multimethod
+    import operator
+
+    classic_div = multimethod(operator.truediv)
+    classic_div[int, int] = operator.floordiv
+
+    classic_div(3, 2)
+    classic_div(3.0, 2)
