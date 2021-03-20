@@ -289,6 +289,8 @@ def test_dispatch_exception():
     def temp(x: float):  # noqa
         return "float"
 
-    with pytest.raises(DispatchError, match="test_methods.py"):
+    with pytest.raises(DispatchError, match="Function"):
         # invalid number of args, check source file is part of the exception args
-        temp(1, 1)
+        temp(1, foo=1)
+
+

@@ -28,8 +28,8 @@ def get_types(func: Callable) -> tuple:
         type_hints.get(param.name, object)
         for param in inspect.signature(func).parameters.values()
         if param.default is param.empty and param.kind in positionals
-    ]  # missing annotations are padded with `object`, but trailing objects are unnecessary
-    return tuple(itertools.dropwhile(lambda cls: cls is object, reversed(annotations)))[::-1]
+    ]  # missing annotations are padded with `object`
+    return tuple(annotations)
 
 
 class DispatchError(TypeError):
@@ -112,7 +112,7 @@ class signature(tuple):
         return tuple.__new__(cls, map(subtype, types))
 
     def __le__(self, other) -> bool:
-        return len(self) <= len(other) and all(map(issubclass, other, self))
+        return len(other) <= len(self) and all(map(issubclass, other, self))
 
     def __lt__(self, other) -> bool:
         return self != other and self <= other
@@ -242,7 +242,7 @@ class multidispatch(multimethod):
 
 get_type = multimethod(type)
 get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
-for atomic in (Iterator, str, bytes):
+for atomic in (Iterator, str, bytes, object):
     get_type[(atomic,)] = type
 
 

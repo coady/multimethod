@@ -1,7 +1,7 @@
 import sys
 from collections.abc import Iterable
 import pytest
-from multimethod import get_types, multidispatch, signature, DispatchError
+from multimethod import get_types, multidispatch, signature, DispatchError, multimethod
 
 
 def test_signature():
@@ -46,7 +46,7 @@ def test_roshambo():
     assert roshambo(p, s) == 'scissors cut paper'
     assert roshambo(r, r) == 'tie'
     assert len(roshambo) == 8
-    del roshambo[()]
+    del roshambo[object, object]
     del roshambo[rock, paper]
     assert len(roshambo) == 5
     with pytest.raises(DispatchError, match="0 methods"):
@@ -86,4 +86,28 @@ def test_arguments():
 
     if sys.version_info >= (3, 8):
         exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
-    assert get_types(func) == (object, int, int)
+    assert get_types(func) == (object, int, int, object)
+
+
+def test_nargs_precedence():
+    class AbstractFoo:
+        pass
+
+    class Foo(AbstractFoo):
+        pass
+
+    @multimethod
+    def temp(a):
+        return "fallback"
+
+    @multimethod
+    def temp(a: AbstractFoo, b: bool):
+        return "2 args"
+
+    @multimethod
+    def temp(a: Foo):
+        return "1 arg"
+
+    assert temp(1) == "fallback"
+    assert temp(Foo(), False) == "2 args"
+    assert temp(Foo()) == "1 arg"
