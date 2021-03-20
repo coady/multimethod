@@ -18,18 +18,30 @@ def groupby(func: Callable, values: Iterable) -> dict:
     return groups
 
 
-def get_types(func: Callable) -> tuple:
-    """Return evaluated type hints for positional required parameters in order."""
+def get_types(func: Callable) -> Iterable[tuple]:
+    """Return evaluated type hints for positional required parameters in order.
+
+    If `func` has optional kwargs yield multiple type signatures
+    """
+
     if not hasattr(func, '__annotations__'):
         return ()
     type_hints = typing.get_type_hints(func)
     positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
-    annotations = [
-        type_hints.get(param.name, object)
-        for param in inspect.signature(func).parameters.values()
-        if param.default is param.empty and param.kind in positionals
-    ]  # missing annotations are padded with `object`
-    return tuple(annotations)
+    params = [p for p in inspect.signature(func).parameters.values() if p.kind in positionals]
+
+    while True:
+        annotations = [type_hints.get(p.name, object) for p in params]
+        yield tuple(annotations)
+
+        if not params:
+            return
+
+        last = params[-1]
+        if last.default != last.empty:
+            params.pop(-1)
+        else:
+            return
 
 
 class DispatchError(TypeError):
@@ -137,7 +149,8 @@ class multimethod(dict):
 
     def __init__(self, func: Callable):
         try:
-            self[get_types(func)] = func
+            for types in get_types(func):
+                self[types] = func
         except (NameError, AttributeError):
             self.pending.add(func)
 
@@ -220,7 +233,8 @@ class multimethod(dict):
         """
         while self.pending:
             func = self.pending.pop()
-            self[get_types(func)] = func
+            for types in get_types(func):
+                self[types] = func
 
     @property
     def docstring(self):

@@ -86,7 +86,8 @@ def test_arguments():
 
     if sys.version_info >= (3, 8):
         exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
-    assert get_types(func) == (object, int, int, object)
+    got = list(get_types(func))
+    assert got == [(object, int, int, object, int), (object, int, int, object)]
 
 
 def test_nargs_precedence():
@@ -111,3 +112,15 @@ def test_nargs_precedence():
     assert temp(1) == "fallback"
     assert temp(Foo(), False) == "2 args"
     assert temp(Foo()) == "1 arg"
+
+
+def test_kwargs():
+    class Foo:
+        pass
+
+    @multimethod
+    def temp(a, b=1):
+        return f"a={a} b={b}"
+
+    assert temp(1) == "a=1 b=1"
+    assert temp(1, 2) == "a=1 b=2"
