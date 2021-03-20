@@ -21,7 +21,13 @@ def groupby(func: Callable, values: Iterable) -> dict:
 def get_types(func: Callable) -> Iterable[tuple]:
     """Return evaluated type hints for positional required parameters in order.
 
-    If `func` has optional kwargs yield multiple type signatures
+    If `func` has optional kwargs yield multiple type signatures. Example:
+
+    ```
+    def foo(a, b=1):
+        ...
+
+    assert get_types(foo) == [(object, object), (object,)]
     """
 
     if not hasattr(func, '__annotations__'):
