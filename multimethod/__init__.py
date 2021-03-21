@@ -5,7 +5,7 @@ import inspect
 import itertools
 import types
 import typing
-from typing import Callable, Iterable, Iterator, Mapping, Union
+from typing import Callable, Iterable, Iterator, Mapping, Tuple, Union
 
 __version__ = '1.5'
 
@@ -18,7 +18,16 @@ def groupby(func: Callable, values: Iterable) -> dict:
     return groups
 
 
-def get_types(func: Callable) -> Iterable[tuple]:
+# Marker for variable args (*args) in a signature
+class _VarArg:
+    def __repr__(self) -> str:
+        return "<*args>"  # pragma: no cover
+
+
+VAR_ARG = _VarArg()
+
+
+def get_types(func: Callable) -> Iterable[Tuple]:
     """Return evaluated type hints for positional required parameters in order.
 
     If `func` has optional kwargs yield multiple type signatures. Example:
@@ -29,20 +38,31 @@ def get_types(func: Callable) -> Iterable[tuple]:
 
     assert get_types(foo) == [(object, object), (object,)]
     """
-
     type_hints = typing.get_type_hints(func)
-    positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+    positionals = {
+        inspect.Parameter.POSITIONAL_ONLY,
+        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        inspect.Parameter.VAR_POSITIONAL,
+    }
 
     try:
         params = list(inspect.signature(func).parameters.values())
     except ValueError as ex:
         if 'no signature' in ex.args[0]:
-            return ()
+            # in python 3.6, C builtins have no signature, should fallback to variadic
+            yield (VAR_ARG,)
+            return
+        raise  # pragma: no cover
 
     params = [p for p in params if p.kind in positionals]
 
+    def resolve_type(param: inspect.Parameter):
+        if param.kind == inspect.Parameter.VAR_POSITIONAL:
+            return VAR_ARG
+        return type_hints.get(param.name, object)
+
     while True:
-        annotations = [type_hints.get(p.name, object) for p in params]
+        annotations = [resolve_type(p) for p in params]
         yield tuple(annotations)
 
         if not params:
@@ -135,7 +155,9 @@ class signature(tuple):
         return tuple.__new__(cls, map(subtype, types))
 
     def __le__(self, other) -> bool:
-        return len(other) <= len(self) and all(map(issubclass, other, self))
+        sig_other = self._strip_varargs(other)
+        sig_self = self._expand_varargs(len(sig_other))
+        return len(sig_self) == len(sig_other) and all(map(issubclass, sig_other, sig_self))
 
     def __lt__(self, other) -> bool:
         return self != other and self <= other
@@ -143,6 +165,17 @@ class signature(tuple):
     def __sub__(self, other) -> tuple:
         """Return relative distances, assuming self >= other."""
         return tuple(map(distance, other, self))
+
+    def _expand_varargs(self, target) -> tuple:
+        if self and self[-1] is VAR_ARG:
+            pad = target - len(self) + 1
+            return tuple([*self[:-1]] + ([object] * pad))
+        return self
+
+    def _strip_varargs(self, types):
+        if types and types[-1] is VAR_ARG:
+            return types[:-1]
+        return types
 
 
 class multimethod(dict):

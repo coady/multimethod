@@ -81,13 +81,20 @@ def test_cls():
 
 
 def test_arguments():
+    from multimethod import VAR_ARG
+
     def func(a, b: int, c: int, d, e: int = 0, *, f: int):
         pass
 
     if sys.version_info >= (3, 8):
         exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
+
     got = list(get_types(func))
     assert got == [(object, int, int, object, int), (object, int, int, object)]
+
+    # builtin type
+    got = list(get_types(type))
+    assert got == [(VAR_ARG,)]
 
 
 def test_nargs_precedence():
@@ -127,12 +134,37 @@ def test_kwargs():
     assert temp(1, b=3, c=1) == "a=1 b=3"
 
 
+def test_varargs():
+    @multimethod
+    def varg1(*args, **kwargs):
+        return str(args)
+
+    assert varg1(a=1) == "()"
+    assert varg1(1) == "(1,)"
+    assert varg1(1, 2) == "(1, 2)"
+
+    @multimethod
+    def varg2(a):
+        return "single"
+
+    @multimethod
+    def varg2(*args, **kwargs):
+        return "var"
+
+    @multimethod
+    def varg2(a: int, *args, **kwargs):
+        return "mixed"
+
+    assert varg2("a") == "single"
+    assert varg2("a", 2) == "var"
+    assert varg2(1, 2) == "mixed"
+
+
 def test_div():
     from multimethod import multimethod
     import operator
 
     classic_div = multimethod(operator.truediv)
     classic_div[int, int] = operator.floordiv
-
-    classic_div(3, 2)
-    classic_div(3.0, 2)
+    classic_div(3, 2) == 1
+    classic_div(3.0, 2) == 1.5
