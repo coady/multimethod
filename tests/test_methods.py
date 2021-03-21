@@ -81,15 +81,15 @@ def test_signature():
     assert signature([AnyStr]) == signature([Union[bytes, str]])
     assert signature([TypeVar('T')]) == signature([object])
     assert signature([int]) - signature([Union[int, float]]) == (0,)
-    assert signature([List]) <= signature([list])
+    assert signature([List]) <= (list,)
     assert signature([list]) <= signature([List])
     assert signature([list]) <= signature([List[int]])
     assert signature([List[int]]) - signature([list])
     assert signature([list]) - signature([List[int]]) == (1,)
 
     # with metaclasses:
-    assert signature([type]) - signature([type]) == (0,)
-    assert signature([type]) - signature([object]) == (1,)
+    assert signature([type]) - (type,) == (0,)
+    assert (type,) - signature([object]) == (1,)
     # using EnumMeta because it is a standard, stable, metaclass
     assert signature([enum.EnumMeta]) - signature([object]) == (2,)
     assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (1,)
@@ -282,13 +282,26 @@ def test_name_shadowing():
 
 def test_dispatch_exception():
     @multimethod
-    def temp(x: int):  # noqa
+    def temp(x: int, y):
         return "int"
 
     @multimethod
-    def temp(x: float):  # noqa
-        return "float"
+    def temp(x: int, y: float):
+        return "int, float"
+
+    @multimethod
+    def temp(x: bool):
+        return "bool"
 
     with pytest.raises(DispatchError, match="test_methods.py"):
         # invalid number of args, check source file is part of the exception args
-        temp(1, 1)
+        temp(1)
+    assert temp(1, y=1.0) == "int"
+    assert temp(True) == "bool"
+    assert temp(True, 1.0) == "int, float"
+
+    @multimethod
+    def temp(x: bool, y=0.0):
+        return "optional"
+
+    assert temp(True, 1.0) == "optional"

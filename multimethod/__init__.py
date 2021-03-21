@@ -1,5 +1,6 @@
 import abc
 import collections
+import contextlib
 import functools
 import inspect
 import itertools
@@ -8,14 +9,6 @@ import typing
 from typing import Callable, Iterable, Iterator, Mapping, Union
 
 __version__ = '1.5'
-
-
-def groupby(func: Callable, values: Iterable) -> dict:
-    """Return mapping of key function to values."""
-    groups = collections.defaultdict(list)  # type: dict
-    for value in values:
-        groups[func(value)].append(value)
-    return groups
 
 
 def get_types(func: Callable) -> tuple:
@@ -107,19 +100,31 @@ class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
     parents: set
+    sig: inspect.Signature
 
     def __new__(cls, types: Iterable):
         return tuple.__new__(cls, map(subtype, types))
 
-    def __le__(self, other) -> bool:
+    def __le__(self, other: tuple) -> bool:
         return len(self) <= len(other) and all(map(issubclass, other, self))
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: tuple) -> bool:
         return self != other and self <= other
 
-    def __sub__(self, other) -> tuple:
+    def __sub__(self, other: tuple) -> tuple:
         """Return relative distances, assuming self >= other."""
         return tuple(map(distance, other, self))
+
+    def __rsub__(self, other: tuple) -> tuple:
+        """Return relative distances, assuming self <= other."""
+        return tuple(map(distance, self, other))
+
+    def callable(self, *types) -> bool:
+        """Check positional arity of associated function signature."""
+        try:
+            return not hasattr(self, 'sig') or bool(self.sig.bind_partial(*types))
+        except TypeError:
+            return False
 
 
 class multimethod(dict):
@@ -174,6 +179,9 @@ class multimethod(dict):
         self.clean()
         types = signature(types)
         parents = types.parents = self.parents(types)
+        with contextlib.suppress(ValueError):
+            types.sig = inspect.signature(func)
+        self.pop(types, None)  # ensure key is overwritten
         for key in self:
             if types < key and (not parents or parents & key.parents):
                 key.parents -= parents
@@ -196,7 +204,10 @@ class multimethod(dict):
         self.evaluate()
         if types in self:
             return self[types]
-        groups = groupby(signature(types).__sub__, self.parents(types))
+        groups = collections.defaultdict(list)
+        for key in self.parents(types):
+            if key.callable(*types):
+                groups[types - key].append(key)
         keys = groups[min(groups)] if groups else []
         funcs = {self[key] for key in keys}
         if len(funcs) == 1:
@@ -210,7 +221,7 @@ class multimethod(dict):
         try:
             return func(*args, **kwargs)
         except TypeError as ex:
-            raise DispatchError("Function {func.__code__}".format(func=func)) from ex
+            raise DispatchError(f"Function {func.__code__}") from ex
 
     def evaluate(self):
         """Evaluate any pending forward references.
