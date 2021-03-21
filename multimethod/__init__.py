@@ -293,11 +293,13 @@ class overload(collections.OrderedDict):
     def __call__(self, *args, **kwargs):
         """Dispatch to first matching function."""
         for sig, func in reversed(self.items()):
-            arguments = sig.bind(*args, **kwargs).arguments
+            try:
+                arguments = sig.bind(*args, **kwargs).arguments
+            except TypeError:
+                continue
             if all(
-                param.annotation(arguments[name])
+                param.annotation is param.empty or param.annotation(arguments[name])
                 for name, param in sig.parameters.items()
-                if param.annotation is not param.empty
             ):
                 return func(*args, **kwargs)
         raise DispatchError("No matching functions found")

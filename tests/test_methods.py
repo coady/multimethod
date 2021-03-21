@@ -2,16 +2,7 @@ import enum
 
 import pytest
 from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
-from multimethod import (
-    DispatchError,
-    get_type,
-    isa,
-    multimeta,
-    multimethod,
-    overload,
-    signature,
-    subtype,
-)
+from multimethod import DispatchError, get_type, multimeta, multimethod, signature, subtype
 
 
 # string join
@@ -166,27 +157,6 @@ def test_register():
     assert func(False) is bool
     assert func([0]) == func((0.0,)) == func({'': 0}) == 'union'
     assert func([0.0]) == func((0.0, 1.0)) == func({}) == object
-
-
-def test_overloads():
-    @overload
-    def func(x):
-        return x
-
-    @overload
-    def func(x: isa(int, float)):
-        return -x
-
-    @func.register
-    def _(x: isa(str)) -> str:
-        return x.upper()
-
-    assert func(None) is None
-    assert func(1) == -1
-    assert func('hi') == 'HI'
-    del func[next(iter(func))]
-    with pytest.raises(DispatchError):
-        func(None)
 
 
 # multimeta
