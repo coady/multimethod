@@ -51,10 +51,10 @@ method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
 ```
 
-Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc` and `typing`. Subscripted generics are provisionally supported:
+Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc` and `typing`. Subscripted generics are supported:
 * `Union[...]`
 * `Mapping[...]` - the first key-value pair is checked
-* `Tuple[...]` - all args are checked
+* `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
 
 Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the multimethod.

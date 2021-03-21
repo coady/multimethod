@@ -1,7 +1,7 @@
 import sys
 from collections.abc import Iterable
 import pytest
-from multimethod import get_types, multidispatch, signature, DispatchError
+from multimethod import get_types, multimethod, signature, DispatchError
 
 
 def test_signature():
@@ -13,7 +13,7 @@ def test_signature():
 rock, paper, scissors = (type('', (), {}) for _ in range(3))
 
 
-@multidispatch
+@multimethod
 def roshambo(left, right):
     return 'tie'
 
@@ -52,13 +52,13 @@ def test_roshambo():
     with pytest.raises(DispatchError, match="0 methods"):
         roshambo(r, r)
     r = roshambo.copy()
-    assert isinstance(r, multidispatch)
+    assert isinstance(r, multimethod)
     assert r == roshambo
 
 
 # methods
 class cls(object):
-    method = multidispatch(lambda self, other: None)
+    method = multimethod(lambda self, other: None)
 
     @method.register(Iterable, object)
     def _(self, other):

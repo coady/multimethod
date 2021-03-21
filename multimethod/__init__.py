@@ -237,11 +237,8 @@ class multimethod(dict):
     def docstring(self):
         """a descriptive docstring of all registered functions"""
         docs = []
-        for func in set(self.values()):
-            try:
-                sig = inspect.signature(func)
-            except ValueError:
-                sig = ''
+        for key, func in self.items():
+            sig = getattr(key, 'sig', '')
             doc = func.__doc__ or ''
             docs.append(f'{func.__name__}{sig}\n    {doc}')
         return '\n\n'.join(docs)
