@@ -145,7 +145,7 @@ def test_varargs():
 
     @multimethod
     def varg2(a):
-        return "single"
+        return "fallback"
 
     @multimethod
     def varg2(*args, **kwargs):
@@ -153,11 +153,31 @@ def test_varargs():
 
     @multimethod
     def varg2(a: int, *args, **kwargs):
-        return "mixed"
+        return "int"
 
-    assert varg2("a") == "single"
+    @multimethod
+    def varg2(a: float, *args, b: str = "foo", **kwargs):
+        return "float"
+
+    @multimethod
+    def varg2(a: tuple, b: str = "foo", **kwargs):
+        return "tuple"
+
+    assert varg2("a") == "fallback"
     assert varg2("a", 2) == "var"
-    assert varg2(1, 2) == "mixed"
+    assert varg2(1, 2) == "int"
+
+    assert varg2(1.0) == "float"
+    assert varg2(1.0, b="bar") == "float"
+    assert varg2(1.0, "bar") == "float"
+    assert varg2(1.0, True) == "float"
+
+    assert varg2((), "bar") == "tuple"
+    assert varg2((), "bar", c=1) == "tuple"
+
+    # inconsistent behavior below expected since kwargs are not part of dispatch logic
+    assert varg2((), 1.0) == "var"
+    assert varg2((), b=1.0) == "tuple"
 
 
 def test_div():
