@@ -89,6 +89,9 @@ def func(obj: str.isdigit):
     ...
 ```
 
+### multidispatch
+`multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also provisionally supports dispatching on keyword arguments.
+
 ### multimeta
 
 Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
@@ -133,6 +136,11 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* Improved checking for TypeErrors
+* `multidispatch` has provisional support for dispatching on keyword arguments
+
 1.5
 
 * Postponed evaluation of nested annotations

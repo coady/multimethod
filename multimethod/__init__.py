@@ -6,7 +6,7 @@ import inspect
 import itertools
 import types
 import typing
-from typing import Callable, Iterable, Iterator, Mapping, Union
+from typing import Callable, Iterable, Iterator, Mapping, Optional, Union
 
 __version__ = '1.5'
 
@@ -245,7 +245,31 @@ class multimethod(dict):
 
 
 class multidispatch(multimethod):
-    """Provisional wrapper for future compatibility with `functools.singledispatch`."""
+    """Provisional wrapper for compatibility with `functools.singledispatch`.
+
+    Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.
+    Allows dispatching on keyword arguments based on the first function signature.
+    """
+
+    signature: Optional[inspect.Signature]
+
+    def __new__(cls, func: Callable):
+        return functools.update_wrapper(dict.__new__(cls), func)
+
+    def __init__(self, func: Callable):
+        self.pending = set()
+        self.get_type = type  # default type checker
+        try:
+            self.signature = inspect.signature(func)
+        except ValueError:
+            self.signature = None
+        super().__init__(func)
+
+    def __call__(self, *args, **kwargs):
+        """Resolve and dispatch to best method."""
+        params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
+        func = self[tuple(map(self.get_type, params))]
+        return func(*args, **kwargs)
 
 
 get_type = multimethod(type)

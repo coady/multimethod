@@ -1,7 +1,7 @@
 import sys
 from collections.abc import Iterable
 import pytest
-from multimethod import get_types, multimethod, signature, DispatchError
+from multimethod import get_types, multidispatch, multimethod, signature, DispatchError
 
 
 def test_signature():
@@ -87,3 +87,15 @@ def test_arguments():
     if sys.version_info >= (3, 8):
         exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
     assert get_types(func) == (object, int, int)
+
+
+def test_keywords():
+    @multidispatch
+    def func(arg):
+        pass
+
+    @func.register
+    def _(arg: int):
+        return int
+
+    assert func(0) is func(arg=0) is int
