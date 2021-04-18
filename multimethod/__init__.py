@@ -5,8 +5,20 @@ import functools
 import inspect
 import itertools
 import types
-import typing
-from typing import Callable, Iterable, Iterator, Mapping, Optional, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    get_type_hints,
+)
+from typing import overload as tp_overload
 
 __version__ = '1.5'
 
@@ -15,7 +27,7 @@ def get_types(func: Callable) -> tuple:
     """Return evaluated type hints for positional required parameters in order."""
     if not hasattr(func, '__annotations__'):
         return ()
-    type_hints = typing.get_type_hints(func)
+    type_hints = get_type_hints(func)
     positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
     annotations = [
         type_hints.get(param.name, object)
@@ -36,12 +48,12 @@ class subtype(type):
     __args__: tuple
 
     def __new__(cls, tp, *args):
-        if tp is typing.Any:
+        if tp is Any:
             return object
-        if isinstance(tp, typing.TypeVar):
+        if isinstance(tp, TypeVar):
             if not tp.__constraints__:
                 return object
-            tp = typing.Union[tp.__constraints__]
+            tp = Union[tp.__constraints__]
         origin = getattr(tp, '__extra__', getattr(tp, '__origin__', tp))
         args = tuple(map(cls, getattr(tp, '__args__', None) or args))
         if set(args) <= {object} and not (origin is tuple and args):
@@ -66,9 +78,9 @@ class subtype(type):
     def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__extra__', getattr(subclass, '__origin__', subclass))
         args = getattr(subclass, '__args__', ())
-        if origin is typing.Union:
+        if origin is Union:
             return all(issubclass(cls, self) for cls in args)
-        if self.__origin__ is typing.Union:
+        if self.__origin__ is Union:
             return issubclass(subclass, self.__args__)
         nargs = len(self.__args__)
         if self.__origin__ is tuple and self.__args__[-1:] == (Ellipsis,):
@@ -90,7 +102,7 @@ class subtype(type):
 
 def distance(cls, subclass: type) -> int:
     """Return estimated distance between classes for tie-breaking."""
-    if getattr(cls, '__origin__', None) is typing.Union:
+    if getattr(cls, '__origin__', None) is Union:
         return min(distance(arg, subclass) for arg in cls.__args__)
     mro = type.mro(subclass)
     return mro.index(cls if cls in mro else object)
@@ -127,6 +139,9 @@ class signature(tuple):
             return False
 
 
+REGISTERED = TypeVar("REGISTERED", bound=Callable[..., Any])
+
+
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
@@ -145,6 +160,14 @@ class multimethod(dict):
             self[get_types(func)] = func
         except (NameError, AttributeError):
             self.pending.add(func)
+
+    @tp_overload
+    def register(self, __func: REGISTERED) -> REGISTERED:
+        ...  # pragma: no cover
+
+    @tp_overload
+    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]:
+        ...  # pragma: no cover
 
     def register(self, *args) -> Callable:
         """Decorator for registering a function.
@@ -244,7 +267,10 @@ class multimethod(dict):
         return '\n\n'.join(docs)
 
 
-class multidispatch(multimethod):
+RETURN = TypeVar("RETURN")
+
+
+class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
     """Provisional wrapper for compatibility with `functools.singledispatch`.
 
     Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.
@@ -253,19 +279,19 @@ class multidispatch(multimethod):
 
     signature: Optional[inspect.Signature]
 
-    def __new__(cls, func: Callable):
+    def __new__(cls, func: Callable[..., RETURN]) -> "multidispatch[RETURN]":
         return functools.update_wrapper(dict.__new__(cls), func)
 
-    def __init__(self, func: Callable):
+    def __init__(self, func: Callable[..., RETURN]) -> None:
         self.pending = set()
         self.get_type = type  # default type checker
         try:
             self.signature = inspect.signature(func)
-        except ValueError:
+        except ValueError:  # pragma: no cover
             self.signature = None
         super().__init__(func)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to best method."""
         params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
         func = self[tuple(map(self.get_type, params))]
