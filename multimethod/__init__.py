@@ -287,7 +287,7 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
         self.get_type = type  # default type checker
         try:
             self.signature = inspect.signature(func)
-        except ValueError:  # pragma: no cover
+        except ValueError:
             self.signature = None
         super().__init__(func)
 

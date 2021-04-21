@@ -99,3 +99,4 @@ def test_keywords():
         return int
 
     assert func(0) is func(arg=0) is int
+    assert multidispatch(bool)(1)
