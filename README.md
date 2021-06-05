@@ -137,12 +137,11 @@ class Foo:
 
 ## Changes
 dev
-
+* Python >=3.7 required
 * Improved checking for TypeErrors
 * `multidispatch` has provisional support for dispatching on keyword arguments
 
 1.5
-
 * Postponed evaluation of nested annotations
 * Variable-length tuples of homogeneous type
 * Ignore default and keyword-only parameters
@@ -151,45 +150,36 @@ dev
 * Resolved dispatch errors when annotating parameters with meta-types such as `type`
 
 1.4
-
 * Python >=3.6 required
 * Expanded support for subscripted type hints
 
 1.3
-
 * Python 3 required
 * Support for subscripted ABCs
 
 1.2
-
 * Support for typing generics
 * Stricter dispatching consistent with singledispatch
 
 1.1
-
 * Fix for Python 2 typing backport
 * Metaclass for automatic multimethods
 
 1.0
-
 * Missing annotations default to object
 * Removed deprecated dispatch stacking
 
 0.7
-
 * Forward references allowed in type hints
 * Register method
 * Overloads with predicate dispatch
 
 0.6
-
 * Multimethods can be defined inside a class
 
 0.5
-
 * Optimized dispatching
 * Support for `functools.singledispatch` syntax
 
 0.4
-
 * Dispatch on Python 3 annotations

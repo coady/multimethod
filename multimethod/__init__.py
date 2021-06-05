@@ -54,7 +54,7 @@ class subtype(type):
             if not tp.__constraints__:
                 return object
             tp = Union[tp.__constraints__]
-        origin = getattr(tp, '__extra__', getattr(tp, '__origin__', tp))
+        origin = getattr(tp, '__origin__', tp)
         args = tuple(map(cls, getattr(tp, '__args__', None) or args))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
@@ -76,7 +76,7 @@ class subtype(type):
         return hash(self.__getstate__())
 
     def __subclasscheck__(self, subclass: type) -> bool:
-        origin = getattr(subclass, '__extra__', getattr(subclass, '__origin__', subclass))
+        origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
         if origin is Union:
             return all(issubclass(cls, self) for cls in args)
