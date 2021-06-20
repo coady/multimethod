@@ -291,6 +291,9 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
             self.signature = None
         super().__init__(func)
 
+    def __get__(self, instance, owner) -> Callable[..., RETURN]:
+        return self if instance is None else types.MethodType(self, instance)  # type: ignore
+
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to best method."""
         params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args

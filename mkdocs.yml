@@ -1,4 +1,5 @@
 site_name: multimethod
+site_url: https://coady.github.io/multimethod/
 site_description: Multiple argument dispatching.
 theme: material
 
