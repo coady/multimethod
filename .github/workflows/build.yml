@@ -17,7 +17,7 @@ jobs:
     - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
-    - run: pip install multimethod pytest-cov
+    - run: pip install pytest-cov
     - run: make check
     - uses: codecov/codecov-action@v1
 
