@@ -113,8 +113,8 @@ class cls:
         return object, int
 
     @multimethod
-    def method(x: 'cls', y: float):
-        return type(x), float
+    def method(x: 'cls', y: List[float]):
+        return type(x), list
 
     @multimethod
     def dotted(x: 'namespace.cls'):
@@ -123,7 +123,7 @@ class cls:
 
 def test_annotations():
     obj = cls()
-    assert obj.method(0.0) == (cls, float)  # run first to check exact match post-evaluation
+    assert obj.method([0.0]) == (cls, list)  # run first to check exact match post-evaluation
     assert obj.method(0) == (object, int)
     assert cls.method(None, 0) == (object, int)
     with pytest.raises(DispatchError):

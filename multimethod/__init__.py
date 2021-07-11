@@ -159,6 +159,8 @@ class multimethod(dict):
         try:
             self[get_types(func)] = func
         except (NameError, AttributeError):
+            if any(subtype.subcheck(subtype(hint)) for hint in func.__annotations__.values()):
+                self.get_type = get_type  # will still need to check subscripts eventually
             self.pending.add(func)
 
     @tp_overload

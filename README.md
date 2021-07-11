@@ -142,6 +142,7 @@ dev
 * Improved checking for TypeErrors
 * `multidispatch` has provisional support for dispatching on keyword arguments
 * `multidispatch` supports static analysis of return type 
+* Fix for forward references and subscripts
 
 1.5
 
