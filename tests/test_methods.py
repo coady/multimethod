@@ -1,7 +1,7 @@
 import enum
-
+import sys
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, List, Literal, Tuple, TypeVar, Union
+from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
 from multimethod import DispatchError, get_type, multimeta, multimethod, signature, subtype
 
 
@@ -277,7 +277,10 @@ def test_dispatch_exception():
     assert temp(True, 1.0) == "optional"
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Literal added in 3.8")
 def test_literals():
+    from typing import Literal
+
     assert subtype(Literal['a', 'b']) is str
     assert subtype(Literal['a', 0]) == subtype(Union[str, int])
 

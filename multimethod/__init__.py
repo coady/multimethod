@@ -5,8 +5,13 @@ import functools
 import inspect
 import itertools
 import types
-from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Iterator, Mapping, Optional, Tuple
 from typing import TypeVar, Union, get_type_hints, overload as tp_overload
+
+try:
+    from typing import Literal
+except ImportError:  # pragma: no cover
+    Literal = None  # type: ignore
 
 __version__ = '1.5'
 
