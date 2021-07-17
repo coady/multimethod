@@ -1,7 +1,7 @@
 import enum
 
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
+from typing import Any, AnyStr, Dict, Iterable, List, Literal, Tuple, TypeVar, Union
 from multimethod import DispatchError, get_type, multimeta, multimethod, signature, subtype
 
 
@@ -275,3 +275,17 @@ def test_dispatch_exception():
         return "optional"
 
     assert temp(True, 1.0) == "optional"
+
+
+def test_literals():
+    assert subtype(Literal['a', 'b']) is str
+    assert subtype(Literal['a', 0]) == subtype(Union[str, int])
+
+    @multimethod
+    def func(arg: Literal[0]):
+        return arg
+
+    assert func(0) == 0
+    assert func(1) == 1
+    with pytest.raises(DispatchError):
+        func(0.0)

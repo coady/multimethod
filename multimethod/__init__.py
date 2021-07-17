@@ -5,20 +5,8 @@ import functools
 import inspect
 import itertools
 import types
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    get_type_hints,
-)
-from typing import overload as tp_overload
+from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
+from typing import TypeVar, Union, get_type_hints, overload as tp_overload
 
 __version__ = '1.5'
 
@@ -55,7 +43,9 @@ class subtype(type):
                 return object
             tp = Union[tp.__constraints__]
         origin = getattr(tp, '__origin__', tp)
-        args = tuple(map(cls, getattr(tp, '__args__', None) or args))
+        args = tuple(map(cls, getattr(tp, '__args__', args)))
+        if origin is Literal:
+            return cls(Union[tuple(map(type, args))])
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
         bases = (origin,) if type(origin) is type else ()
