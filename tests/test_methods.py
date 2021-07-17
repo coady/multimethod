@@ -113,7 +113,7 @@ class cls:
         return object, int
 
     @multimethod
-    def method(x: 'cls', y: List[float]):
+    def method(x: 'cls', y: 'List[float]'):
         return type(x), list
 
     @multimethod
@@ -128,6 +128,9 @@ def test_annotations():
     assert cls.method(None, 0) == (object, int)
     with pytest.raises(DispatchError):
         cls.method(None, 0.0)
+    key = cls, subtype(List[float])
+    cls.method.pending.add(cls.method.pop(key))
+    assert cls.method[key]
 
 
 # register out of order

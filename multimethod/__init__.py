@@ -154,8 +154,6 @@ class multimethod(dict):
         try:
             self[get_types(func)] = func
         except (NameError, AttributeError):
-            if any(subtype.subcheck(subtype(hint)) for hint in func.__annotations__.values()):
-                self.get_type = get_type  # will still need to check subscripts eventually
             self.pending.add(func)
 
     @tp_overload
@@ -237,6 +235,8 @@ class multimethod(dict):
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
+        if self.pending:  # check first to avoid function call
+            self.evaluate()
         func = self[tuple(map(self.get_type, args))]
         try:
             return func(*args, **kwargs)
