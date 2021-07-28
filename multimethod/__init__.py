@@ -345,7 +345,7 @@ class overload(dict):
 
     def __call__(self, *args, **kwargs):
         """Dispatch to first matching function."""
-        for sig, func in reversed(self.items()):
+        for sig in reversed(list(self)):  # Python >=3.8 dicts support `reversed`
             try:
                 arguments = sig.bind(*args, **kwargs).arguments
             except TypeError:
@@ -354,7 +354,7 @@ class overload(dict):
                 param.annotation is param.empty or param.annotation(arguments[name])
                 for name, param in sig.parameters.items()
             ):
-                return func(*args, **kwargs)
+                return self[sig](*args, **kwargs)
         raise DispatchError("No matching functions found")
 
     def register(self, func: Callable) -> Callable:
