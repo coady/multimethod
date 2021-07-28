@@ -57,7 +57,7 @@ Multimethods support any types that satisfy the `issubclass` relation, including
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
 
-Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the multimethod.
+Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter.
 
 Dispatch resolution details:
 * If an exact match isn't registered, the next closest method is called (and cached).

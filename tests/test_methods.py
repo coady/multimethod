@@ -88,19 +88,21 @@ def test_signature():
 
 def test_get_type():
     method = multimethod(lambda: None)
-    assert method.get_type is type
+    assert method.type_checkers == []
 
     @method.register
     def _(x: Union[int, type(None)]):
         pass
 
-    assert method.get_type is type
+    assert method.type_checkers == [type]
 
     @method.register
     def _(x: List[int]):
         pass
 
-    assert method.get_type is get_type
+    assert method.type_checkers == [get_type]
+    method[int, float] = lambda x, y: None
+    assert method.type_checkers == [get_type, type]
 
 
 class namespace:

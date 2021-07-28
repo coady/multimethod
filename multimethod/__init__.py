@@ -141,12 +141,13 @@ class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
     pending: set
+    type_checkers: list
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.pending = set()
-        self.get_type = type  # default type checker
+        self.type_checkers = []  # defaults to builtin `type`
         homonym = namespace.get(func.__name__, self)
         return homonym if isinstance(homonym, multimethod) else self
 
@@ -204,8 +205,10 @@ class multimethod(dict):
             if types < key and (not parents or parents & key.parents):
                 key.parents -= parents
                 key.parents.add(types)
-        if any(map(subtype.subcheck, types)):
-            self.get_type = get_type  # switch to slower generic type checker
+        self.type_checkers += [type] * (len(types) - len(self.type_checkers))
+        for index, cls in enumerate(types):
+            if subtype.subcheck(cls):  # switch to slower generic type checker
+                self.type_checkers[index] = get_type
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
 
@@ -237,7 +240,7 @@ class multimethod(dict):
         """Resolve and dispatch to best method."""
         if self.pending:  # check first to avoid function call
             self.evaluate()
-        func = self[tuple(map(self.get_type, args))]
+        func = self[tuple(func(arg) for func, arg in zip(self.type_checkers, args))]
         try:
             return func(*args, **kwargs)
         except TypeError as ex:
@@ -281,7 +284,7 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
 
     def __init__(self, func: Callable[..., RETURN]) -> None:
         self.pending = set()
-        self.get_type = type  # default type checker
+        self.type_checkers = []
         try:
             self.signature = inspect.signature(func)
         except ValueError:
@@ -294,7 +297,7 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to best method."""
         params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
-        func = self[tuple(map(self.get_type, params))]
+        func = self[tuple(func(arg) for func, arg in zip(self.type_checkers, params))]
         return func(*args, **kwargs)
 
 
@@ -327,7 +330,7 @@ def isa(*types: type) -> Callable:
     return lambda arg: isinstance(arg, types)
 
 
-class overload(collections.OrderedDict):
+class overload(dict):
     """Ordered functions which dispatch based on their annotated predicates."""
 
     __get__ = multimethod.__get__
