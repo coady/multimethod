@@ -69,7 +69,7 @@ def test_subtype():
     assert tp.get_type([0, 0.0]) == tp
     assert subtype.get_type(object, {}) is dict
     it = iter('abc')
-    assert subtype(Iterator, str).get_type(it) is type(it)
+    assert subtype(Iterator[str]).get_type(it) is type(it)
     tp = subtype(Union, List[int], List[List[int]])
     assert tp.get_type('') is str
     assert tp.get_type([]) is list

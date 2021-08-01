@@ -66,9 +66,6 @@ class subtype(type):
         if isinstance(self.__origin__, abc.ABCMeta):
             self.__origin__.register(self)
 
-    def __repr__(self):
-        return repr(self.__origin__[self.__args__])
-
     def __getstate__(self) -> tuple:
         return self.__origin__, self.__args__
 
