@@ -1,8 +1,8 @@
 import enum
 import sys
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, List, Tuple, TypeVar, Union
-from multimethod import DispatchError, get_type, multimeta, multimethod, signature, subtype
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Tuple, TypeVar, Union
+from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
 # string join
@@ -57,14 +57,25 @@ def test_subtype():
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
     assert issubclass(subtype(List[int]), subtype(Iterable))
 
-    assert get_type(0) is int
-    assert not isinstance(get_type(iter('')), subtype)
-    assert get_type(()) is tuple
-    assert get_type((0, 0.0)) == subtype(tuple, int, float)
-    assert get_type([]) is list
-    assert get_type([0, 0.0]) == subtype(list, int)
-    assert get_type({}) is dict
-    assert get_type({' ': 0}) == subtype(dict, str, int)
+    assert subtype.get_type(object, 0) is int
+    assert not isinstance(subtype.get_type(object, iter('')), subtype)
+    assert subtype.get_type(object, ()) is tuple
+    tp = subtype(tuple, int, float)
+    assert tp.get_type((0, 0.0)) == tp
+    assert subtype.get_type(object, []) is list
+    tp = subtype(dict, str, int)
+    assert tp.get_type({' ': 0}) == tp
+    tp = subtype(list, int)
+    assert tp.get_type([0, 0.0]) == tp
+    assert subtype.get_type(object, {}) is dict
+    it = iter('abc')
+    assert subtype(Iterator, str).get_type(it) is type(it)
+    tp = subtype(Union, List[int], List[List[int]])
+    assert tp.get_type('') is str
+    assert tp.get_type([]) is list
+    assert tp.get_type([0]) == List[int]
+    assert tp.get_type([[]]) == List[list]
+    assert tp.get_type([[0]]) == List[List[int]]
 
 
 def test_signature():
@@ -100,7 +111,10 @@ def test_get_type():
     def _(x: List[int]):
         pass
 
-    assert method.type_checkers == [get_type]
+    (get_type,) = method.type_checkers
+    assert get_type([0]) == List[int]
+    assert get_type([0.0]) == List[float]
+    assert get_type((0,)) is tuple
     method[int, float] = lambda x, y: None
     assert method.type_checkers == [get_type, type]
 

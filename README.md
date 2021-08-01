@@ -143,6 +143,7 @@ dev
 * `multidispatch` has provisional support for dispatching on keyword arguments
 * `multidispatch` supports static analysis of return type 
 * Fix for forward references and subscripts
+* Checking type subscripts is done minimally based on each parameter
 
 1.5
 

@@ -6,7 +6,7 @@ import inspect
 import itertools
 import types
 from typing import Any, Callable, Dict, Iterable, Iterator, Mapping, Optional, Tuple
-from typing import TypeVar, Union, get_type_hints, overload as tp_overload
+from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
 try:
     from typing import Literal
@@ -35,7 +35,12 @@ class DispatchError(TypeError):
 
 
 class subtype(type):
-    """A normalized generic type which checks subscripts."""
+    """A normalized generic type which checks subscripts.
+
+    Transforms a generic alias into a concrete type which supports `issubclass`.
+    If the type ends up being equivalent to a builtin, the builtin in returned.
+    Includes an adaptive replacement for `type` which will iterate args as needed for subscripts.
+    """
 
     __origin__: type
     __args__: tuple
@@ -61,11 +66,14 @@ class subtype(type):
         if isinstance(self.__origin__, abc.ABCMeta):
             self.__origin__.register(self)
 
+    def __repr__(self):
+        return repr(self.__origin__[self.__args__])
+
     def __getstate__(self) -> tuple:
         return self.__origin__, self.__args__
 
     def __eq__(self, other) -> bool:
-        return isinstance(other, subtype) and self.__getstate__() == other.__getstate__()
+        return hasattr(other, '__origin__') and self.__getstate__() == subtype.__getstate__(other)
 
     def __hash__(self) -> int:
         return hash(self.__getstate__())
@@ -93,6 +101,38 @@ class subtype(type):
         return isinstance(tp, cls) and (
             tp.__origin__ is not Union or any(map(cls.subcheck, tp.__args__))
         )
+
+    @no_type_check
+    def get_type(self, arg) -> type:
+        """An adaptive version of `type`, which checks subscripts as needed.
+
+        This is complicated by needing to potentially iterate an argument, but only if required
+        because the origin type matches and has subscripts. The challenge is making the type
+        checker as specific as needed, but with as minimal introspection as possible, and yet still
+        performant. The strategy is to end the recursive checking at the first failure, and only
+        check subsequent types which themselves are subclasses. This way `get_type` is only called
+        repeatedly if it may increase the type specificity.
+        """
+        if not isinstance(self, subtype):  # also called as a staticmethod
+            return type(arg)
+        if self.__origin__ is Union:
+            cls = subtype.get_type(self.__args__[0], arg)
+            for tp_arg in self.__args__[1:]:
+                if issubclass(tp_arg, cls):  # find the most specific match without duplication
+                    cls = subtype.get_type(tp_arg, arg)
+            return cls
+        if not isinstance(arg, self.__origin__):  # no need to check subscripts
+            return type(arg)
+        args = ()
+        if issubclass(self, tuple) and self.__args__[-1:] != (Ellipsis,):  # check all values
+            if len(arg) != len(self.__args__):
+                return type(arg)
+            args = arg
+        elif issubclass(self, Mapping):  # check first item
+            args = next(iter(arg.items()), ())
+        elif issubclass(self, Iterable) and not issubclass(self, Iterator):  # check first value
+            args = itertools.islice(arg, 1)
+        return subtype(type(arg), *map(subtype.get_type, self.__args__, args))
 
 
 def distance(cls, subclass: type) -> int:
@@ -206,9 +246,13 @@ class multimethod(dict):
                 key.parents -= parents
                 key.parents.add(types)
         self.type_checkers += [type] * (len(types) - len(self.type_checkers))
-        for index, cls in enumerate(types):
+        for index, (cls, type_checker) in enumerate(zip(types, self.type_checkers)):
             if subtype.subcheck(cls):  # switch to slower generic type checker
-                self.type_checkers[index] = get_type
+                if type_checker is not type:
+                    tp = type_checker.__self__
+                    args = {cls} | set(tp.__args__) if tp.__origin__ is Union else {cls, tp}
+                    cls = subtype(Union[tuple(args)])
+                self.type_checkers[index] = cls.get_type
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
 
@@ -299,30 +343,6 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
         params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
         func = self[tuple(func(arg) for func, arg in zip(self.type_checkers, params))]
         return func(*args, **kwargs)
-
-
-get_type = multimethod(type)
-get_type.__doc__ = """Return a generic `subtype` which checks subscripts."""
-for atomic in (Iterator, str, bytes):
-    get_type[(atomic,)] = type
-
-
-@multimethod  # type: ignore[no-redef]
-def get_type(arg: tuple):
-    """Return generic type checking all values."""
-    return subtype(type(arg), *map(get_type, arg))
-
-
-@multimethod  # type: ignore[no-redef]
-def get_type(arg: Mapping):
-    """Return generic type checking first item."""
-    return subtype(type(arg), *map(get_type, next(iter(arg.items()), ())))
-
-
-@multimethod  # type: ignore[no-redef]
-def get_type(arg: Iterable):
-    """Return generic type checking first value."""
-    return subtype(type(arg), *map(get_type, itertools.islice(arg, 1)))
 
 
 def isa(*types: type) -> Callable:
