@@ -112,6 +112,8 @@ class subtype(type):
         """
         if not isinstance(self, subtype):  # also called as a staticmethod
             return type(arg)
+        if hasattr(arg, '__orig_class__'):  # user-defined generic type
+            return subtype(arg.__orig_class__)
         if self.__origin__ is Union:
             cls = subtype.get_type(self.__args__[0], arg)
             for tp_arg in self.__args__[1:]:

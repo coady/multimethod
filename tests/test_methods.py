@@ -1,7 +1,7 @@
 import enum
 import sys
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Tuple, TypeVar, Union
+from typing import Any, AnyStr, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Union
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
@@ -311,3 +311,14 @@ def test_literals():
     assert func(1) == 1
     with pytest.raises(DispatchError):
         func(0.0)
+
+
+def test_generic():
+    class cls(Generic[TypeVar('T')]):
+        pass
+
+    @multimethod
+    def func(x: cls[int]):
+        pass
+
+    assert func(cls[int]()) is None
