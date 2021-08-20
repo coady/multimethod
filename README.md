@@ -65,8 +65,10 @@ Dispatch resolution details:
 [mro](https://docs.python.org/3/library/stdtypes.html?highlight=mro#class.mro) position is used as a tie-breaker.
 * If there are still ambiguous methods - or none - a custom `TypeError` is raised.
 * Default and keyword-only parameters may be annotated, but won't affect dispatching.
-* A skipped annotation is equivalent to `: object`, which implicitly supports methods by leaving `self` blank.
+* A skipped annotation is equivalent to `: object`.
 * If no types are specified, it will inherently match all arguments.
+
+`classmethod` and `staticmethod` may be used with a multimethod, but must be applied last, i.e., wrapping the multimethod. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
 
 ### overload
 Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
