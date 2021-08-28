@@ -38,7 +38,7 @@ class subtype(type):
     """A normalized generic type which checks subscripts.
 
     Transforms a generic alias into a concrete type which supports `issubclass`.
-    If the type ends up being equivalent to a builtin, the builtin in returned.
+    If the type ends up being equivalent to a builtin, the builtin is returned.
     Includes an adaptive replacement for `type` which will iterate args as needed for subscripts.
     """
 
