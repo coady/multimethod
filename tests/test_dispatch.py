@@ -98,5 +98,9 @@ def test_keywords():
     def _(arg: int):
         return int
 
+    @func.register
+    def _(arg: int, extra: float):
+        return int
+
     assert func(0) is func(arg=0) is int
     assert multidispatch(bool)(1)

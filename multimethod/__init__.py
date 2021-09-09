@@ -210,7 +210,8 @@ class multimethod(dict):
         Optionally call with types to return a decorator for unannotated functions.
         """
         if len(args) == 1 and hasattr(args[0], '__annotations__'):
-            return overload.register(self, *args)  # type: ignore
+            multimethod.__init__(self, *args)
+            return self if self.__name__ == args[0].__name__ else args[0]  # type: ignore
         return lambda func: self.__setitem__(args, func) or func
 
     def __get__(self, instance, owner):
