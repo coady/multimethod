@@ -58,7 +58,7 @@ Multimethods support any types that satisfy the `issubclass` relation, including
 * `Iterable[...]` - the first arg is checked
 * `Literal[...]` - provisionally supported
 
-Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter.
+Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter. Empty iterables provisionally match any subscript, but don't special-case how the types are normally resolved.
 
 Dispatch resolution details:
 * If an exact match isn't registered, the next closest method is called (and cached).
@@ -148,6 +148,7 @@ dev
 * Fix for forward references and subscripts
 * Checking type subscripts is done minimally based on each parameter
 * Provisionally dispatch on `Literal` type
+* Provisionally empty iterables match subscript
 
 1.5
 

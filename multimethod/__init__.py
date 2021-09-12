@@ -14,6 +14,7 @@ except ImportError:  # pragma: no cover
     Literal = None  # type: ignore
 
 __version__ = '1.5'
+Empty = types.new_class('*')
 
 
 def get_types(func: Callable) -> tuple:
@@ -85,9 +86,14 @@ class subtype(type):
         if self.__origin__ is Union:
             return issubclass(subclass, self.__args__)
         nargs = len(self.__args__)
-        if self.__origin__ is tuple and self.__args__[-1:] == (Ellipsis,):
-            nargs -= 1
-            args = args[:nargs]
+        if self.__origin__ is tuple:
+            if self.__args__[-1:] == (Ellipsis,):
+                if args == (Empty,):
+                    return issubclass(origin, self.__origin__)
+                nargs -= 1
+                args = args[:nargs]
+        elif args == (Empty,):
+            return issubclass(origin, self.__origin__)
         return (  # check args first to avoid a recursion error in ABCMeta
             len(args) == nargs
             and issubclass(origin, self.__origin__)
@@ -128,16 +134,18 @@ class subtype(type):
             return cls
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
             return type(arg)
-        args = ()
+        if isinstance(arg, Iterator) or not isinstance(arg, Iterable):
+            return type(arg)
         if issubclass(self, tuple) and self.__args__[-1:] != (Ellipsis,):  # check all values
             if len(arg) != len(self.__args__):
                 return type(arg)
             args = arg
         elif issubclass(self, Mapping):  # check first item
             args = next(iter(arg.items()), ())
-        elif issubclass(self, Iterable) and not issubclass(self, Iterator):  # check first value
+        else:  # check first value
             args = itertools.islice(arg, 1)
-        return subtype(type(arg), *map(subtype.get_type, self.__args__, args))
+        subscripts = list(map(subtype.get_type, self.__args__, args))
+        return subtype(type(arg), *(subscripts or [Empty]))
 
 
 def distance(cls, subclass: type) -> int:

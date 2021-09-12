@@ -2,7 +2,7 @@ import enum
 import sys
 import pytest
 from typing import Any, AnyStr, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Union
-from multimethod import DispatchError, multimeta, multimethod, signature, subtype
+from multimethod import DispatchError, Empty, multimeta, multimethod, signature, subtype
 
 
 # string join
@@ -72,9 +72,9 @@ def test_subtype():
     assert subtype(Iterator[str]).get_type(it) is type(it)
     tp = subtype(Union, List[int], List[List[int]])
     assert tp.get_type('') is str
-    assert tp.get_type([]) is list
+    assert tp.get_type([]) == subtype(list, Empty)
     assert tp.get_type([0]) == List[int]
-    assert tp.get_type([[]]) == List[list]
+    assert tp.get_type([[]]) == List[subtype(list, Empty)]
     assert tp.get_type([[0]]) == List[List[int]]
 
 
@@ -174,8 +174,8 @@ def test_register():
     assert func(0.0) is object
     assert func(0) is int
     assert func(False) is bool
-    assert func([0]) == func((0.0,)) == func({'': 0}) == 'union'
-    assert func([0.0]) == func((0.0, 1.0)) == func({}) == object
+    assert func([0]) == func((0.0,)) == func({'': 0}) == func({}) == 'union'
+    assert func([0.0]) == func((0.0, 1.0)) == object
 
 
 # multimeta
@@ -221,8 +221,7 @@ def test_ellipsis():
     assert func(tup) == tup
     tup = ((0, 1), (2, 3))
     assert func(tup) == tup
-    with pytest.raises(DispatchError):
-        func(())
+    assert func(()) == ()
     with pytest.raises(DispatchError):
         func(((0, 1.0),))
 
@@ -327,3 +326,16 @@ def test_generic():
         pass
 
     assert func(cls[int]()) is None
+
+
+def test_empty():
+    @multimethod
+    def func(arg: List[int]):
+        return int
+
+    @func.register
+    def _(arg: List[bool]):
+        return bool
+
+    assert func([0]) is int
+    assert func([False]) is func([]) is bool
