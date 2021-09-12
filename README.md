@@ -139,7 +139,7 @@ class Foo:
 ```
 
 ## Changes
-dev
+1.6
 
 * Python >=3.7 required
 * Improved checking for TypeErrors
