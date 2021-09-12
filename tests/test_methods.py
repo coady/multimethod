@@ -300,15 +300,20 @@ def test_dispatch_exception():
 def test_literals():
     from typing import Literal
 
-    assert subtype(Literal['a', 'b']) is str
-    assert subtype(Literal['a', 0]) == subtype(Union[str, int])
+    tp = subtype(Literal['a', 0])
+    assert issubclass(tp.get_type('a'), tp)
+    assert issubclass(tp.get_type(0), tp)
+    assert not issubclass(tp.get_type('b'), tp)
+    assert tp.get_type('b') is str
+    assert tp.get_type(0.0) is float
 
     @multimethod
-    def func(arg: Literal[0]):
+    def func(arg: Literal['a', 0]):
         return arg
 
     assert func(0) == 0
-    assert func(1) == 1
+    with pytest.raises(DispatchError):
+        assert func(1)
     with pytest.raises(DispatchError):
         func(0.0)
 

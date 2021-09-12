@@ -56,6 +56,7 @@ Multimethods support any types that satisfy the `issubclass` relation, including
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
+* `Literal[...]` - provisionally supported
 
 Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter.
 
@@ -146,6 +147,7 @@ dev
 * `multidispatch` supports static analysis of return type 
 * Fix for forward references and subscripts
 * Checking type subscripts is done minimally based on each parameter
+* Provisionally dispatch on `Literal` type
 
 1.5
 

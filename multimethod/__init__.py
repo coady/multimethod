@@ -54,11 +54,11 @@ class subtype(type):
             tp = Union[tp.__constraints__]
         origin = getattr(tp, '__origin__', tp)
         args = tuple(map(cls, getattr(tp, '__args__', args)))
-        if origin is Literal:
-            return cls(Union[tuple(map(type, args))])
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
         bases = (origin,) if type(origin) is type else ()
+        if origin is Literal and len(args) == 1:
+            bases = tuple(map(type, args))
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
@@ -78,6 +78,8 @@ class subtype(type):
     def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
+        if self.__origin__ is Literal:
+            return origin is Literal and set(args) <= set(self.__args__)
         if origin is Union:
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ is Union:
@@ -114,6 +116,10 @@ class subtype(type):
             return type(arg)
         if hasattr(arg, '__orig_class__'):  # user-defined generic type
             return subtype(arg.__orig_class__)
+        if self.__origin__ is Literal:
+            if any(arg == param and type(arg) is type(param) for param in self.__args__):
+                return subtype(Literal, arg)
+            return type(arg)
         if self.__origin__ is Union:
             cls = subtype.get_type(self.__args__[0], arg)
             for tp_arg in self.__args__[1:]:
