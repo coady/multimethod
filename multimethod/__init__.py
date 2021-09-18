@@ -58,8 +58,8 @@ class subtype(type):
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
         bases = (origin,) if type(origin) is type else ()
-        if origin is Literal and len(args) == 1:
-            bases = tuple(map(type, args))
+        if origin is Literal:
+            bases = (subtype(Union[tuple(map(type, args))]),)
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
@@ -126,12 +126,9 @@ class subtype(type):
             if any(arg == param and type(arg) is type(param) for param in self.__args__):
                 return subtype(Literal, arg)
             return type(arg)
-        if self.__origin__ is Union:
-            cls = subtype.get_type(self.__args__[0], arg)
-            for tp_arg in self.__args__[1:]:
-                if issubclass(tp_arg, cls):  # find the most specific match without duplication
-                    cls = subtype.get_type(tp_arg, arg)
-            return cls
+        if self.__origin__ is Union:  # find the most specific match
+            tps = (subtype.get_type(tp_arg, arg) for tp_arg in self.__args__)
+            return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
             return type(arg)
         if isinstance(arg, Iterator) or not isinstance(arg, Iterable):

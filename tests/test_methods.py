@@ -76,6 +76,9 @@ def test_subtype():
     assert tp.get_type([0]) == List[int]
     assert tp.get_type([[]]) == List[subtype(list, Empty)]
     assert tp.get_type([[0]]) == List[List[int]]
+    tp = subtype(Union, int, Iterable[int], list)
+    assert tp.get_type([0]) == List[int]
+    assert tp.get_type([]) == subtype(list, Empty)
 
 
 def test_signature():
@@ -299,6 +302,7 @@ def test_dispatch_exception():
 def test_literals():
     from typing import Literal
 
+    assert issubclass(subtype(Literal['a', 'b']), str)
     tp = subtype(Literal['a', 0])
     assert issubclass(tp.get_type('a'), tp)
     assert issubclass(tp.get_type(0), tp)
