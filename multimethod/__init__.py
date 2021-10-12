@@ -317,8 +317,8 @@ class multimethod(dict):
         docs = []
         for key, func in self.items():
             sig = getattr(key, 'sig', '')
-            doc = func.__doc__ or ''
-            docs.append(f'{func.__name__}{sig}\n    {doc}')
+            if func.__doc__:
+                docs.append(f'{func.__name__}{sig}\n    {func.__doc__}')
         return '\n\n'.join(docs)
 
 
