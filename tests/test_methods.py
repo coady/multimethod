@@ -303,6 +303,7 @@ def test_literals():
     from typing import Literal
 
     assert issubclass(subtype(Literal['a', 'b']), str)
+    assert not issubclass(subtype(Literal['a']), subtype(List[int]))
     tp = subtype(Literal['a', 0])
     assert issubclass(tp.get_type('a'), tp)
     assert issubclass(tp.get_type(0), tp)

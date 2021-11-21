@@ -79,12 +79,12 @@ class subtype(type):
     def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
-        if self.__origin__ is Literal:
-            return origin is Literal and set(args) <= set(self.__args__)
         if origin is Union:
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ is Union:
             return issubclass(subclass, self.__args__)
+        if Literal in (origin, self.__origin__):
+            return (origin is self.__origin__ is Literal) and set(args) <= set(self.__args__)
         nargs = len(self.__args__)
         if self.__origin__ is tuple:
             if self.__args__[-1:] == (Ellipsis,):
