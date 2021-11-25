@@ -372,6 +372,9 @@ class overload(dict):
         return namespace.get(func.__name__, self)
 
     def __init__(self, func: Callable):
+        for name, value in get_type_hints(func).items():
+            if not callable(value) or isinstance(value, type):
+                func.__annotations__[name] = isa(value)
         self[inspect.signature(func)] = func
 
     def __call__(self, *args, **kwargs):
@@ -384,6 +387,7 @@ class overload(dict):
             if all(
                 param.annotation is param.empty or param.annotation(arguments[name])
                 for name, param in sig.parameters.items()
+                if name in arguments
             ):
                 return self[sig](*args, **kwargs)
         raise DispatchError("No matching functions found")

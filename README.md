@@ -74,13 +74,13 @@ Dispatch resolution details:
 ### overload
 Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
 
-The implementation is separate from `multimethod` due to the different performance characteristics. Instead a simple `isa` predicate is provided for checking instance type.
+The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check.
 
 ```python
-from multimethod import isa, overload
+from multimethod import overload
 
 @overload
-def func(obj: isa(str)):
+def func(obj: str):
     ...
 
 @overload
@@ -139,6 +139,10 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* `overload` allows types and converts them to an `isa` check
+
 1.6
 
 * Python >=3.7 required

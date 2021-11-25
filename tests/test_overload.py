@@ -2,7 +2,7 @@ import pytest
 from multimethod import DispatchError, isa, overload
 
 
-def test_overloads():
+def test_predicates():
     @overload
     def func(x):
         return x
@@ -23,3 +23,16 @@ def test_overloads():
     del func[next(iter(func))]
     with pytest.raises(DispatchError):
         func(None)
+
+
+def test_signatures():
+    @overload
+    def func(a: int, c: str = ''):
+        return 1
+
+    @overload
+    def func(a: int, b: int, c: str = ''):
+        return 2
+
+    assert func(0) == func(a=0) == 1
+    assert func(0, 1) == func(0, b=1) == func(a=0, b=0) == 2
