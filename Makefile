@@ -8,4 +8,4 @@ lint:
 	mypy tests/static.py | grep -qv Any
 
 html:
-	PYTHONPATH=$(PWD) mkdocs build
+	PYTHONPATH=$(PWD) python3 -m mkdocs build

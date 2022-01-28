@@ -139,9 +139,11 @@ class Foo:
 ```
 
 ## Changes
-dev
+1.7
 
 * `overload` allows types and converts them to an `isa` check
+* Only functions with docstrings combine signatures
+* Fixes for subscripted union and literal checks
 
 1.6
 
