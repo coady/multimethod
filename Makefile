@@ -2,7 +2,7 @@ check:
 	pytest -s --cov
 
 lint:
-	black --check .
+	python3 -m black --check .
 	flake8
 	mypy -p multimethod
 	mypy tests/static.py | grep -qv Any
