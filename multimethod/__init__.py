@@ -60,6 +60,8 @@ class subtype(type):
         bases = (origin,) if type(origin) is type else ()
         if origin is Literal:
             bases = (subtype(Union[tuple(map(type, args))]),)
+        if origin is Callable.__origin__ and args[:1] == (...,):
+            args = args[1:]
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
@@ -85,9 +87,15 @@ class subtype(type):
             return issubclass(subclass, self.__args__)
         if Literal in (origin, self.__origin__):
             return (origin is self.__origin__ is Literal) and set(args) <= set(self.__args__)
+        if self.__origin__ is Callable.__origin__:  # type: ignore
+            return (
+                issubclass(origin, self.__origin__)
+                and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
+                and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
+            )
         nargs = len(self.__args__)
         if self.__origin__ is tuple:
-            if self.__args__[-1:] == (Ellipsis,):
+            if self.__args__[-1:] == (...,):
                 if args == (Empty,):
                     return issubclass(origin, self.__origin__)
                 nargs -= 1
@@ -129,11 +137,13 @@ class subtype(type):
         if self.__origin__ is Union:  # find the most specific match
             tps = (subtype.get_type(tp_arg, arg) for tp_arg in self.__args__)
             return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)
+        if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
+            return subtype(Callable.__origin__, *get_type_hints(arg).values())
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
             return type(arg)
         if isinstance(arg, Iterator) or not isinstance(arg, Iterable):
             return type(arg)
-        if issubclass(self, tuple) and self.__args__[-1:] != (Ellipsis,):  # check all values
+        if issubclass(self, tuple) and self.__args__[-1:] != (...,):  # check all values
             if len(arg) != len(self.__args__):
                 return type(arg)
             args = arg

@@ -56,9 +56,10 @@ Multimethods support any types that satisfy the `issubclass` relation, including
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
-* `Literal[...]` - provisionally supported
+* `Literal[...]`
+* `Callable[[...], ...]` - parameter types are contravariant, return type is covariant
 
-Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter. Empty iterables provisionally match any subscript, but don't special-case how the types are normally resolved.
+Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter. Empty iterables match any subscript, but don't special-case how the types are normally resolved.
 
 Dispatch resolution details:
 * If an exact match isn't registered, the next closest method is called (and cached).
@@ -151,6 +152,10 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* `Callable` checks parameters and return type
+
 1.7
 
 * `overload` allows types and converts them to an `isa` check
