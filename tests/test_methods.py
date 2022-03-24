@@ -1,6 +1,6 @@
 import enum
 import pytest
-from typing import Any, AnyStr, Dict, Iterable, Iterator, List, Tuple, TypeVar, Union
+from typing import Any, AnyStr, Dict, Iterable, Iterator, List, NewType, Tuple, TypeVar, Union
 from multimethod import DispatchError, Empty, multimeta, multimethod, signature, subtype
 
 
@@ -81,7 +81,7 @@ def test_subtype():
 
 
 def test_signature():
-    assert signature([Any, List]) == (object, list)
+    assert signature([Any, List, NewType('', int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([Union[bytes, str]])
     assert signature([TypeVar('T')]) == signature([object])
     assert signature([int]) - signature([Union[int, float]]) == (0,)

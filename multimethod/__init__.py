@@ -49,6 +49,8 @@ class subtype(type):
     def __new__(cls, tp, *args):
         if tp is Any:
             return object
+        if hasattr(tp, '__supertype__'):  # isinstance(..., NewType) only supported >=3.10
+            tp = tp.__supertype__
         if isinstance(tp, TypeVar):
             if not tp.__constraints__:
                 return object

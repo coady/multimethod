@@ -155,6 +155,7 @@ class Foo:
 dev
 
 * `Callable` checks parameters and return type
+* Support for `NewType`
 
 1.7
 
