@@ -152,7 +152,7 @@ class Foo:
 ```
 
 ## Changes
-dev
+1.8
 
 * `Callable` checks parameters and return type
 * Support for `NewType`

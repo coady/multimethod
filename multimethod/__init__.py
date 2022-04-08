@@ -13,7 +13,7 @@ try:
 except ImportError:  # pragma: no cover
     Literal = None  # type: ignore
 
-__version__ = '1.7'
+__version__ = '1.8'
 Empty = types.new_class('*')
 
 
