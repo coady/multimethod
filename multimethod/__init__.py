@@ -299,7 +299,7 @@ class multimethod(dict):
         keys = groups[min(groups)] if groups else []
         funcs = {self[key] for key in keys}
         if len(funcs) == 1:
-            return self.setdefault(types, *funcs)
+            return self.setdefault(types, *funcs)  # type: ignore
         msg = f"{self.__name__}: {len(keys)} methods found"  # type: ignore
         raise DispatchError(msg, types, keys)
 
