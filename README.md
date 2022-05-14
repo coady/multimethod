@@ -152,6 +152,10 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* Python 3.11 supported
+
 1.8
 
 * `Callable` checks parameters and return type

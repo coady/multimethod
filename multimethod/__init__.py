@@ -71,14 +71,14 @@ class subtype(type):
         if isinstance(self.__origin__, abc.ABCMeta):
             self.__origin__.register(self)
 
-    def __getstate__(self) -> tuple:
+    def _getstate(self) -> tuple:
         return self.__origin__, self.__args__
 
     def __eq__(self, other) -> bool:
-        return hasattr(other, '__origin__') and self.__getstate__() == subtype.__getstate__(other)
+        return hasattr(other, '__origin__') and self._getstate() == subtype._getstate(other)
 
     def __hash__(self) -> int:
-        return hash(self.__getstate__())
+        return hash(self._getstate())
 
     def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__origin__', subclass)
