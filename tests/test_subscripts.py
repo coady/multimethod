@@ -70,6 +70,10 @@ def test_callable():
     def _(arg: Callable[..., bool]):
         return ...
 
+    @func.register
+    def _(arg: int):
+        return 'int'
+
     tp = subtype(func.__annotations__['arg'])
     assert not issubclass(tp.get_type(f), tp.get_type(g))
     assert issubclass(tp.get_type(g), tp.get_type(f))

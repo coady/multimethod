@@ -91,7 +91,7 @@ class subtype(type):
             return (origin is self.__origin__ is Literal) and set(args) <= set(self.__args__)
         if self.__origin__ is Callable.__origin__:  # type: ignore
             return (
-                issubclass(origin, self.__origin__)
+                origin is Callable.__origin__  # type: ignore
                 and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
                 and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
             )
