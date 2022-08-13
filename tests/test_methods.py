@@ -283,6 +283,10 @@ def test_dispatch_exception():
     def temp(x: bool):
         return "bool"
 
+    @multimethod
+    def temp(x: int, y: object):
+        return "int, object"
+
     with pytest.raises(DispatchError, match="test_methods.py"):
         # invalid number of args, check source file is part of the exception args
         temp(1)

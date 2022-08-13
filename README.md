@@ -155,6 +155,7 @@ class Foo:
 dev
 
 * Python 3.11 supported
+* Fixes for `Callable` and `object` annotations
 
 1.8
 

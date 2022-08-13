@@ -23,12 +23,13 @@ def get_types(func: Callable) -> tuple:
         return ()
     type_hints = get_type_hints(func)
     positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
-    annotations = [
-        type_hints.get(param.name, object)
+    names = [
+        param.name
         for param in inspect.signature(func).parameters.values()
         if param.default is param.empty and param.kind in positionals
     ]  # missing annotations are padded with `object`, but trailing objects are unnecessary
-    return tuple(itertools.dropwhile(lambda cls: cls is object, reversed(annotations)))[::-1]
+    head = itertools.dropwhile(lambda name: name not in type_hints, reversed(names))
+    return tuple(type_hints.get(name, object) for name in head)[::-1]
 
 
 class DispatchError(TypeError):
