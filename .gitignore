@@ -1,4 +1,3 @@
 __pycache__/
 .coverage
 site/
-.mypy_cache/

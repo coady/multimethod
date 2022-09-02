@@ -1,7 +1,48 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "multimethod"
+dynamic = ["version"]
+description = "Multiple argument dispatching."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE.txt"}
+authors = [{name = "Aric Coady", email = "aric.coady@gmail.com"}]
+keywords = ["multiple", "dispatch", "multidispatch", "generic", "functions", "methods", "overload"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/coady/multimethod"
+Documentation = "https://coady.github.io/multimethod"
+
+[tool.setuptools]
+packages = ["multimethod"]
+
+[tool.setuptools.dynamic]
+version = {attr = "multimethod.__version__"}
+
+[tool.setuptools.package-data]
+multimethod = ["py.typed"]
 
 [tool.black]
 line-length = 100
 skip-string-normalization = true
+
+[tool.coverage.run]
+source = ["multimethod"]
+branch = true
