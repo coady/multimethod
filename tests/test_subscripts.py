@@ -1,6 +1,6 @@
 import sys
 import pytest
-from typing import Callable, Generic, List, TypeVar
+from typing import Callable, Generic, List, Sequence, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
@@ -74,10 +74,15 @@ def test_callable():
     def _(arg: int):
         return 'int'
 
+    @func.register
+    def _(arg: Sequence[Callable[[bool], bool]]):
+        return arg[0].__name__ + "0"
+
     tp = subtype(func.__annotations__['arg'])
     assert not issubclass(tp.get_type(f), tp.get_type(g))
     assert issubclass(tp.get_type(g), tp.get_type(f))
     with pytest.raises(DispatchError):
         func(f)
     assert func(g) == 'g'
+    assert func([g]) == 'g0'
     assert func(h) is ...

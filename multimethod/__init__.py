@@ -138,7 +138,9 @@ class subtype(type):
                 return subtype(Literal, arg)
             return type(arg)
         if self.__origin__ is Union:  # find the most specific match
-            tps = (subtype.get_type(tp_arg, arg) for tp_arg in self.__args__)
+            tps = {subtype.get_type(tp_arg, arg) for tp_arg in self.__args__}
+            if tps > {types.FunctionType}:  # not issubclass(Callable, FunctionType)
+                tps.remove(types.FunctionType)
             return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)
         if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
             return subtype(Callable.__origin__, *get_type_hints(arg).values())
