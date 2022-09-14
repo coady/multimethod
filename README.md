@@ -152,7 +152,7 @@ class Foo:
 ```
 
 ## Changes
-dev
+1.9
 
 * Python 3.11 supported
 * Fixes for `Callable` and `object` annotations
