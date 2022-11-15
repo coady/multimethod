@@ -1,5 +1,6 @@
 import sys
 from collections.abc import Iterable
+from concurrent import futures
 import pytest
 from multimethod import get_types, multidispatch, multimethod, signature, DispatchError
 
@@ -104,3 +105,14 @@ def test_keywords():
 
     assert func(0) is func(arg=0) is int
     assert multidispatch(bool)(1)
+
+
+def test_concurrency():
+    @multimethod
+    def func(arg: int):
+        ...
+
+    submit = futures.ThreadPoolExecutor().submit
+    args = [type('', (int,), {})() for _ in range(500)]
+    fs = [submit(func, arg) for arg in args]
+    assert all(future.result() is None for future in fs)

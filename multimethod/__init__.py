@@ -245,7 +245,7 @@ class multimethod(dict):
 
     def parents(self, types: tuple) -> set:
         """Find immediate parents of potential key."""
-        parents = {key for key in self if isinstance(key, signature) and key < types}
+        parents = {key for key in list(self) if isinstance(key, signature) and key < types}
         return parents - {ancestor for parent in parents for ancestor in parent.parents}
 
     def clean(self):
