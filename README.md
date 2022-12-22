@@ -152,6 +152,10 @@ class Foo:
 ```
 
 ## Changes
+1.9.1
+
+* Dispatch is thread-safe
+
 1.9
 
 * Python 3.11 supported

@@ -13,7 +13,7 @@ try:
 except ImportError:  # pragma: no cover
     Literal = None  # type: ignore
 
-__version__ = '1.9'
+__version__ = '1.9.1'
 Empty = types.new_class('*')
 
 
@@ -141,7 +141,7 @@ class subtype(type):
             tps = {subtype.get_type(tp_arg, arg) for tp_arg in self.__args__}
             if tps > {types.FunctionType}:  # not issubclass(Callable, FunctionType)
                 tps.remove(types.FunctionType)
-            return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)
+            return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)  # noqa: E741
         if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
             return subtype(Callable.__origin__, *get_type_hints(arg).values())
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
