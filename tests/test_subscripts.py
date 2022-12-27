@@ -1,6 +1,6 @@
 import sys
 import pytest
-from typing import Callable, Generic, List, Sequence, TypeVar
+from typing import Callable, Generic, List, Sequence, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
@@ -23,9 +23,22 @@ def test_literals():
 
     assert func(0) == 0
     with pytest.raises(DispatchError):
-        assert func(1)
+        func(1)
     with pytest.raises(DispatchError):
         func(0.0)
+
+
+def test_type():
+    @multimethod
+    def func(arg: Type[int]):
+        return arg
+
+    assert func(int) is int
+    assert func(bool) is bool
+    with pytest.raises(DispatchError):
+        func(float)
+    with pytest.raises(DispatchError):
+        func(0)
 
 
 def test_generic():

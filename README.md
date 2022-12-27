@@ -56,6 +56,7 @@ Multimethods support any types that satisfy the `issubclass` relation, including
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
+* `Type[...]`
 * `Literal[...]`
 * `Callable[[...], ...]` - parameter types are contravariant, return type is covariant
 
@@ -152,6 +153,10 @@ class Foo:
 ```
 
 ## Changes
+dev
+
+* `Type[...]` dispatches on class arguments
+
 1.9.1
 
 * Dispatch is thread-safe

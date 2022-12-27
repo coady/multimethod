@@ -17,7 +17,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          rendering:
+          options:
             show_root_heading: true
   - mkdocs-jupyter:
       execute: True

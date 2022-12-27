@@ -86,8 +86,8 @@ class subtype(type):
         args = getattr(subclass, '__args__', ())
         if origin is Union:
             return all(issubclass(cls, self) for cls in args)
-        if self.__origin__ is Union:
-            return issubclass(subclass, self.__args__)
+        if self.__origin__ in (Union, type):
+            return inspect.isclass(subclass) and issubclass(subclass, self.__args__)
         if Literal in (origin, self.__origin__):
             return (origin is self.__origin__ is Literal) and set(args) <= set(self.__args__)
         if self.__origin__ is Callable.__origin__:  # type: ignore
@@ -133,6 +133,8 @@ class subtype(type):
             return type(arg)
         if hasattr(arg, '__orig_class__'):  # user-defined generic type
             return subtype(arg.__orig_class__)
+        if self.__origin__ is type:  # a class argument is expected
+            return arg
         if self.__origin__ is Literal:
             if any(arg == param and type(arg) is type(param) for param in self.__args__):
                 return subtype(Literal, arg)
