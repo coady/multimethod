@@ -28,6 +28,12 @@ def test_literals():
         func(0.0)
 
 
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="Union syntax added in 3.10")
+def test_union():
+    assert issubclass(int, subtype(int | float))
+    assert issubclass(subtype(int | float), subtype(int | float | None))
+
+
 def test_type():
     @multimethod
     def func(arg: Type[int]):

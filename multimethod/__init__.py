@@ -57,6 +57,8 @@ class subtype(type):
                 return object
             tp = Union[tp.__constraints__]
         origin = getattr(tp, '__origin__', tp)
+        if hasattr(types, 'UnionType') and isinstance(tp, types.UnionType):
+            origin = Union  # `|` syntax added in 3.10
         args = tuple(map(cls, getattr(tp, '__args__', args)))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin

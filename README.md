@@ -52,7 +52,7 @@ method[type, ...] = func    # register function by explicit types
 ```
 
 Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc` and `typing`. Subscripted generics are supported:
-* `Union[...]`
+* `Union[...]` or `... | ...`
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
@@ -156,6 +156,7 @@ class Foo:
 dev
 
 * `Type[...]` dispatches on class arguments
+* `|` syntax for union types
 
 1.9.1
 
