@@ -213,12 +213,14 @@ class multimethod(dict):
     type_checkers: list
 
     def __new__(cls, func):
-        namespace = inspect.currentframe().f_back.f_locals
+        homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)
+        if isinstance(homonym, multimethod):
+            return homonym
+
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.pending = set()
         self.type_checkers = []  # defaults to builtin `type`
-        homonym = namespace.get(func.__name__, self)
-        return homonym if isinstance(homonym, multimethod) else self
+        return self
 
     def __init__(self, func: Callable):
         try:
