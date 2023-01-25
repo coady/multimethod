@@ -1,4 +1,3 @@
-import sys
 from collections.abc import Iterable
 from concurrent import futures
 import pytest
@@ -82,11 +81,9 @@ def test_cls():
 
 
 def test_arguments():
-    def func(a, b: int, c: int, d, e: int = 0, *, f: int):
-        pass
+    def func(a, b: int, /, c: int, d, e: int = 0, *, f: int):
+        ...
 
-    if sys.version_info >= (3, 8):
-        exec("def func(a, b: int, /, c: int, d, e: int = 0, *, f: int): pass")
     assert get_types(func) == (object, int, int)
 
 

@@ -5,13 +5,8 @@ import functools
 import inspect
 import itertools
 import types
-from typing import Any, Callable, Dict, Iterable, Iterator, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
-
-try:
-    from typing import Literal
-except ImportError:  # pragma: no cover
-    Literal = None  # type: ignore
 
 __version__ = '1.9.1'
 Empty = types.new_class('*')
@@ -400,7 +395,7 @@ class overload(dict):
 
     def __call__(self, *args, **kwargs):
         """Dispatch to first matching function."""
-        for sig in reversed(list(self)):  # Python >=3.8 dicts support `reversed`
+        for sig in reversed(self):
             try:
                 arguments = sig.bind(*args, **kwargs).arguments
             except TypeError:

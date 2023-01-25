@@ -4,7 +4,6 @@ from typing import Callable, Generic, List, Sequence, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Literal added in 3.8")
 def test_literals():
     from typing import Literal
 
