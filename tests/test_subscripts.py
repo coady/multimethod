@@ -1,6 +1,6 @@
 import sys
 import pytest
-from typing import Callable, Generic, List, Sequence, Type, TypeVar
+from typing import Callable, Generic, Iterable, List, Sequence, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
@@ -104,3 +104,10 @@ def test_callable():
     assert func(g) == 'g'
     assert func([g]) == 'g0'
     assert func(h) is ...
+
+
+def test_final():
+    tp = subtype(Iterable[str])
+    d = {'': 0}
+    assert issubclass(tp.get_type(d), tp)
+    assert issubclass(tp.get_type(d.keys()), tp)

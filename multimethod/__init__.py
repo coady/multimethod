@@ -137,9 +137,10 @@ class subtype(type):
                 return subtype(Literal, arg)
             return type(arg)
         if self.__origin__ is Union:  # find the most specific match
-            tps = {subtype.get_type(tp_arg, arg) for tp_arg in self.__args__}
-            if tps > {types.FunctionType}:  # not issubclass(Callable, FunctionType)
-                tps.remove(types.FunctionType)
+            tps = (subtype.get_type(tp_arg, arg) for tp_arg in self.__args__)
+            tps = {tp for tp, tp_arg in zip(tps, self.__args__) if issubclass(tp, tp_arg)}
+            if not tps:
+                return type(arg)
             return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)  # noqa: E741
         if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
             return subtype(Callable.__origin__, *get_type_hints(arg).values())
@@ -155,8 +156,11 @@ class subtype(type):
             args = next(iter(arg.items()), ())
         else:  # check first value
             args = itertools.islice(arg, 1)
-        subscripts = list(map(subtype.get_type, self.__args__, args))
-        return subtype(type(arg), *(subscripts or [Empty]))
+        subscripts = list(map(subtype.get_type, self.__args__, args)) or [Empty]
+        try:
+            return subtype(type(arg), *subscripts)
+        except TypeError:  # not an acceptable base type
+            return subtype(self.__origin__, *subscripts)
 
 
 def distance(cls, subclass: type) -> int:
