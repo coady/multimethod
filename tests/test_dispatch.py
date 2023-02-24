@@ -302,3 +302,100 @@ def test_kw_mixed2():
     assert func(1) == 'a'
     assert func(a=1) == 'a'
     assert func(c=1, b=2) == '**kw 1'
+
+
+def test_multiple_registrations_on_top_of_each_other():
+    @multidispatch
+    def func(left, right):
+        return left + right
+
+    @func.register(int, float)
+    @func.register(float, int)
+    def _(left, right):
+        return (left + right) / 2
+
+    assert func(1, 2) == 3
+    assert func(1.0, 2.0) == 3.0
+    assert func(1.0, 2) == 1.5
+    assert func(1, 2.0) == 1.5
+
+
+def test_different_signatures():
+    class cls: pass
+
+    @multidispatch
+    def func():
+        return 'no args'
+
+    @func.register
+    def only_int(a: int):
+        return f'int: {a}'
+
+    @func.register
+    def int_float(a: int, b: float = 3.0):
+        return f'int_float: {a} / {b}'
+
+    @func.register
+    def str_cls(a: str, b: cls):
+        return f'str_cls: {a} / cls'
+
+    assert func() == 'no args'
+    assert func(1) == 'int: 1'
+    assert func("A", cls()) == 'str_cls: A / cls'
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func(1, 2)
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func("")
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func("A", cls)
+
+
+def test_all_possible_arguments():
+    class cls1(int): pass
+    class cls2(int): pass
+
+    @multidispatch
+    def func():
+        return 1
+
+    @func.register
+    def _(po: int, /, pok: float, *args: str, kw: cls1, **kwargs: cls2):  # / introduced in Python 3.8
+        return f"po: {po}, /, pok: {pok}, *args: {args}, kw: {kw}, **kwargs: {kwargs}"
+
+    assert func() == 1
+    assert func(1, 1.0, "1", "2", kw=cls1(5), x=cls2(6), y=cls2(7)) == "po: 1, /, pok: 1.0, *args: ('1', '2'), kw: 5, **kwargs: {'x': 6, 'y': 7}"
+    assert func(1, 1.0, kw=cls1(5)) == "po: 1, /, pok: 1.0, *args: (), kw: 5, **kwargs: {}"
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func(1, 1.0, "1", 1.23, kw=cls1(), x=cls2(), y=cls2())
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func(1, 1.0, "1", 1.23, kw=cls1(), x=cls1())
+
+
+@pytest.mark.skip("Skip for now. Under discussion")
+def test_all_possible_arguments_with_defaults():
+    class cls1(int): pass
+    class cls2(int): pass
+
+    @multidispatch
+    def func():
+        return 1
+
+    @func.register
+    def _(po: int, /, pok: float, pok2: float = 10.0, *args: str, kw: cls1, kw2: cls1 = cls1(11), **kwargs: cls2):  # / introduced in Python 3.8
+        return f"po: {po}, /, pok: {pok}, pok2: {pok2}, *args: {args}, kw: {kw}, kw2: {kw2}, **kwargs: {kwargs}"
+
+    assert func() == 1
+    # This method fails because "1" is assigned to pok2, and args is ("2", ). Whereas we might want pok2 to be the default value 10.0, and args be ("1", "2")...
+    assert func(1, 1.0, "1", "2", kw=cls1(5), x=cls2(6), y=cls2(7)) == "po: 1, /, pok: 1.0, *args: ('1', '2'), kw: 5, **kwargs: {'x': 6, 'y': 7}"
+    assert func(1, 1.0, kw=cls1(5)) == "po: 1, /, pok: 1.0, *args: (), kw: 5, **kwargs: {}"
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func(1, 1.0, "1", 1.23, kw=cls1(), x=cls2(), y=cls2())
+
+    with pytest.raises(DispatchError, match="No matching functions found"):
+        func(1, 1.0, "1", 1.23, kw=cls1(), x=cls1())

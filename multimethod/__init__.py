@@ -6,7 +6,8 @@ import inspect
 import itertools
 import types
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional
+from enum import Enum
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, Mapping, Optional, Tuple
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
 __version__ = '1.9.1'
@@ -351,20 +352,20 @@ _notset = type('_notset', (), {'__repr__': lambda self: "_notset"})()
 class KWSignature:
     parent: "multidispatch"
     func: Callable
-    _types: Dict[str, type] = _notset
+    _types: List[Tuple[str, type, Enum]] = _notset
 
     @functools.cached_property
-    def types(self) -> Dict[str, type]:
+    def types(self) -> List[Tuple[str, type, Enum]]:
         __tracebackhide__ = True
 
         if self._types is _notset:
             self._types = self._get_types()
         elif isinstance(self._types, tuple):
             params = self.sig.parameters
-            self._types = {
-                param.name: type_
+            self._types = [
+                (param.name, type_, param.kind)
                 for param, type_ in zip(params.values(), self._types)
-            }
+            ]
             assert len(self._types) == len(params), f"Invalid length: I need {params}, but got {self._types}?"
 
         return self._types
@@ -373,17 +374,17 @@ class KWSignature:
     def sig(self) -> inspect.Signature:
         return inspect.signature(self.func)
 
-    def _get_types(self) -> Dict[str, type]:
+    def _get_types(self) -> List[Tuple[str, type, Enum]]:
         __tracebackhide__ = True
 
         if not hasattr(self.func, '__annotations__'):
             raise TypeError("No annotations found. Please add.")
 
         type_hints: Dict[str, type] = get_type_hints(self.func)
-        return {
-            param.name: type_hints.get(param.name, object)
+        return [
+            (param.name, type_hints.get(param.name, object), param.kind)
             for param in self.sig.parameters.values()
-        }
+        ]
 
     @staticmethod
     def _distance(input_type, expected_type: type) -> int:
@@ -415,14 +416,30 @@ class KWSignature:
         __tracebackhide__ = True
 
         bound = self.sig.bind(*args, **kwargs).arguments
-        return sum(
-            self._distance(type(bound.get(arg_name, object)), arg_type)
-            for arg_name, arg_type in self.types.items()
-        )
+
+        total = 0
+        for arg_name, arg_type, arg_kind in self.types:
+            if arg_name not in bound:
+                continue  # The function signature is fine
+
+            if arg_kind == inspect.Parameter.VAR_POSITIONAL:
+                total += min(
+                    self._distance(type(arg), arg_type)
+                    for arg in bound[arg_name]
+                )
+            elif arg_kind == inspect.Parameter.VAR_KEYWORD:
+                total += min(
+                    self._distance(type(arg), arg_type)
+                    for arg in bound[arg_name].values()
+                )
+            else:
+                total += self._distance(type(bound.get(arg_name, object)), arg_type)
+
+        return total
 
 
 class multidispatch:
-    """Allows dispatching on keyword arguments."""
+    """Allows dispatching on all possible arguments."""
     _is_bound_method: bool = False
 
     def __new__(cls, func: Callable) -> "multidispatch":
