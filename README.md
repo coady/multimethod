@@ -107,7 +107,52 @@ def func(obj: str.isdigit):
 ```
 
 ### multidispatch
-`multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also provisionally supports dispatching on keyword arguments.
+`multidispatch` allows one to dispatch based on all the provided arguments (positional and keyword).
+
+Usage:
+```python
+from multimethod import multidispatch
+
+@multidispatch
+def func(left, right):
+    return left + right
+
+@func.register(int, float)
+@func.register(float, int)
+def _(left, right):
+    return (left + right) / 2
+
+print(func(1, 2))  # 3
+print(func(1.0, 2.0))  # 3
+
+print(func(1.0, 2))  # 1.5
+print(func(1, 2.0))  # 1.5
+
+print(func(right=1, left=2.0))  # 1.5
+print(func(1, left=2.0))  # 1.5
+print(func(1, right=2.0))  # 1.5
+```
+
+#### Known limitations:
+- if an argument of your method isn't type hinted, it will match everything.
+- matching happens from left to right.
+```python
+from multimethod import multidispatch
+
+
+@multidispatch
+def func(a, b):
+    return 1
+
+@func.register
+def _(a, b: float = 1.0, c: str = "A"):
+    return 2
+
+
+print(func(1, 2))  # 1
+print(func(1, "A"))  # 1
+```
+The last bit happens because "A" is matched with `b`, which should be a float. Maybe an adjustment is needed in this case?
 
 ### multimeta
 
