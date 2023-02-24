@@ -4,10 +4,9 @@ import contextlib
 import functools
 import inspect
 import itertools
-import math
 import types
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple, ClassVar
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
 __version__ = '1.9.1'
@@ -345,47 +344,46 @@ class multimethod(dict):
 
 
 RETURN = TypeVar("RETURN")
-_notset = object()
+_notset = type('_notset', (), {'__repr__': lambda self: "_notset"})()
 
 
 @dataclass
 class KWSignature:
+    parent: "multidispatch"
     func: Callable
-    types: dict[str, type] = field(default_factory=dict)
+    _types: Dict[str, type] = _notset
 
-    def __post_init__(self):
-        # self._pending = []
-        self.types = self._get_types()
+    @functools.cached_property
+    def types(self) -> Dict[str, type]:
+        __tracebackhide__ = True
 
-    def __hash__(self):
-        return hash(self.func)
+        if self._types is _notset:
+            self._types = self._get_types()
+        elif isinstance(self._types, tuple):
+            params = self.sig.parameters
+            self._types = {
+                param.name: type_
+                for param, type_ in zip(params.values(), self._types)
+            }
+            assert len(self._types) == len(params), f"Invalid length: I need {params}, but got {self._types}?"
+
+        return self._types
 
     @functools.cached_property
     def sig(self) -> inspect.Signature:
         return inspect.signature(self.func)
 
-    def _get_types(self) -> dict[str, type]:
+    def _get_types(self) -> Dict[str, type]:
+        __tracebackhide__ = True
+
         if not hasattr(self.func, '__annotations__'):
             raise TypeError("No annotations found. Please add.")
 
-        type_hints: dict[str, type] = get_type_hints(self.func)
-        annotations = {
-            param.name: type_hints.get(param.name, _notset)
+        type_hints: Dict[str, type] = get_type_hints(self.func)
+        return {
+            param.name: type_hints.get(param.name, object)
             for param in self.sig.parameters.values()
-            # if param.kind not in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]
         }
-
-        if any(v is _notset for k, v in annotations.items() if k != 'self'):
-            raise TypeError("Some annotations were missing. Please add.")
-
-        return annotations
-
-    @staticmethod
-    @functools.lru_cache
-    def _mro(entry):
-        if not isinstance(entry, type):
-            entry = entry.__class__
-        return entry.__mro__
 
     @staticmethod
     def _distance(input_type, expected_type: type) -> int:
@@ -414,6 +412,8 @@ class KWSignature:
         raise TypeError(f"{input_type} is not a subclass of {expected_type}")
 
     def distance(self, *args, **kwargs) -> int:
+        __tracebackhide__ = True
+
         bound = self.sig.bind(*args, **kwargs).arguments
         return sum(
             self._distance(type(bound.get(arg_name, object)), arg_type)
@@ -423,29 +423,50 @@ class KWSignature:
 
 class multidispatch:
     """Allows dispatching on keyword arguments."""
+    _is_bound_method: bool = False
 
     def __new__(cls, func: Callable) -> "multidispatch":
         return functools.update_wrapper(super().__new__(cls), func)
 
     def __init__(self, func: Callable):
-        self._signatures: set[KWSignature] = set()
+        self._signatures: list[KWSignature] = []
+        self._pending = []
         self.register(func)
-        # _pending: set = field(init=False, default_factory=set)
 
-    def register(self, func: Callable = None):
-        if func is None:
-            return lambda func: self.register(func) or func
+    @tp_overload
+    def register(self, func: Optional[Callable]) -> Callable: ...
 
-        self._signatures.add(KWSignature(func))
-        return self
+    @tp_overload
+    def register(self, *args: type) -> Callable: ...
+
+    def register(self, *args) -> Callable:
+        if len(args) == 1 and hasattr(args[0], '__annotations__'):
+            self._signatures.append(KWSignature(self, args[0]))
+            return self
+
+        assert all(isinstance(arg, type) for arg in args), "All annotations should be types"
+
+        def add(func):
+            if func.__class__ is self.__class__:
+                func = self._signatures[-1].func  # Stacking decorators -> So take the last function used
+
+            self._signatures.append(KWSignature(self, func, args or _notset))
+            return self
+
+        return add
+
+    def __len__(self) -> int:
+        return len(self._signatures)
+
+    def __set_name__(self, owner, name):
+        self._is_bound_method = True
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
-        return self if instance is None else types.MethodType(self, instance)  # type: ignore
+        return self if instance is None else types.MethodType(self, instance)
 
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to the best method."""
-        # if self._pending:
-        #     self._evaluate()
+        __tracebackhide__ = True
 
         methods = []
         for signature in self._signatures:
@@ -464,13 +485,7 @@ class multidispatch:
             if distance == least_distance
         ]
 
-        if len(best_methods) != 1:
-            raise DispatchError(f"{best_methods[0].__name__}: {len(best_methods)} methods found")
-
-        return best_methods[0](*args, **kwargs)
-
-    def _evaluate(self):
-        pass
+        return best_methods[0](*args, **kwargs)  # Just take the first method that was registered
 
 
 def isa(*types: type) -> Callable:

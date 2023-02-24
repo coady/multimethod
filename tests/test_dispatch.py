@@ -3,12 +3,54 @@ from concurrent import futures
 from typing import Union
 
 import pytest
-from multimethod import get_types, multidispatch, multimethod, signature, DispatchError
+
+from multimethod import DispatchError, get_types, multidispatch, multimethod
+
+
+def test_roshambo():
+    class rock: pass
+
+    class paper: pass
+
+    class scissors: pass
+
+    @multidispatch
+    def roshambo(left, right):
+        return 'tie'
+
+    @roshambo.register(scissors, rock)
+    @roshambo.register(rock, scissors)
+    def _(left, right):
+        return 'rock smashes scissors'
+
+    @roshambo.register(paper, scissors)
+    @roshambo.register(scissors, paper)
+    def _(left, right):
+        return 'scissors cut paper'
+
+    @roshambo.register(rock, paper)
+    @roshambo.register(paper, rock)
+    def _(left, right):
+        return 'paper covers rock'
+
+    assert roshambo.__name__ == 'roshambo'
+    r, p, s = rock(), paper(), scissors()
+    assert len(roshambo) == 7
+    assert roshambo(r, p) == 'paper covers rock'
+    assert roshambo(p, r) == 'paper covers rock'
+    assert roshambo(r, s) == 'rock smashes scissors'
+    assert roshambo(p, s) == 'scissors cut paper'
+    assert roshambo(r, r) == 'tie'
+    assert roshambo(p, p) == 'tie'
+    assert roshambo(s, s) == 'tie'
+    assert len(roshambo) == 7
 
 
 def test_cls():
     class cls:
-        method = multidispatch(lambda self, other: None)
+        @multidispatch
+        def method(self, other: object):
+            return None
 
         @method.register
         def iterable_object(self: Iterable, other: object):
@@ -18,12 +60,10 @@ def test_cls():
         def object_iterable(self: object, other: Iterable):
             return 'right'
 
-    obj = cls()
-    assert obj.method(None) is cls.method(None, None) is None
-    assert obj.method('') == 'right'
+    assert cls().method(None) is cls.method(None, None) is None
+    assert cls().method('') == 'right'
     assert cls.method('', None) == 'left'
-    with pytest.raises(DispatchError, match="2 methods"):
-        cls.method('', '')
+    assert cls.method('', '') == 'left'
 
 
 def test_arguments():
@@ -34,6 +74,8 @@ def test_arguments():
 
 
 def test_keywords():
+    class cls: pass
+
     @multidispatch
     def func(arg):
         return 0
@@ -51,7 +93,7 @@ def test_keywords():
         return 3
 
     @func.register
-    def int_kwonly(arg: int, *, extra: rock):
+    def int_kwonly(arg: int, *, extra: cls):
         return 4
 
     assert func("sth") == 0
@@ -59,10 +101,10 @@ def test_keywords():
     assert func(0, 0.0) == func(arg=0, extra=0.0) == func(arg=0, extra=0.0) == 2
     assert func(0, 0) == func(0, extra=0) == func(arg=0, extra=0) == 2
     assert func(0, '') == func(0, extra='') == func(arg=0, extra='') == 3
-    assert func(0, extra=rock()) == func(arg=0, extra=rock()) == 4
+    assert func(0, extra=cls()) == func(arg=0, extra=cls()) == 4
 
     with pytest.raises(DispatchError):
-        func(0, rock())
+        func(0, cls())
 
 
 def test_keywords2():
