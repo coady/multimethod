@@ -4,8 +4,10 @@ import contextlib
 import functools
 import inspect
 import itertools
+import math
 import types
-from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple, ClassVar
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
 __version__ = '1.9.1'
@@ -343,37 +345,132 @@ class multimethod(dict):
 
 
 RETURN = TypeVar("RETURN")
+_notset = object()
 
 
-class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
-    """Provisional wrapper for compatibility with `functools.singledispatch`.
+@dataclass
+class KWSignature:
+    func: Callable
+    types: dict[str, type] = field(default_factory=dict)
 
-    Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.
-    Allows dispatching on keyword arguments based on the first function signature.
-    """
+    def __post_init__(self):
+        # self._pending = []
+        self.types = self._get_types()
 
-    signature: Optional[inspect.Signature]
+    def __hash__(self):
+        return hash(self.func)
 
-    def __new__(cls, func: Callable[..., RETURN]) -> "multidispatch[RETURN]":
-        return functools.update_wrapper(dict.__new__(cls), func)
+    @functools.cached_property
+    def sig(self) -> inspect.Signature:
+        return inspect.signature(self.func)
 
-    def __init__(self, func: Callable[..., RETURN]) -> None:
-        self.pending = set()
-        self.type_checkers = []
-        try:
-            self.signature = inspect.signature(func)
-        except ValueError:
-            self.signature = None
-        super().__init__(func)
+    def _get_types(self) -> dict[str, type]:
+        if not hasattr(self.func, '__annotations__'):
+            raise TypeError("No annotations found. Please add.")
+
+        type_hints: dict[str, type] = get_type_hints(self.func)
+        annotations = {
+            param.name: type_hints.get(param.name, _notset)
+            for param in self.sig.parameters.values()
+            # if param.kind not in [inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD]
+        }
+
+        if any(v is _notset for k, v in annotations.items() if k != 'self'):
+            raise TypeError("Some annotations were missing. Please add.")
+
+        return annotations
+
+    @staticmethod
+    @functools.lru_cache
+    def _mro(entry):
+        if not isinstance(entry, type):
+            entry = entry.__class__
+        return entry.__mro__
+
+    @staticmethod
+    def _distance(input_type, expected_type: type) -> int:
+        origin = getattr(expected_type, '__origin__', None)
+        if origin is Union:
+            least = 999_999_999
+            for arg in expected_type.__args__:
+                try:
+                    least = min(least, KWSignature._distance(input_type, arg))
+                except TypeError:
+                    pass
+            if least != 999_999_999:
+                return least
+
+            raise TypeError(f"{input_type} is not of any of these types: {expected_type.__args__}")
+
+        if input_type is expected_type:
+            return 0
+
+        if expected_type is object:
+            return 2
+
+        if issubclass(input_type, expected_type):
+            return 1
+
+        raise TypeError(f"{input_type} is not a subclass of {expected_type}")
+
+    def distance(self, *args, **kwargs) -> int:
+        bound = self.sig.bind(*args, **kwargs).arguments
+        return sum(
+            self._distance(type(bound.get(arg_name, object)), arg_type)
+            for arg_name, arg_type in self.types.items()
+        )
+
+
+class multidispatch:
+    """Allows dispatching on keyword arguments."""
+
+    def __new__(cls, func: Callable) -> "multidispatch":
+        return functools.update_wrapper(super().__new__(cls), func)
+
+    def __init__(self, func: Callable):
+        self._signatures: set[KWSignature] = set()
+        self.register(func)
+        # _pending: set = field(init=False, default_factory=set)
+
+    def register(self, func: Callable = None):
+        if func is None:
+            return lambda func: self.register(func) or func
+
+        self._signatures.add(KWSignature(func))
+        return self
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
         return self if instance is None else types.MethodType(self, instance)  # type: ignore
 
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
-        """Resolve and dispatch to best method."""
-        params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
-        func = self[tuple(func(arg) for func, arg in zip(self.type_checkers, params))]
-        return func(*args, **kwargs)
+        """Resolve and dispatch to the best method."""
+        # if self._pending:
+        #     self._evaluate()
+
+        methods = []
+        for signature in self._signatures:
+            try:
+                methods.append((signature.distance(*args, **kwargs), signature.func))
+            except TypeError:
+                pass
+
+        if not methods:
+            raise DispatchError("No matching functions found")
+
+        least_distance = min(dist for dist, _ in methods)
+        best_methods = [
+            method
+            for distance, method in methods
+            if distance == least_distance
+        ]
+
+        if len(best_methods) != 1:
+            raise DispatchError(f"{best_methods[0].__name__}: {len(best_methods)} methods found")
+
+        return best_methods[0](*args, **kwargs)
+
+    def _evaluate(self):
+        pass
 
 
 def isa(*types: type) -> Callable:
