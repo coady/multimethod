@@ -299,3 +299,54 @@ def test_dispatch_exception():
         return "optional"
 
     assert temp(True, 1.0) == "optional"
+
+
+# roshambo
+class rock: pass
+
+class paper: pass
+
+class scissors: pass
+
+
+@multimethod
+def roshambo(left, right):
+    return 'tie'
+
+
+@roshambo.register(scissors, rock)
+@roshambo.register(rock, scissors)
+def _(left, right):
+    return 'rock smashes scissors'
+
+
+@roshambo.register(paper, scissors)
+@roshambo.register(scissors, paper)
+def _(left, right):
+    return 'scissors cut paper'
+
+
+@roshambo.register(rock, paper)
+@roshambo.register(paper, rock)
+def _(left, right):
+    return 'paper covers rock'
+
+
+def test_roshambo():
+    assert roshambo.__name__ == 'roshambo'
+    r, p, s = rock(), paper(), scissors()
+    assert len(roshambo) == 7
+    assert roshambo(r, p) == 'paper covers rock'
+    assert roshambo(p, r) == 'paper covers rock'
+    assert roshambo(r, s) == 'rock smashes scissors'
+    assert roshambo(p, s) == 'scissors cut paper'
+    assert roshambo(r, r) == 'tie'
+    assert len(roshambo) == 8
+    del roshambo[()]
+    del roshambo[rock, paper]
+    assert len(roshambo) == 5
+    with pytest.raises(DispatchError, match="0 methods"):
+        roshambo(r, r)
+    r = roshambo.copy()
+    assert isinstance(r, multimethod)
+    assert r == roshambo
