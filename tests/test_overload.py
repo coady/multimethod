@@ -1,4 +1,5 @@
 import pytest
+from typing import List, Literal
 from multimethod import DispatchError, isa, overload
 
 
@@ -36,3 +37,11 @@ def test_signatures():
 
     assert func(0) == func(a=0) == 1
     assert func(0, 1) == func(0, b=1) == func(a=0, b=0) == 2
+
+
+def test_generic():
+    pred = isa(List[int], Literal[0.0])
+    assert pred([0])
+    assert not pred([0.0])
+    assert pred(0.0)
+    assert not pred(1.0)

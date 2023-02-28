@@ -13,6 +13,14 @@ Multimethod provides a decorator for adding multiple argument dispatching to fun
 There are several multiple dispatch libraries on PyPI. This one aims for simplicity and speed. With caching of argument types, it should be the fastest pure Python implementation possible.
 
 ## Usage
+There are a few options which trade-off dispatch speed for flexibility.
+
+Decorator | Speed | Dispatch | Arguments
+--------- | ----- | -------- | ---------
+[multimethod](#multimethod) | fastest | cached lookup | positional only
+[multidispatch](#multidispatch) | - | binds to first signature + cached lookup | + keywords
+[overload](#overload) | slowest | checks all signatures serially | + keywords & predicates
+
 ### multimethod
 ```python
 from multimethod import multimethod
@@ -85,10 +93,13 @@ class Foo:
         ...
 ```
 
+### multidispatch
+`multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also supports dispatching on keyword arguments.
+
 ### overload
 Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
 
-The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check.
+The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check. Provisionally supports generics as well.
 
 ```python
 from multimethod import overload
@@ -105,9 +116,6 @@ def func(obj: str.isalnum):
 def func(obj: str.isdigit):
     ...
 ```
-
-### multidispatch
-`multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also provisionally supports dispatching on keyword arguments.
 
 ### multimeta
 

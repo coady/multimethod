@@ -108,6 +108,9 @@ class subtype(type):
             and all(map(issubclass, args, self.__args__))
         )
 
+    def __instancecheck__(self, instance):
+        return issubclass(self.get_type(instance), self)
+
     @classmethod
     def subcheck(cls, tp: type) -> bool:
         """Return whether type requires checking subscripts using `get_type`."""
@@ -346,7 +349,7 @@ RETURN = TypeVar("RETURN")
 
 
 class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
-    """Provisional wrapper for compatibility with `functools.singledispatch`.
+    """Wrapper for compatibility with `functools.singledispatch`.
 
     Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.
     Allows dispatching on keyword arguments based on the first function signature.
@@ -378,6 +381,7 @@ class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
 
 def isa(*types: type) -> Callable:
     """Partially bound `isinstance`."""
+    types = tuple(map(subtype, types))
     return lambda arg: isinstance(arg, types)
 
 
