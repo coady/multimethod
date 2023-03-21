@@ -42,6 +42,9 @@ multimethod = ["py.typed"]
 line-length = 100
 skip-string-normalization = true
 
+[tool.ruff]
+ignore = ["E501", "F811"]
+
 [tool.coverage.run]
 source = ["multimethod"]
 branch = true

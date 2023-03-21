@@ -254,11 +254,11 @@ def test_meta_types():
 
 def test_name_shadowing():
     # an object with the same name appearing previously in the same namespace
-    temp = 123  # noqa
+    temp = 123
 
     # a multimethod shadowing that name
     @multimethod
-    def temp(x: int):  # noqa
+    def temp(x: int):
         return "int"
 
     @multimethod

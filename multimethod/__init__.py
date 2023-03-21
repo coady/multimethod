@@ -144,7 +144,7 @@ class subtype(type):
             tps = {tp for tp, tp_arg in zip(tps, self.__args__) if issubclass(tp, tp_arg)}
             if not tps:
                 return type(arg)
-            return functools.reduce(lambda l, r: l if issubclass(l, r) else r, tps)  # noqa: E741
+            return functools.reduce(lambda x, y: x if issubclass(x, y) else y, tps)
         if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
             return subtype(Callable.__origin__, *get_type_hints(arg).values())
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
