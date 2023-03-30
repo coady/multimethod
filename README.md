@@ -166,6 +166,7 @@ dev
 * Python >=3.8 required
 * `Type[...]` dispatches on class arguments
 * `|` syntax for union types
+* `overload` supports generics
 
 1.9.1
 

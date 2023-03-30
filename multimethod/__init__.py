@@ -397,7 +397,7 @@ class overload(dict):
 
     def __init__(self, func: Callable):
         for name, value in get_type_hints(func).items():
-            if not callable(value) or isinstance(value, type):
+            if not callable(value) or isinstance(value, type) or hasattr(value, '__origin__'):
                 func.__annotations__[name] = isa(value)
         self[inspect.signature(func)] = func
 

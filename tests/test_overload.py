@@ -1,5 +1,5 @@
 import pytest
-from typing import List, Literal
+from typing import List, Literal, Optional
 from multimethod import DispatchError, isa, overload
 
 
@@ -45,3 +45,12 @@ def test_generic():
     assert not pred([0.0])
     assert pred(0.0)
     assert not pred(1.0)
+
+    @overload
+    def func(arg: Optional[str]):
+        return arg
+
+    assert func('') == ''
+    assert func(None) is None
+    with pytest.raises(DispatchError):
+        func(0)
