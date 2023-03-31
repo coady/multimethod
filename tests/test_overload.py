@@ -54,3 +54,13 @@ def test_generic():
     assert func(None) is None
     with pytest.raises(DispatchError):
         func(0)
+
+
+class cls:
+    @overload
+    def method(self: 'cls'):
+        return type(self)
+
+
+def test_annotations():
+    assert cls().method() is cls

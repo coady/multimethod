@@ -325,11 +325,7 @@ class multimethod(dict):
             raise DispatchError(f"Function {func.__code__}") from ex
 
     def evaluate(self):
-        """Evaluate any pending forward references.
-
-        This can be called explicitly when using forward references,
-        otherwise cache misses will evaluate.
-        """
+        """Evaluate any pending forward references."""
         while self.pending:
             func = self.pending.pop()
             self[get_types(func)] = func
@@ -388,21 +384,35 @@ def isa(*types: type) -> Callable:
 class overload(dict):
     """Ordered functions which dispatch based on their annotated predicates."""
 
+    pending: set
     __get__ = multimethod.__get__
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
         self = functools.update_wrapper(super().__new__(cls), func)
+        self.pending = set()
         return namespace.get(func.__name__, self)
 
     def __init__(self, func: Callable):
+        try:
+            sig = self.signature(func)
+        except (NameError, AttributeError):
+            self.pending.add(func)
+        else:
+            self[sig] = func
+
+    @classmethod
+    def signature(cls, func: Callable) -> inspect.Signature:
         for name, value in get_type_hints(func).items():
             if not callable(value) or isinstance(value, type) or hasattr(value, '__origin__'):
                 func.__annotations__[name] = isa(value)
-        self[inspect.signature(func)] = func
+        return inspect.signature(func)
 
     def __call__(self, *args, **kwargs):
         """Dispatch to first matching function."""
+        while self.pending:
+            func = self.pending.pop()
+            self[self.signature(func)] = func
         for sig in reversed(self):
             try:
                 arguments = sig.bind(*args, **kwargs).arguments
