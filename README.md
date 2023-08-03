@@ -79,18 +79,21 @@ Dispatch resolution details:
 * A skipped annotation is equivalent to `: object`.
 * If no types are specified, it will inherently match all arguments.
 
-`classmethod` and `staticmethod` may be used with a multimethod, but must be applied last, i.e., wrapping the final multimethod definition. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
+`classmethod` and `staticmethod` may be used with a multimethod, but must be applied _last_, i.e., wrapping the final multimethod definition after all functions are registered. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
 
 ```python
 class Foo:
+    # @classmethod: only works here if there are no more functions
     @multimethod
     def bar(cls, x: str):
         ...
 
-    @classmethod # <- only put this @classmethod here on the final definition
+    # @classmethod: can not be used with `register` because `_` is not the multimethod
     @bar.register
     def _(cls, x: int):
         ...
+
+    bar = classmethod(bar)  # done with registering
 ```
 
 ### multidispatch
