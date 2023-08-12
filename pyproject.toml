@@ -29,6 +29,8 @@ classifiers = [
 [project.urls]
 Homepage = "https://github.com/coady/multimethod"
 Documentation = "https://coady.github.io/multimethod"
+Changelog = "https://github.com/coady/multimethod/blob/main/CHANGELOG.md"
+Issues = "https://github.com/coady/multimethod/issues"
 
 [tool.setuptools]
 packages = ["multimethod"]
