@@ -12,21 +12,6 @@ __version__ = '1.9.1'
 Empty = types.new_class('*')
 
 
-def get_types(func: Callable) -> tuple:
-    """Return evaluated type hints for positional required parameters in order."""
-    if not hasattr(func, '__annotations__'):
-        return ()
-    type_hints = get_type_hints(func)
-    positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
-    names = [
-        param.name
-        for param in inspect.signature(func).parameters.values()
-        if param.default is param.empty and param.kind in positionals
-    ]  # missing annotations are padded with `object`, but trailing objects are unnecessary
-    head = itertools.dropwhile(lambda name: name not in type_hints, reversed(names))
-    return tuple(type_hints.get(name, object) for name in head)[::-1]
-
-
 class DispatchError(TypeError):
     pass
 
@@ -177,14 +162,34 @@ def distance(cls, subclass: type) -> int:
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
+    required: int
     parents: set
     sig: inspect.Signature
 
-    def __new__(cls, types: Iterable):
+    def __new__(cls, types: Iterable, required: Optional[int] = None):
         return tuple.__new__(cls, map(subtype, types))
 
+    def __init__(self, types: Iterable, required: Optional[int] = None):
+        self.required = len(self) if required is None else required
+
+    @classmethod
+    def from_hints(cls, func: Callable) -> 'signature':
+        """Return evaluated type hints for positional parameters in order."""
+        if not hasattr(func, '__annotations__'):
+            return cls(())
+        type_hints = get_type_hints(func)
+        positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
+        params: Iterable = inspect.signature(func).parameters.values()
+        params = [param for param in params if param.kind in positionals]
+        # missing annotations are padded with `object`, but trailing objects are unnecessary
+        indices = [index for index, param in enumerate(params) if param.name in type_hints]
+        params = params[: max(indices, default=-1) + 1]
+        hints = [type_hints.get(param.name, object) for param in params]
+        required = sum(param.default is param.empty for param in params)
+        return cls(hints, required)
+
     def __le__(self, other: tuple) -> bool:
-        return len(self) <= len(other) and all(map(issubclass, other, self))
+        return self.required <= len(other) and all(map(issubclass, other, self))
 
     def __lt__(self, other: tuple) -> bool:
         return self != other and self <= other
@@ -226,7 +231,7 @@ class multimethod(dict):
 
     def __init__(self, func: Callable):
         try:
-            self[get_types(func)] = func
+            self[signature.from_hints(func)] = func
         except (NameError, AttributeError):
             self.pending.add(func)
 
@@ -270,7 +275,8 @@ class multimethod(dict):
 
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()
-        types = signature(types)
+        if not isinstance(types, signature):
+            types = signature(types)
         parents = types.parents = self.parents(types)
         with contextlib.suppress(ValueError):
             types.sig = inspect.signature(func)
@@ -328,7 +334,7 @@ class multimethod(dict):
         """Evaluate any pending forward references."""
         while self.pending:
             func = self.pending.pop()
-            self[get_types(func)] = func
+            self[signature.from_hints(func)] = func
 
     @property
     def docstring(self):

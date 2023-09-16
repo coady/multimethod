@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 * `Type[...]` dispatches on class arguments
 * `|` syntax for union types
 * `overload` supports generics and forward references
+* Dispatch on optional parameters
 
 ## [1.9.1](https://pypi.org/project/multimethod/1.9.1/) - 2022-12-21
 ### Fixed
@@ -19,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.9](https://pypi.org/project/multimethod/1.9/) - 2022-09-14
 ### Changed
 * Python 3.11 supported
+
 ### Fixed
 * Fixes for `Callable` and `object` annotations
 

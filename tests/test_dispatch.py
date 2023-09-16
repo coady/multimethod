@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from concurrent import futures
 import pytest
-from multimethod import get_types, multidispatch, multimethod, signature, DispatchError
+from multimethod import multidispatch, multimethod, signature, DispatchError
 
 
 def test_signature():
@@ -81,10 +81,24 @@ def test_cls():
 
 
 def test_arguments():
-    def func(a, b: int, /, c: int, d, e: int = 0, *, f: int):
+    def func(a, b: int, /, c: int = 0, d=None, *, f: int):
         ...
 
-    assert get_types(func) == (object, int, int)
+    assert signature.from_hints(func) == (object, int, int)
+
+
+def test_defaults():
+    def func(a: int, b: float = 0.0):
+        return b
+
+    assert signature.from_hints(func) == (int, float)
+    method = multimethod(func)
+    assert method(1) == 0.0
+    assert method(0, 1.0) == method(0, b=1.0) == 1.0
+    with pytest.raises(DispatchError, match="0 methods"):
+        method(0, 0)
+    with pytest.raises(DispatchError, match="0 methods"):
+        multidispatch(func)(0, b=1)
 
 
 def test_keywords():
