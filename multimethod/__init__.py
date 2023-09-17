@@ -54,15 +54,16 @@ class subtype(type):
         if isinstance(self.__origin__, abc.ABCMeta):
             self.__origin__.register(self)
 
-    def _getstate(self) -> tuple:
-        return self.__origin__, self.__args__
+    def key(self) -> tuple:
+        return self.__origin__, *self.__args__
 
     def __eq__(self, other) -> bool:
-        return hasattr(other, '__origin__') and self._getstate() == subtype._getstate(other)
+        return hasattr(other, '__origin__') and self.key() == subtype.key(other)
 
     def __hash__(self) -> int:
-        return hash(self._getstate())
+        return hash(self.key())
 
+    @no_type_check
     def __subclasscheck__(self, subclass: type) -> bool:
         origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
@@ -70,27 +71,23 @@ class subtype(type):
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ in (Union, type):
             return inspect.isclass(subclass) and issubclass(subclass, self.__args__)
-        if Literal in (origin, self.__origin__):
-            return (origin is self.__origin__ is Literal) and set(args) <= set(self.__args__)
-        if self.__origin__ is Callable.__origin__:  # type: ignore
+        if self.__origin__ is Literal:
+            return (origin is Literal) and set(subclass.__args__) <= set(self.__args__)
+        if origin is Literal:
+            return all(isinstance(arg, self) for arg in args)
+        if self.__origin__ is Callable.__origin__:
             return (
-                origin is Callable.__origin__  # type: ignore
+                origin is Callable.__origin__
                 and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
                 and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
             )
-        nargs = len(self.__args__)
-        if self.__origin__ is tuple:
-            if self.__args__[-1:] == (...,):
-                if args == (Empty,):
-                    return issubclass(origin, self.__origin__)
-                nargs -= 1
-                args = args[:nargs]
-        elif args == (Empty,):
+        if args == (Empty,):
             return issubclass(origin, self.__origin__)
+        params = self.__args__[: -1 if self.__args__[-1:] == (...,) else None]
         return (  # check args first to avoid a recursion error in ABCMeta
-            len(args) == nargs
+            len(args) >= len(params)
             and issubclass(origin, self.__origin__)
-            and all(map(issubclass, args, self.__args__))
+            and all(map(issubclass, args, params))
         )
 
     def __instancecheck__(self, instance):

@@ -6,7 +6,7 @@
 [![image](https://codecov.io/gh/coady/multimethod/branch/main/graph/badge.svg)](https://codecov.io/gh/coady/multimethod/)
 [![image](https://github.com/coady/multimethod/workflows/codeql/badge.svg)](https://github.com/coady/multimethod/security/code-scanning)
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://pypi.org/project/black/)
-[![image](http://mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
+[![image](https://mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 
 Multimethod provides a decorator for adding multiple argument dispatching to functions. The decorator creates a multimethod object as needed, and registers the function with its annotations.
 
@@ -38,7 +38,7 @@ def func(x: float, y: int):
     ...
 ```
 
-Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). This syntax is also compatible with [mypy](http://mypy-lang.org), which by default checks that [each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
+Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). This syntax is also compatible with [mypy](https://mypy-lang.org), which by default checks that [each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
 
 ```python
 @func.register

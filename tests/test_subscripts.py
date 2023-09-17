@@ -1,14 +1,13 @@
 import sys
 import pytest
-from typing import Callable, Generic, Iterable, List, Sequence, Type, TypeVar
+from typing import Callable, Generic, Iterable, List, Literal, Sequence, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
 def test_literals():
-    from typing import Literal
-
     assert issubclass(subtype(Literal['a', 'b']), str)
     assert not issubclass(subtype(Literal['a']), subtype(List[int]))
+    assert issubclass(Literal[[0]], subtype(Iterable[int]))
     tp = subtype(Literal['a', 0])
     assert issubclass(tp.get_type('a'), tp)
     assert issubclass(tp.get_type(0), tp)
