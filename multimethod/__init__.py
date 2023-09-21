@@ -16,7 +16,7 @@ class DispatchError(TypeError):
     pass
 
 
-class subtype(type):
+class subtype(abc.ABCMeta):
     """A normalized generic type which checks subscripts.
 
     Transforms a generic alias into a concrete type which supports `issubclass`.
@@ -42,7 +42,7 @@ class subtype(type):
         args = tuple(map(cls, getattr(tp, '__args__', args)))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
-        bases = (origin,) if type(origin) is type else ()
+        bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
             bases = (subtype(Union[tuple(map(type, args))]),)
         if origin is Callable.__origin__ and args[:1] == (...,):
@@ -51,8 +51,7 @@ class subtype(type):
         return type.__new__(cls, str(tp), bases, namespace)
 
     def __init__(self, tp, *args):
-        if isinstance(self.__origin__, abc.ABCMeta):
-            self.__origin__.register(self)
+        ...
 
     def key(self) -> tuple:
         return self.__origin__, *self.__args__
@@ -146,6 +145,8 @@ class subtype(type):
             return subtype(type(arg), *subscripts)
         except TypeError:  # not an acceptable base type
             return subtype(self.__origin__, *subscripts)
+
+    __call__ = get_type
 
 
 def distance(cls, subclass: type) -> int:
@@ -286,10 +287,11 @@ class multimethod(dict):
         for index, (cls, type_checker) in enumerate(zip(types, self.type_checkers)):
             if subtype.subcheck(cls):  # switch to slower generic type checker
                 if type_checker is not type:
-                    tp = type_checker.__self__
-                    args = {cls} | set(tp.__args__) if tp.__origin__ is Union else {cls, tp}
-                    cls = subtype(Union[tuple(args)])
-                self.type_checkers[index] = cls.get_type
+                    if issubclass(type_checker, cls):
+                        cls = type_checker
+                    else:
+                        cls = subtype(Union[type_checker, cls])
+                self.type_checkers[index] = cls
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
 
