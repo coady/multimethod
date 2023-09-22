@@ -8,7 +8,7 @@ import types
 from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
-__version__ = '1.9.1'
+__version__ = '1.10'
 Empty = types.new_class('*')
 
 
