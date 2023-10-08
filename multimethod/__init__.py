@@ -63,8 +63,7 @@ class subtype(abc.ABCMeta):
     def __hash__(self) -> int:
         return hash(self.key())
 
-    @no_type_check
-    def __subclasscheck__(self, subclass: type) -> bool:
+    def __subclasscheck__(self, subclass):
         origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
         if origin is Union:
@@ -93,7 +92,22 @@ class subtype(abc.ABCMeta):
         )
 
     def __instancecheck__(self, instance):
-        return issubclass(self.get_type(instance), self)
+        if self.__origin__ is Literal:
+            return instance in self.__args__
+        if self.__origin__ is Union:
+            return isinstance(instance, self.__args__)
+        if not isinstance(instance, self.__origin__) or isinstance(self.__origin__, Iterator):
+            return False
+        if self.__origin__ is Callable.__origin__:
+            return issubclass(subtype(Callable, *get_type_hints(instance).values()), self)
+        if self.__origin__ is tuple and self.__args__[-1:] != (...,):
+            if len(instance) != len(self.__args__):
+                return False
+        elif issubclass(self, Mapping):
+            instance = next(iter(instance.items()), ())
+        else:
+            instance = tuple(itertools.islice(instance, 1))
+        return all(map(isinstance, instance, self.__args__))
 
     @classmethod
     def subcheck(cls, tp: type) -> bool:

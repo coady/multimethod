@@ -1,6 +1,7 @@
 import sys
 import pytest
-from typing import Callable, Generic, Iterable, List, Literal, Sequence, Type, TypeVar
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Generic, List, Literal, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
@@ -97,6 +98,7 @@ def test_callable():
 
     tp = subtype(func.__annotations__['arg'])
     assert not issubclass(tp.get_type(f), tp.get_type(g))
+    assert isinstance(g, tp.get_type(f))
     assert issubclass(tp.get_type(g), tp.get_type(f))
     with pytest.raises(DispatchError):
         func(f)
@@ -108,5 +110,6 @@ def test_callable():
 def test_final():
     tp = subtype(Iterable[str])
     d = {'': 0}
+    assert isinstance(d, subtype(Mapping[str, int]))
     assert issubclass(tp.get_type(d), tp)
     assert issubclass(tp.get_type(d.keys()), tp)
