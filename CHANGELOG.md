@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 ### Changed
+* Python >=3.9 required
 * `isinstance` check optimized
 
 ## [1.10](https://pypi.org/project/multimethod/1.10/) - 2023-09-21

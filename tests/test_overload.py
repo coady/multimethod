@@ -1,5 +1,5 @@
 import pytest
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 from multimethod import DispatchError, isa, overload
 
 
@@ -40,7 +40,7 @@ def test_signatures():
 
 
 def test_generic():
-    pred = isa(List[int], Literal[0.0])
+    pred = isa(list[int], Literal[0.0])
     assert pred([0])
     assert not pred([0.0])
     assert pred(0.0)

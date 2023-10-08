@@ -5,9 +5,9 @@ import functools
 import inspect
 import itertools
 import types
-from collections.abc import Iterable, Iterator, Mapping
-from typing import Any, Callable, Dict, Literal, Optional, Tuple
-from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from typing import Any, Literal, Optional, TypeVar, Union
+from typing import get_type_hints, no_type_check, overload as tp_overload
 
 __version__ = '1.10'
 Empty = types.new_class('*')
@@ -46,7 +46,7 @@ class subtype(abc.ABCMeta):
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
             bases = (subtype(Union[tuple(map(type, args))]),)
-        if origin is Callable.__origin__ and args[:1] == (...,):
+        if origin is Callable and args[:1] == (...,):
             args = args[1:]
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
@@ -76,9 +76,9 @@ class subtype(abc.ABCMeta):
             return (origin is Literal) and set(subclass.__args__) <= set(self.__args__)
         if origin is Literal:
             return all(isinstance(arg, self) for arg in args)
-        if self.__origin__ is Callable.__origin__:
+        if self.__origin__ is Callable:
             return (
-                origin is Callable.__origin__
+                origin is Callable
                 and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
                 and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
             )
@@ -98,7 +98,7 @@ class subtype(abc.ABCMeta):
             return isinstance(instance, self.__args__)
         if not isinstance(instance, self.__origin__) or isinstance(self.__origin__, Iterator):
             return False
-        if self.__origin__ is Callable.__origin__:
+        if self.__origin__ is Callable:
             return issubclass(subtype(Callable, *get_type_hints(instance).values()), self)
         if self.__origin__ is tuple and self.__args__[-1:] != (...,):
             if len(instance) != len(self.__args__):
@@ -143,8 +143,8 @@ class subtype(abc.ABCMeta):
             if not tps:
                 return type(arg)
             return functools.reduce(lambda x, y: x if issubclass(x, y) else y, tps)
-        if self.__origin__ is Callable.__origin__ and isinstance(arg, Callable):
-            return subtype(Callable.__origin__, *get_type_hints(arg).values())
+        if self.__origin__ is Callable and isinstance(arg, Callable):
+            return subtype(Callable, *get_type_hints(arg).values())
         if not isinstance(arg, self.__origin__):  # no need to check subscripts
             return type(arg)
         if isinstance(arg, Iterator) or not isinstance(arg, Iterable):
@@ -366,7 +366,7 @@ class multimethod(dict):
 RETURN = TypeVar("RETURN")
 
 
-class multidispatch(multimethod, Dict[Tuple[type, ...], Callable[..., RETURN]]):
+class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     """Wrapper for compatibility with `functools.singledispatch`.
 
     Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.

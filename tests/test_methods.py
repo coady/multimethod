@@ -1,7 +1,7 @@
 import enum
 import pytest
 from collections.abc import Iterable, Iterator
-from typing import Any, AnyStr, Dict, List, NewType, Tuple, TypeVar, Union
+from typing import Any, AnyStr, NewType, TypeVar, Union
 from multimethod import DispatchError, Empty, multimeta, multimethod, signature, subtype
 
 
@@ -47,19 +47,19 @@ def test_join():
 
 # type hints
 def test_subtype():
-    assert len({subtype(List[int]), subtype(List[int])}) == 1
-    assert len({subtype(List[bool]), subtype(List[int])}) == 2
+    assert len({subtype(list[int]), subtype(list[int])}) == 1
+    assert len({subtype(list[bool]), subtype(list[int])}) == 2
     assert issubclass(int, subtype(Union[int, float]))
     assert issubclass(Union[float, int], subtype(Union[int, float]))
-    assert issubclass(List[bool], subtype(List[int]))
-    assert isinstance((0, 0.0), subtype(Tuple[int, float]))
-    assert not isinstance((0,), subtype(Tuple[int, float]))
-    assert isinstance((0,), subtype(Tuple[int, ...]))
-    assert not issubclass(Tuple[int], subtype(Tuple[int, float]))
+    assert issubclass(list[bool], subtype(list[int]))
+    assert isinstance((0, 0.0), subtype(tuple[int, float]))
+    assert not isinstance((0,), subtype(tuple[int, float]))
+    assert isinstance((0,), subtype(tuple[int, ...]))
+    assert not issubclass(tuple[int], subtype(tuple[int, float]))
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
-    assert issubclass(subtype(List[int]), subtype(Iterable))
-    assert issubclass(List[bool], subtype(Union[List[int], List[float]]))
+    assert issubclass(subtype(list[int]), subtype(Iterable))
+    assert issubclass(list[bool], subtype(Union[list[int], list[float]]))
 
     assert subtype.get_type(object, 0) is int
     assert not isinstance(subtype.get_type(object, iter('')), subtype)
@@ -74,27 +74,27 @@ def test_subtype():
     assert subtype.get_type(object, {}) is dict
     it = iter('abc')
     assert subtype(Iterator[str]).get_type(it) is type(it)
-    tp = subtype(Union, List[int], List[List[int]])
+    tp = subtype(Union, list[int], list[list[int]])
     assert tp.get_type('') is str
     assert tp.get_type([]) == subtype(list, Empty)
-    assert tp.get_type([0]) == List[int]
-    assert tp.get_type([[]]) == List[subtype(list, Empty)]
-    assert tp.get_type([[0]]) == List[List[int]]
+    assert tp.get_type([0]) == list[int]
+    assert tp.get_type([[]]) == list[subtype(list, Empty)]
+    assert tp.get_type([[0]]) == list[list[int]]
     tp = subtype(Union, int, Iterable[int], list)
-    assert tp.get_type([0]) == List[int]
+    assert tp.get_type([0]) == list[int]
     assert tp.get_type([]) == subtype(list, Empty)
 
 
 def test_signature():
-    assert signature([Any, List, NewType('', int)]) == (object, list, int)
+    assert signature([Any, list, NewType('', int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([Union[bytes, str]])
     assert signature([TypeVar('T')]) == signature([object])
     assert signature([int]) - signature([Union[int, float]]) == (0,)
-    assert signature([List]) <= (list,)
-    assert signature([list]) <= signature([List])
-    assert signature([list]) <= signature([List[int]])
-    assert signature([List[int]]) - signature([list])
-    assert signature([list]) - signature([List[int]]) == (1,)
+    assert signature([list]) <= (list,)
+    assert signature([list]) <= signature([list])
+    assert signature([list]) <= signature([list[int]])
+    assert signature([list[int]]) - signature([list])
+    assert signature([list]) - signature([list[int]]) == (1,)
 
     # with metaclasses:
     assert signature([type]) - (type,) == (0,)
@@ -115,12 +115,12 @@ def test_get_type():
     assert method.type_checkers == [type]
 
     @method.register
-    def _(x: List[int]):
+    def _(x: list[int]):
         pass
 
     (get_type,) = method.type_checkers
-    assert get_type([0]) == List[int]
-    assert get_type([0.0]) == List[float]
+    assert get_type([0]) == list[int]
+    assert get_type([0.0]) == list[float]
     assert get_type((0,)) is tuple
     method[int, float] = lambda x, y: None
     assert method.type_checkers == [get_type, type]
@@ -136,7 +136,7 @@ class cls:
         return object, int
 
     @multimethod
-    def method(x: 'cls', y: 'List[float]'):
+    def method(x: 'cls', y: 'list[float]'):
         return type(x), list
 
     @multimethod
@@ -151,7 +151,7 @@ def test_annotations():
     assert cls.method(None, 0) == (object, int)
     with pytest.raises(DispatchError):
         cls.method(None, 0.0)
-    key = cls, subtype(List[float])
+    key = cls, subtype(list[float])
     cls.method.pending.add(cls.method.pop(key))
     assert cls.method[key]
 
@@ -173,7 +173,7 @@ def _(arg: int):
 
 
 @func.register
-def _(arg: Union[List[int], Tuple[float], Dict[str, int]]):
+def _(arg: Union[list[int], tuple[float], dict[str, int]]):
     return 'union'
 
 
@@ -221,7 +221,7 @@ def test_meta():
 
 def test_ellipsis():
     @multimethod
-    def func(arg: Tuple[Tuple[int, int], ...]):
+    def func(arg: tuple[tuple[int, int], ...]):
         return arg
 
     tup = ((0, 1),)

@@ -1,13 +1,13 @@
 import sys
 import pytest
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Generic, List, Literal, Type, TypeVar
+from typing import Generic, Literal, Type, TypeVar
 from multimethod import multimethod, subtype, DispatchError
 
 
 def test_literals():
     assert issubclass(subtype(Literal['a', 'b']), str)
-    assert not issubclass(subtype(Literal['a']), subtype(List[int]))
+    assert not issubclass(subtype(Literal['a']), subtype(list[int]))
     assert issubclass(Literal[[0]], subtype(Iterable[int]))
     tp = subtype(Literal['a', 0])
     assert issubclass(tp.get_type('a'), tp)
@@ -59,11 +59,11 @@ def test_generic():
 
 def test_empty():
     @multimethod
-    def func(arg: List[int]):
+    def func(arg: list[int]):
         return int
 
     @func.register
-    def _(arg: List[bool]):
+    def _(arg: list[bool]):
         return bool
 
     assert func([0]) is int
