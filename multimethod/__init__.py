@@ -5,7 +5,8 @@ import functools
 import inspect
 import itertools
 import types
-from typing import Any, Callable, Dict, Iterable, Iterator, Literal, Mapping, Optional, Tuple
+from collections.abc import Iterable, Iterator, Mapping
+from typing import Any, Callable, Dict, Literal, Optional, Tuple
 from typing import TypeVar, Union, get_type_hints, no_type_check, overload as tp_overload
 
 __version__ = '1.10'
@@ -68,7 +69,9 @@ class subtype(abc.ABCMeta):
         args = getattr(subclass, '__args__', ())
         if origin is Union:
             return all(issubclass(cls, self) for cls in args)
-        if self.__origin__ in (Union, type):
+        if self.__origin__ is Union:
+            return issubclass(subclass, self.__args__)
+        if self.__origin__ is type:
             return inspect.isclass(subclass) and issubclass(subclass, self.__args__)
         if self.__origin__ is Literal:
             return (origin is Literal) and set(subclass.__args__) <= set(self.__args__)
@@ -83,7 +86,7 @@ class subtype(abc.ABCMeta):
         if args == (Empty,):
             return issubclass(origin, self.__origin__)
         params = self.__args__[: -1 if self.__args__[-1:] == (...,) else None]
-        return (  # check args first to avoid a recursion error in ABCMeta
+        return (  # check args first to avoid recursion error: python/cpython#73407
             len(args) >= len(params)
             and issubclass(origin, self.__origin__)
             and all(map(issubclass, args, params))

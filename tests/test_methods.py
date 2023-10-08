@@ -55,6 +55,7 @@ def test_subtype():
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
     assert issubclass(subtype(List[int]), subtype(Iterable))
+    assert issubclass(List[bool], subtype(Union[List[int], List[float]]))
 
     assert subtype.get_type(object, 0) is int
     assert not isinstance(subtype.get_type(object, iter('')), subtype)
