@@ -8,15 +8,13 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v4
       with:
         python-version: 3.x
-    - run: pip install build wheel -r docs/requirements.in
+    - run: pip install build wheel setuptools -r docs/requirements.in
     - run: python -m build -n
     - run: PYTHONPATH=$PWD mkdocs gh-deploy --force
     - uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        password: ${{ secrets.PYPI_TOKEN }}
-        verbose: true
