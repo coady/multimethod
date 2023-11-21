@@ -96,7 +96,11 @@ class subtype(abc.ABCMeta):
             return instance in self.__args__
         if self.__origin__ is Union:
             return isinstance(instance, self.__args__)
-        if not isinstance(instance, self.__origin__) or isinstance(self.__origin__, Iterator):
+        if hasattr(instance, '__orig_class__'):  # user-defined generic type
+            return issubclass(instance.__orig_class__, self)
+        if self.__origin__ is type:  # a class argument is expected
+            return inspect.isclass(instance) and issubclass(instance, self.__args__)
+        if not isinstance(instance, self.__origin__) or issubclass(self.__origin__, Iterator):
             return False
         if self.__origin__ is Callable:
             return issubclass(subtype(Callable, *get_type_hints(instance).values()), self)
@@ -170,7 +174,7 @@ def distance(cls, subclass: type) -> int:
     """Return estimated distance between classes for tie-breaking."""
     if getattr(cls, '__origin__', None) is Union:
         return min(distance(arg, subclass) for arg in cls.__args__)
-    mro = type.mro(subclass)
+    mro = type.mro(subclass) if isinstance(subclass, type) else subclass.mro()
     return mro.index(cls if cls in mro else object)
 
 

@@ -2,7 +2,7 @@ import sys
 import pytest
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Generic, Literal, Type, TypeVar
-from multimethod import multimethod, subtype, DispatchError
+from multimethod import distance, multimethod, subtype, DispatchError
 
 
 def test_literals():
@@ -38,6 +38,7 @@ def test_type():
     def func(arg: Type[int]):
         return arg
 
+    assert isinstance(int, subtype(Type[int]))
     assert func(int) is int
     assert func(bool) is bool
     with pytest.raises(DispatchError):
@@ -54,7 +55,10 @@ def test_generic():
     def func(x: cls[int]):
         pass
 
-    assert func(cls[int]()) is None
+    assert distance(object, cls[int])
+    obj = cls[int]()
+    assert isinstance(obj, subtype(cls[int]))
+    assert func(obj) is None
 
 
 def test_empty():
