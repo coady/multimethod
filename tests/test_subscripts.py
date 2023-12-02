@@ -10,11 +10,9 @@ def test_literals():
     assert not issubclass(subtype(Literal['a']), subtype(list[int]))
     assert issubclass(Literal[[0]], subtype(Iterable[int]))
     tp = subtype(Literal['a', 0])
-    assert issubclass(tp.get_type('a'), tp)
-    assert issubclass(tp.get_type(0), tp)
-    assert not issubclass(tp.get_type('b'), tp)
-    assert tp.get_type('b') is str
-    assert tp.get_type(0.0) is float
+    assert isinstance('a', tp)
+    assert isinstance(0, tp)
+    assert not issubclass(Literal['a', 0.0], tp)
 
     @multimethod
     def func(arg: Literal['a', 0]):
@@ -70,6 +68,7 @@ def test_empty():
     def _(arg: list[bool]):
         return bool
 
+    assert func[list[int],]
     assert func([0]) is int
     assert func([False]) is func([]) is bool
 
@@ -100,10 +99,6 @@ def test_callable():
     def _(arg: Sequence[Callable[[bool], bool]]):
         return arg[0].__name__ + "0"
 
-    tp = subtype(func.__annotations__['arg'])
-    assert not issubclass(tp.get_type(f), tp.get_type(g))
-    assert isinstance(g, tp.get_type(f))
-    assert issubclass(tp.get_type(g), tp.get_type(f))
     with pytest.raises(DispatchError):
         func(f)
     assert func(g) == 'g'
@@ -115,5 +110,4 @@ def test_final():
     tp = subtype(Iterable[str])
     d = {'': 0}
     assert isinstance(d, subtype(Mapping[str, int]))
-    assert issubclass(tp.get_type(d), tp)
-    assert issubclass(tp.get_type(d.keys()), tp)
+    assert isinstance(d.keys(), tp)
