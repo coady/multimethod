@@ -19,9 +19,8 @@ class DispatchError(TypeError):
 class subtype(abc.ABCMeta):
     """A normalized generic type which checks subscripts.
 
-    Transforms a generic alias into a concrete type which supports `issubclass`.
+    Transforms a generic alias into a concrete type which supports `issubclass` and `isinstance`.
     If the type ends up being equivalent to a builtin, the builtin is returned.
-    Includes an adaptive replacement for `type` which will iterate args as needed for subscripts.
     """
 
     __origin__: type
@@ -79,11 +78,10 @@ class subtype(abc.ABCMeta):
                 and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
                 and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
             )
-        params = self.__args__[: -1 if self.__args__[-1:] == (...,) else None]
         return (  # check args first to avoid recursion error: python/cpython#73407
-            len(args) >= len(params)
+            len(args) == len(self.__args__)
             and issubclass(origin, self.__origin__)
-            and all(map(issubclass, args, params))
+            and all(pair[0] is pair[1] or issubclass(*pair) for pair in zip(args, self.__args__))
         )
 
     def __instancecheck__(self, instance):
@@ -105,21 +103,19 @@ class subtype(abc.ABCMeta):
         elif issubclass(self, Mapping):
             instance = next(iter(instance.items()), ())
         else:
-            instance = tuple(itertools.islice(instance, 1))
+            instance = itertools.islice(instance, 1)
         return all(map(isinstance, instance, self.__args__))
 
     def origins(self) -> Iterator[type]:
         """Generate origins which would need subscript checking."""
-        if not isinstance(self, subtype):  # also called as a staticmethod
-            return
-        if self.__origin__ is Literal:
-            (cls,) = self.__bases__
-            yield from getattr(cls, '__args__', [cls])
-        elif self.__origin__ is Union:
+        origin = getattr(self, '__origin__', None)  # also called as a staticmethod
+        if origin is Literal:
+            yield from set(map(type, self.__args__))
+        elif origin is Union:
             for cls in self.__args__:
                 yield from subtype.origins(cls)  # type: ignore
-        else:
-            yield self.__origin__
+        elif origin is not None:
+            yield origin
 
 
 def distance(cls, subclass: type) -> int:
