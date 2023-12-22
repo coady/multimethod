@@ -1,4 +1,5 @@
 """Fixture for static analysis."""
+
 from multimethod import multidispatch
 
 

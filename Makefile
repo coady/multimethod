@@ -2,8 +2,8 @@ check:
 	python -m pytest -s --cov
 
 lint:
-	black --check .
 	ruff .
+	ruff format --check .
 	mypy -p multimethod
 	mypy tests/static.py | grep -qv Any
 

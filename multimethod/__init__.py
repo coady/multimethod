@@ -49,8 +49,7 @@ class subtype(abc.ABCMeta):
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
-    def __init__(self, tp, *args):
-        ...
+    def __init__(self, tp, *args): ...
 
     def key(self) -> tuple:
         return self.__origin__, *self.__args__
@@ -207,12 +206,10 @@ class multimethod(dict):
             self.pending.add(func)
 
     @tp_overload
-    def register(self, __func: REGISTERED) -> REGISTERED:
-        ...  # pragma: no cover
+    def register(self, __func: REGISTERED) -> REGISTERED: ...  # pragma: no cover
 
     @tp_overload
-    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]:
-        ...  # pragma: no cover
+    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...  # pragma: no cover
 
     def register(self, *args) -> Callable:
         """Decorator for registering a function.
@@ -240,9 +237,7 @@ class multimethod(dict):
 
     def copy(self):
         """Return a new multimethod with the same methods."""
-        other = dict.__new__(type(self))
-        other.update(self)
-        return other
+        return dict.__new__(type(self)).__ior__(self)
 
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()

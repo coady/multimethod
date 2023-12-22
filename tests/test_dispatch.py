@@ -81,8 +81,7 @@ def test_cls():
 
 
 def test_arguments():
-    def func(a, b: int, /, c: int = 0, d=None, *, f: int):
-        ...
+    def func(a, b: int, /, c: int = 0, d=None, *, f: int): ...
 
     assert signature.from_hints(func) == (object, int, int)
 
@@ -120,8 +119,7 @@ def test_keywords():
 
 def test_concurrency():
     @multimethod
-    def func(arg: int):
-        ...
+    def func(arg: int): ...
 
     submit = futures.ThreadPoolExecutor().submit
     args = [type('', (int,), {})() for _ in range(500)]
