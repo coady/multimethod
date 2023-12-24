@@ -102,7 +102,7 @@ class Foo:
 ### overload
 Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
 
-The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check. Provisionally supports generics as well.
+The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check.
 
 ```python
 from multimethod import overload
@@ -118,6 +118,25 @@ def func(obj: str.isalnum):
 @overload
 def func(obj: str.isdigit):
     ...
+```
+
+### subtype
+`subtype` provisionally provides `isinstance` and `issubclass` checks for generic types. When called on a non-generic, it will return the origin type.
+
+```python
+from multimethod import subtype
+
+cls = subtype(int | list[int])
+
+for obj in (0, False, [0], [False], []):
+    assert isinstance(obj, cls)
+for obj in (0.0, [0.0], (0,)):
+    assert not isinstance(obj, cls)
+
+for subclass in (int, bool, list[int], list[bool]):
+    assert issubclass(subclass, cls)
+for subclass in (float, list, list[float], tuple[int]):
+    assert not issubclass(subclass, cls)
 ```
 
 ### multimeta

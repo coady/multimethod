@@ -1,7 +1,7 @@
 import sys
 import pytest
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Generic, Literal, Type, TypeVar
+from typing import Generic, Literal, Type, TypeVar, Union
 from multimethod import distance, multimethod, subtype, DispatchError
 
 
@@ -13,6 +13,8 @@ def test_literals():
     assert isinstance('a', tp)
     assert isinstance(0, tp)
     assert not issubclass(Literal['a', 0.0], tp)
+    assert not issubclass(tuple[str, int], tp)
+    assert issubclass(tp, subtype(Union[str, int]))
 
     @multimethod
     def func(arg: Literal['a', 0]):

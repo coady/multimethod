@@ -1,6 +1,6 @@
 import enum
 import pytest
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable
 from typing import Any, AnyStr, NewType, TypeVar, Union
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
@@ -56,7 +56,7 @@ def test_subtype():
     assert not isinstance((0,), subtype(tuple[int, float]))
     assert isinstance((0,), subtype(tuple[int, ...]))
     assert not issubclass(tuple[int], subtype(tuple[int, ...]))
-    assert not isinstance(iter(''), subtype(Iterator[str]))
+    assert not isinstance(iter('-'), subtype(Iterable[str]))
     assert not issubclass(tuple[int], subtype(tuple[int, float]))
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))

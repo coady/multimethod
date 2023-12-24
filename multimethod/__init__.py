@@ -63,14 +63,14 @@ class subtype(abc.ABCMeta):
     def __subclasscheck__(self, subclass):
         origin = getattr(subclass, '__origin__', subclass)
         args = getattr(subclass, '__args__', ())
-        if origin is Union:
-            return all(issubclass(cls, self) for cls in args)
-        if self.__origin__ is Union:
-            return issubclass(subclass, self.__args__)
-        if self.__origin__ is type:
-            return origin is type and issubclass(args[0], self.__args__)
         if origin is Literal:
             return all(isinstance(arg, self) for arg in args)
+        if origin is Union:
+            return all(issubclass(cls, self) for cls in args)
+        if self.__origin__ is Literal:
+            return False
+        if self.__origin__ is Union:
+            return issubclass(subclass, self.__args__)
         if self.__origin__ is Callable:
             return (
                 origin is Callable
@@ -92,7 +92,7 @@ class subtype(abc.ABCMeta):
             return issubclass(instance.__orig_class__, self)
         if self.__origin__ is type:  # a class argument is expected
             return inspect.isclass(instance) and issubclass(instance, self.__args__)
-        if not isinstance(instance, self.__origin__) or issubclass(self.__origin__, Iterator):
+        if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
             return False
         if self.__origin__ is Callable:
             return issubclass(subtype(Callable, *get_type_hints(instance).values()), self)
