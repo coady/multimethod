@@ -57,7 +57,7 @@ def test_roshambo():
 
 
 # methods
-class cls(object):
+class cls:
     method = multidispatch(lambda self, other: None)
 
     @method.register(Iterable, object)

@@ -110,3 +110,9 @@ def test_final():
     d = {'': 0}
     assert isinstance(d, subtype(Mapping[str, int]))
     assert isinstance(d.keys(), tp)
+
+
+def test_args():
+    tp = type('', (), {'__args__': None})
+    assert subtype(tp) is tp
+    assert not issubclass(tp, subtype(list[int]))

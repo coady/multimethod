@@ -5,15 +5,25 @@ import functools
 import inspect
 import itertools
 import types
+import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, Optional, TypeVar, Union
-from typing import get_type_hints, overload as tp_overload
+from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload as tp_overload
 
 __version__ = '1.10'
 
 
 class DispatchError(TypeError):
     pass
+
+
+def get_origin(tp):
+    return tp.__origin__ if isinstance(tp, subtype) else typing.get_origin(tp)
+
+
+def get_args(tp) -> tuple:
+    if isinstance(tp, subtype) or typing.get_origin(tp) is Callable:
+        return tp.__args__
+    return typing.get_args(tp)
 
 
 class subtype(abc.ABCMeta):
@@ -35,10 +45,10 @@ class subtype(abc.ABCMeta):
             if not tp.__constraints__:
                 return object
             tp = Union[tp.__constraints__]
-        origin = getattr(tp, '__origin__', tp)
+        origin = get_origin(tp) or tp
         if hasattr(types, 'UnionType') and isinstance(tp, types.UnionType):
             origin = Union  # `|` syntax added in 3.10
-        args = tuple(map(cls, getattr(tp, '__args__', args)))
+        args = tuple(map(cls, get_args(tp) or args))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
@@ -61,8 +71,8 @@ class subtype(abc.ABCMeta):
         return hash(self.key())
 
     def __subclasscheck__(self, subclass):
-        origin = getattr(subclass, '__origin__', subclass)
-        args = getattr(subclass, '__args__', ())
+        origin = get_origin(subclass) or subclass
+        args = get_args(subclass)
         if origin is Literal:
             return all(isinstance(arg, self) for arg in args)
         if origin is Union:
@@ -107,19 +117,19 @@ class subtype(abc.ABCMeta):
 
     def origins(self) -> Iterator[type]:
         """Generate origins which would need subscript checking."""
-        origin = getattr(self, '__origin__', None)  # also called as a staticmethod
+        origin = get_origin(self)
         if origin is Literal:
             yield from set(map(type, self.__args__))
         elif origin is Union:
             for cls in self.__args__:
-                yield from subtype.origins(cls)  # type: ignore
+                yield from subtype.origins(cls)
         elif origin is not None:
             yield origin
 
 
 def distance(cls, subclass: type) -> int:
     """Return estimated distance between classes for tie-breaking."""
-    if getattr(cls, '__origin__', None) is Union:
+    if get_origin(cls) is Union:
         return min(distance(arg, subclass) for arg in cls.__args__)
     mro = type.mro(subclass) if isinstance(subclass, type) else subclass.mro()
     return mro.index(cls if cls in mro else object)
@@ -186,6 +196,7 @@ REGISTERED = TypeVar("REGISTERED", bound=Callable[..., Any])
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
+    __name__: str
     pending: set
     generics: list[set]
 
@@ -218,7 +229,7 @@ class multimethod(dict):
         """
         if len(args) == 1 and hasattr(args[0], '__annotations__'):
             multimethod.__init__(self, *args)
-            return self if self.__name__ == args[0].__name__ else args[0]  # type: ignore
+            return self if self.__name__ == args[0].__name__ else args[0]
         return lambda func: self.__setitem__(args, func) or func
 
     def __get__(self, instance, owner):
@@ -276,7 +287,7 @@ class multimethod(dict):
         funcs = {self[key] for key in keys}
         if len(funcs) == 1:
             return funcs.pop()
-        raise DispatchError(f"{self.__name__}: {len(keys)} methods found", types, keys)  # type: ignore
+        raise DispatchError(f"{self.__name__}: {len(keys)} methods found", types, keys)
 
     def __missing__(self, types: tuple) -> Callable:
         """Find and cache the next applicable method of given types."""
