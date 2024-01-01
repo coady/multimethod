@@ -1,8 +1,11 @@
+import asyncio
 import sys
+import typing
 import pytest
+from array import array
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Generic, Literal, Type, TypeVar, Union
-from multimethod import distance, multimethod, subtype, DispatchError
+from multimethod import distance, multimethod, parametric, subtype, DispatchError
 
 
 def test_literals():
@@ -116,3 +119,22 @@ def test_args():
     tp = type('', (), {'__args__': None})
     assert subtype(tp) is tp
     assert not issubclass(tp, subtype(list[int]))
+    assert subtype(typing.Callable) is Callable
+
+
+def test_parametric():
+    coro = parametric(Callable, asyncio.iscoroutinefunction)
+    assert issubclass(coro, Callable)
+    assert not issubclass(Callable, coro)
+    assert not issubclass(parametric(object, asyncio.iscoroutinefunction), coro)
+    assert isinstance(asyncio.sleep, coro)
+    assert not isinstance(lambda: None, coro)
+    assert list(subtype.origins(coro)) == [Callable]
+
+    ints = parametric(array, typecode='i')
+    assert issubclass(ints, array)
+    assert not issubclass(array, ints)
+    assert not issubclass(parametric(object, typecode='i'), coro)
+    assert isinstance(array('i'), ints)
+    assert not isinstance(array('l'), ints)
+    assert list(subtype.origins(ints)) == [array]

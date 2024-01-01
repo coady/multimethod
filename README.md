@@ -120,7 +120,7 @@ def func(obj: str.isdigit):
     ...
 ```
 
-### subtype
+### instance checks
 `subtype` provisionally provides `isinstance` and `issubclass` checks for generic types. When called on a non-generic, it will return the origin type.
 
 ```python
@@ -139,8 +139,16 @@ for subclass in (float, list, list[float], tuple[int]):
     assert not issubclass(subclass, cls)
 ```
 
-### multimeta
+If a type implements a custom `__instancecheck__`, it is automatically detected and dispatched on (without caching). `parametric` provisionally provides a convenient constructor, with support for predicate functions and checking attributes.
 
+```python
+from multimethod import parametric
+
+coro = parametric(Callable, asyncio.iscoroutinefunction)
+ints = parametric(array, typecode='i')
+```
+
+### multimeta
 Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
 
 ```python
@@ -170,7 +178,6 @@ class Foo:
 ```
 
 ## Installation
-
 ```console
 % pip install multimethod
 ```

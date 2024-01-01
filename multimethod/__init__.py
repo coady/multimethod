@@ -22,7 +22,7 @@ def get_origin(tp):
 
 def get_args(tp) -> tuple:
     if isinstance(tp, subtype) or typing.get_origin(tp) is Callable:
-        return tp.__args__
+        return getattr(tp, '__args__', ())
     return typing.get_args(tp)
 
 
@@ -118,13 +118,48 @@ class subtype(abc.ABCMeta):
     def origins(self) -> Iterator[type]:
         """Generate origins which would need subscript checking."""
         origin = get_origin(self)
+        cls = type(self)
         if origin is Literal:
             yield from set(map(type, self.__args__))
         elif origin is Union:
-            for cls in self.__args__:
-                yield from subtype.origins(cls)
+            for arg in self.__args__:
+                yield from subtype.origins(arg)
         elif origin is not None:
             yield origin
+        elif cls not in (type, abc.ABCMeta) and '__instancecheck__' in cls.__dict__:  # type: ignore
+            yield from self.__bases__
+
+
+class parametric(abc.ABCMeta):
+    """A type which further customizes `issubclass` and `isinstance` beyond the base type.
+
+    Args:
+        base: base type
+        funcs: all predicate functions are checked against the instance
+        attrs: all attributes are checked for equality
+    """
+
+    def __new__(cls, base: type, *funcs: Callable, **attrs):
+        return super().__new__(cls, base.__name__, (base,), {'funcs': funcs, 'attrs': attrs})
+
+    def __init__(self, base: type, *funcs: Callable, **attrs): ...
+
+    def __subclasscheck__(self, subclass):
+        missing = object()
+        attrs = getattr(subclass, 'attrs', {})
+        return (  # pragma: no branch
+            subclass in self.__bases__  # python/cpython#73407
+            and set(getattr(subclass, 'funcs', ())).issuperset(self.funcs)
+            and all(attrs.get(name, missing) == self.attrs[name] for name in self.attrs)
+        )
+
+    def __instancecheck__(self, instance):
+        missing = object()
+        return (
+            issubclass(type(instance), self.__bases__)
+            and all(func(instance) for func in self.funcs)
+            and all(getattr(instance, name, missing) == self.attrs[name] for name in self.attrs)
+        )
 
 
 def distance(cls, subclass: type) -> int:
