@@ -134,7 +134,10 @@ def test_parametric():
     ints = parametric(array, typecode='i')
     assert issubclass(ints, array)
     assert not issubclass(array, ints)
-    assert not issubclass(parametric(object, typecode='i'), coro)
+    sized = parametric(array, itemsize=4)
+    assert issubclass(sized & ints, ints)
+    assert not issubclass(ints, sized & ints)
+    assert not issubclass(parametric(object, typecode='i'), array)
     assert isinstance(array('i'), ints)
     assert not isinstance(array('l'), ints)
     assert list(subtype.origins(ints)) == [array]

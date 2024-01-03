@@ -147,8 +147,8 @@ class parametric(abc.ABCMeta):
     def __subclasscheck__(self, subclass):
         missing = object()
         attrs = getattr(subclass, 'attrs', {})
-        return (  # pragma: no branch
-            subclass in self.__bases__  # python/cpython#73407
+        return (
+            set(subclass.__bases__).issuperset(self.__bases__)  # python/cpython#73407
             and set(getattr(subclass, 'funcs', ())).issuperset(self.funcs)
             and all(attrs.get(name, missing) == self.attrs[name] for name in self.attrs)
         )
@@ -160,6 +160,10 @@ class parametric(abc.ABCMeta):
             and all(func(instance) for func in self.funcs)
             and all(getattr(instance, name, missing) == self.attrs[name] for name in self.attrs)
         )
+
+    def __and__(self, other):
+        (base,) = set(self.__bases__ + other.__bases__)
+        return type(self)(base, *set(self.funcs + other.funcs), **(self.attrs | other.attrs))
 
 
 def distance(cls, subclass: type) -> int:
