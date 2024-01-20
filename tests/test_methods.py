@@ -62,6 +62,7 @@ def test_subtype():
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
     assert issubclass(subtype(list[int]), subtype(Iterable))
     assert issubclass(list[bool], subtype(Union[list[int], list[float]]))
+    assert issubclass(subtype(Union[bool, int]), int)
 
 
 def test_signature():
@@ -80,7 +81,7 @@ def test_signature():
     assert (type,) - signature([object]) == (1,)
     # using EnumMeta because it is a standard, stable, metaclass
     assert signature([enum.EnumMeta]) - signature([object]) == (2,)
-    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (1,)
+    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (2,)
 
 
 class namespace:

@@ -26,6 +26,10 @@ def get_args(tp) -> tuple:
     return typing.get_args(tp)
 
 
+def get_mro(cls) -> tuple:  # `inspect.getmro` doesn't handle all cases
+    return type.mro(cls) if isinstance(cls, type) else cls.mro()
+
+
 class subtype(abc.ABCMeta):
     """A normalized generic type which checks subscripts.
 
@@ -54,6 +58,9 @@ class subtype(abc.ABCMeta):
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
             bases = (subtype(Union[tuple(map(type, args))]),)
+        if origin is Union:
+            counts = collections.Counter(cls for arg in args for cls in get_mro(arg))
+            bases = tuple(cls for cls in counts if counts[cls] == len(args))[:1]
         if origin is Callable and args[:1] == (...,):
             args = args[1:]
         namespace = {'__origin__': origin, '__args__': args}
@@ -156,7 +163,7 @@ class parametric(abc.ABCMeta):
     def __instancecheck__(self, instance):
         missing = object()
         return (
-            issubclass(type(instance), self.__bases__)
+            isinstance(instance, self.__bases__)
             and all(func(instance) for func in self.funcs)
             and all(getattr(instance, name, missing) == self.attrs[name] for name in self.attrs)
         )
@@ -170,7 +177,7 @@ def distance(cls, subclass: type) -> int:
     """Return estimated distance between classes for tie-breaking."""
     if get_origin(cls) is Union:
         return min(distance(arg, subclass) for arg in cls.__args__)
-    mro = type.mro(subclass) if isinstance(subclass, type) else subclass.mro()
+    mro = get_mro(subclass)
     return mro.index(cls if cls in mro else object)
 
 
