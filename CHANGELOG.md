@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 * Python >=3.9 required
 * `isinstance` and generic dispatch optimized
 
+### Deprecated
+* Resolving ambiguity using positional distance
+
 ### Added
 * Custom instance checks
 * `subtype` and `parametric` utilities

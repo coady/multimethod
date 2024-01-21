@@ -72,9 +72,7 @@ Naturally checking subscripts is slower, but the implementation is optimized, ca
 
 Dispatch resolution details:
 * If an exact match isn't registered, the next closest method is called (and cached).
-* If the `issubclass` relation is ambiguous,
-[mro](https://docs.python.org/3/library/stdtypes.html?highlight=mro#class.mro) position is used as a tie-breaker.
-* If there are still ambiguous methods - or none - a custom `TypeError` is raised.
+* If there are ambiguous methods - or none - a custom `TypeError` is raised.
 * Keyword-only parameters may be annotated, but won't affect dispatching.
 * A skipped annotation is equivalent to `: object`.
 * If no types are specified, it will inherently match all arguments.

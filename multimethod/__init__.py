@@ -6,6 +6,7 @@ import inspect
 import itertools
 import types
 import typing
+import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload as tp_overload
 
@@ -325,12 +326,15 @@ class multimethod(dict):
 
     def select(self, types: tuple, keys: set[signature]) -> Callable:
         keys = {key for key in keys if key.callable(*types)}
-        if len(keys) > 1:
+        funcs = {self[key] for key in keys}
+        if len(funcs) > 1:
             groups = collections.defaultdict(set)
             for key in keys:
                 groups[types - key].add(key)
             keys = groups[min(groups)]
-        funcs = {self[key] for key in keys}
+            funcs = {self[key] for key in keys}
+            if len(funcs) == 1:
+                warnings.warn("positional distance tie-breaking is deprecated", DeprecationWarning)
         if len(funcs) == 1:
             return funcs.pop()
         raise DispatchError(f"{self.__name__}: {len(keys)} methods found", types, keys)

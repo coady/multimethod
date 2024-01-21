@@ -42,7 +42,8 @@ def test_join():
     assert join(seq, sep) == '0<>[1]<>2'
     assert join(tree(seq), sep) == '0<>1<>2'
     assert join(seq, bracket(*sep)) == '<0><[1]><2>'
-    assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
+    with pytest.warns(DeprecationWarning):
+        assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
 
 
 # type hints
@@ -258,7 +259,7 @@ def test_dispatch_exception():
     assert temp(True, 1.0) == "int, float"
 
     @multimethod
-    def temp(x: bool, y=0.0):
+    def temp(x: bool, y: float = 0.0):
         return "optional"
 
     assert temp(True, 1.0) == "optional"
