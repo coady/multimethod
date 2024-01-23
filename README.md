@@ -13,13 +13,14 @@ Multimethod provides a decorator for adding multiple argument dispatching to fun
 There are several multiple dispatch libraries on PyPI. This one aims for simplicity and speed. With caching of argument types, it should be the fastest pure Python implementation possible.
 
 ## Usage
-There are a few options which trade-off dispatch speed for flexibility.
+There are a couple options which trade-off dispatch speed for flexibility.
 
 Decorator | Speed | Dispatch | Arguments
 --------- | ----- | -------- | ---------
-[multimethod](#multimethod) | fastest | cached lookup | positional only
-[multidispatch](#multidispatch) | - | binds to first signature + cached lookup | + keywords
-[overload](#overload) | slowest | checks all signatures serially | + keywords & predicates
+[multimethod](#multimethod) | faster | cached lookup | positional only
+[multidispatch](#multidispatch) | slower | binds to first signature + cached lookup | positional + keywords
+
+Dispatching on simple types which use `issubclass` is cached. Advanced types which use `isinstance` require a linear scan.
 
 ### multimethod
 ```python
@@ -97,27 +98,6 @@ class Foo:
 ### multidispatch
 `multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also supports dispatching on keyword arguments.
 
-### overload
-Overloads dispatch on annotated predicates. Each predicate is checked in the reverse order of registration.
-
-The implementation is separate from `multimethod` due to the different performance characteristics. If an annotation is a type instead of a predicate, it will be converted into an `isinstance` check.
-
-```python
-from multimethod import overload
-
-@overload
-def func(obj: str):
-    ...
-
-@overload
-def func(obj: str.isalnum):
-    ...
-
-@overload
-def func(obj: str.isdigit):
-    ...
-```
-
 ### instance checks
 `subtype` provisionally provides `isinstance` and `issubclass` checks for generic types. When called on a non-generic, it will return the origin type.
 
@@ -137,7 +117,7 @@ for subclass in (float, list, list[float], tuple[int]):
     assert not issubclass(subclass, cls)
 ```
 
-If a type implements a custom `__instancecheck__`, it is automatically detected and dispatched on (without caching). `parametric` provisionally provides a convenient constructor, with support for predicate functions and checking attributes.
+If a type implements a custom `__instancecheck__`, it is automatically detected and dispatched on (without caching). `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
 
 ```python
 from multimethod import parametric
@@ -145,6 +125,8 @@ from multimethod import parametric
 coro = parametric(Callable, asyncio.iscoroutinefunction)
 ints = parametric(array, typecode='i')
 ```
+
+`overload` used to dispatch on annotated predicate functions. It is deprecated because a custom instance check - including using `parametric` - offers the same functionality.
 
 ### multimeta
 Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.

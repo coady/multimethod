@@ -56,10 +56,12 @@ def test_generic():
         func(0)
 
 
-class cls:
-    @overload
-    def method(self: 'cls'):
-        return type(self)
+with pytest.warns(DeprecationWarning):
+
+    class cls:
+        @overload
+        def method(self: 'cls'):
+            return type(self)
 
 
 def test_annotations():

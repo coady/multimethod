@@ -429,6 +429,8 @@ class overload(dict):
 
     def __new__(cls, func):
         namespace = inspect.currentframe().f_back.f_locals
+        if func.__name__ not in namespace:
+            warnings.warn("use `parametric(<base>, <func>)` as a type instead", DeprecationWarning)
         self = functools.update_wrapper(super().__new__(cls), func)
         self.pending = set()
         return namespace.get(func.__name__, self)
