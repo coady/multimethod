@@ -245,7 +245,7 @@ class multimethod(dict):
 
     __name__: str
     pending: set
-    generics: list[set]
+    generics: list[tuple]  # positional bases which require instance checks
 
     def __new__(cls, func):
         homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)
@@ -311,8 +311,8 @@ class multimethod(dict):
                 key.parents.add(types)
         for index, cls in enumerate(types):
             if origins := set(subtype.origins(cls)):
-                self.generics += (set() for _ in range(index + 1 - len(self.generics)))
-                self.generics[index].update(origins)
+                self.generics += [()] * (index + 1 - len(self.generics))
+                self.generics[index] = tuple(origins.union(self.generics[index]))
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
 
@@ -349,7 +349,7 @@ class multimethod(dict):
 
     def dispatch(self, *args) -> Callable:
         types = tuple(map(type, args))
-        if not any(issubclass(cls, tuple(generics)) for cls, generics in zip(types, self.generics)):
+        if not any(map(issubclass, types, self.generics)):
             return self[types]
         matches = {key for key in list(self) if isinstance(key, signature) and key.instances(*args)}
         matches -= {ancestor for match in matches for ancestor in match.parents}
