@@ -60,7 +60,9 @@ class subtype(abc.ABCMeta):
         if origin is Literal:
             bases = (subtype(Union[tuple(map(type, args))]),)
         if origin is Union:
-            counts = collections.Counter(cls for arg in args for cls in get_mro(arg))
+            counts = collections.Counter()
+            for arg in args:
+                counts.update(cls for cls in get_mro(arg) if issubclass(abc.ABCMeta, type(cls)))
             bases = tuple(cls for cls in counts if counts[cls] == len(args))[:1]
         if origin is Callable and args[:1] == (...,):
             args = args[1:]

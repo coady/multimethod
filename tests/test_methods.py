@@ -1,6 +1,7 @@
 import enum
+import types
 import pytest
-from collections.abc import Iterable
+from collections.abc import Collection, Iterable, Mapping, Set
 from typing import Any, AnyStr, NewType, TypeVar, Union
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
@@ -46,7 +47,10 @@ def test_join():
         assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
 
 
-# type hints
+def subclass(*bases, **kwds):
+    return types.new_class('', bases, kwds)
+
+
 def test_subtype():
     assert len({subtype(list[int]), subtype(list[int])}) == 1
     assert len({subtype(list[bool]), subtype(list[int])}) == 2
@@ -64,6 +68,9 @@ def test_subtype():
     assert issubclass(subtype(list[int]), subtype(Iterable))
     assert issubclass(list[bool], subtype(Union[list[int], list[float]]))
     assert issubclass(subtype(Union[bool, int]), int)
+    assert issubclass(subtype(Union[Mapping, Set]), Collection)
+    base = subclass(metaclass=subclass(type))
+    assert subtype(Union[base, subclass(base)])
 
 
 def test_signature():

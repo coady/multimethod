@@ -43,8 +43,10 @@ multimethod = ["py.typed"]
 
 [tool.ruff]
 line-length = 100
-ignore = ["F811"]
 extend-include = ["*.ipynb"]
+
+[tool.ruff.lint]
+ignore = ["F811"]
 
 [tool.ruff.format]
 preview = true
