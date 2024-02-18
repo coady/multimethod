@@ -128,7 +128,6 @@ class subtype(abc.ABCMeta):
     def origins(self) -> Iterator[type]:
         """Generate origins which would need subscript checking."""
         origin = get_origin(self)
-        cls = type(self)
         if origin is Literal:
             yield from set(map(type, self.__args__))
         elif origin is Union:
@@ -136,8 +135,8 @@ class subtype(abc.ABCMeta):
                 yield from subtype.origins(arg)
         elif origin is not None:
             yield origin
-        elif cls not in (type, abc.ABCMeta) and '__instancecheck__' in cls.__dict__:  # type: ignore
-            yield from self.__bases__
+        elif isinstance(self.__instancecheck__, types.MethodType):
+            yield from getattr(self, '__orig_bases__', ())
 
 
 class parametric(abc.ABCMeta):
@@ -152,7 +151,8 @@ class parametric(abc.ABCMeta):
     def __new__(cls, base: type, *funcs: Callable, **attrs):
         return super().__new__(cls, base.__name__, (base,), {'funcs': funcs, 'attrs': attrs})
 
-    def __init__(self, base: type, *funcs: Callable, **attrs): ...
+    def __init__(self, *_, **__):
+        self.__orig_bases__ = self.__bases__
 
     def __subclasscheck__(self, subclass):
         missing = object()

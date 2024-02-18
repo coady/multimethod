@@ -117,7 +117,7 @@ for subclass in (float, list, list[float], tuple[int]):
     assert not issubclass(subclass, cls)
 ```
 
-If a type implements a custom `__instancecheck__`, it is automatically detected and dispatched on (without caching). `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
+If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (without caching) by specifying `__orig_bases__` . `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
 
 ```python
 from multimethod import parametric
