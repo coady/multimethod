@@ -85,6 +85,9 @@ def test_arguments():
 
     assert signature.from_hints(func) == (object, int, int)
 
+    @multidispatch
+    def func(arg: ...): ...
+
 
 def test_defaults():
     def func(a: int, b: float = 0.0):
@@ -96,7 +99,7 @@ def test_defaults():
     assert method(0, 1.0) == method(0, b=1.0) == 1.0
     with pytest.raises(DispatchError, match="0 methods"):
         method(0, 0)
-    with pytest.raises(DispatchError, match="0 methods"):
+    with pytest.raises(DispatchError, match="0 methods"), pytest.warns(DeprecationWarning):
         multidispatch(func)(0, b=1)
 
 

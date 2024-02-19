@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 * Unions with custom metaclasses supported
 * Concrete protocol classes supported
 
+### Deprecated
+* Dispatch on base implementation of `multidispatch`
+
 ## [1.11](https://pypi.org/project/multimethod/1.11/) - 2024-01-28
 ### Changed
 * Python >=3.9 required

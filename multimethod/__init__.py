@@ -405,6 +405,11 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
             self.signature = inspect.signature(func)
         except ValueError:
             self.signature = None
+        msg = "base implementation will eventually ignore annotations as `singledispatch does`"
+        with contextlib.suppress(NameError, AttributeError, TypeError):
+            hints = signature.from_hints(func)
+            if hints and all(map(issubclass, hints, hints)):
+                warnings.warn(msg, DeprecationWarning)
         super().__init__(func)
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
