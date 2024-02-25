@@ -125,8 +125,12 @@ class subtype(abc.ABCMeta):
             instance = itertools.islice(instance, 1)
         return all(map(isinstance, instance, self.__args__))
 
-    def origins(self) -> Iterator[type]:
-        """Generate origins which would need subscript checking."""
+    @functools.singledispatch
+    def origins(self) -> Iterable[type]:
+        """Return origin types which would require instance checks.
+
+        Provisional custom usage: `subtype.origins.register(<metaclass>, lambda cls: ...)
+        """
         origin = get_origin(self)
         if origin is Literal:
             yield from set(map(type, self.__args__))
@@ -135,8 +139,6 @@ class subtype(abc.ABCMeta):
                 yield from subtype.origins(arg)
         elif origin is not None:
             yield origin
-        elif isinstance(self.__instancecheck__, types.MethodType):
-            yield from getattr(self, '__orig_bases__', ())
 
 
 class parametric(abc.ABCMeta):
@@ -151,8 +153,7 @@ class parametric(abc.ABCMeta):
     def __new__(cls, base: type, *funcs: Callable, **attrs):
         return super().__new__(cls, base.__name__, (base,), {'funcs': funcs, 'attrs': attrs})
 
-    def __init__(self, *_, **__):
-        self.__orig_bases__ = self.__bases__
+    def __init__(self, *_, **__): ...
 
     def __subclasscheck__(self, subclass):
         missing = object()
@@ -174,6 +175,9 @@ class parametric(abc.ABCMeta):
     def __and__(self, other):
         (base,) = set(self.__bases__ + other.__bases__)
         return type(self)(base, *set(self.funcs + other.funcs), **(self.attrs | other.attrs))
+
+
+subtype.origins.register(parametric, lambda cls: cls.__bases__)
 
 
 def distance(cls, subclass: type) -> int:

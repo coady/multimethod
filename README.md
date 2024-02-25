@@ -60,7 +60,7 @@ method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
 ```
 
-Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc` and `typing`. Subscripted generics are supported:
+Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc`. Note `typing` aliases do not support `issubclass` consistently, and are no longer needed for subscripts. Using ABCs instead is recommended. Subscripted generics are supported:
 * `Union[...]` or `... | ...`
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
@@ -117,7 +117,7 @@ for subclass in (float, list, list[float], tuple[int]):
     assert not issubclass(subclass, cls)
 ```
 
-If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (without caching) by specifying `__orig_bases__` . `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
+If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (without caching) by registering its metaclass and bases with `subtype.origins`. `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
 
 ```python
 from multimethod import parametric

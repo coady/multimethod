@@ -2,7 +2,7 @@ import enum
 import types
 import pytest
 from collections.abc import Collection, Iterable, Mapping, Set
-from typing import Any, AnyStr, NewType, Protocol, TypeVar, Union
+from typing import Any, AnyStr, NewType, Protocol, Sized, TypeVar, Union
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
@@ -72,6 +72,7 @@ def test_subtype():
     base = subclass(metaclass=subclass(type))
     assert subtype(Union[base, subclass(base)])
     assert not list(subtype.origins(subclass(subclass(Protocol))))
+    assert not list(subtype.origins(subclass(Sized)))
 
 
 def test_signature():
