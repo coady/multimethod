@@ -78,23 +78,6 @@ Dispatch resolution details:
 * A skipped annotation is equivalent to `: object`.
 * If no types are specified, it will inherently match all arguments.
 
-`classmethod` and `staticmethod` may be used with a multimethod, but must be applied _last_, i.e., wrapping the final multimethod definition after all functions are registered. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
-
-```python
-class Foo:
-    # @classmethod: only works here if there are no more functions
-    @multimethod
-    def bar(cls, x: str):
-        ...
-
-    # @classmethod: can not be used with `register` because `_` is not the multimethod
-    @bar.register
-    def _(cls, x: int):
-        ...
-
-    bar = classmethod(bar)  # done with registering
-```
-
 ### multidispatch
 `multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also supports dispatching on keyword arguments.
 
@@ -128,33 +111,47 @@ ints = parametric(array, typecode='i')
 
 `overload` used to dispatch on annotated predicate functions. It is deprecated because a custom instance check - including using `parametric` - offers the same functionality.
 
-### multimeta
-Use `metaclass=multimeta` to create a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
+### classes
+`classmethod` and `staticmethod` may be used with a multimethod, but must be applied _last_, i.e., wrapping the final multimethod definition after all functions are registered. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
 
 ```python
-from multimethod import multimeta
+class Cls:
+    # @classmethod: only works here if there are no more functions
+    @multimethod
+    def meth(cls, arg: str): ...
 
-class Foo(metaclass=multimeta):
-    def bar(self, x: str):
-        ...
-        
-    def bar(self, x: int):
-        ...
+    # @classmethod: can not be used with `register` because `_` is not the multimethod
+    @meth.register
+    def _(cls, arg: int): ...
+
+    meth = classmethod(meth)  # done with registering
 ```
 
-Equivalent to:
+If a method spans multiple classes, then the namespace lookup can not work. The `register` method can be used instead.
 
 ```python
-from multimethod import multimethod
-
-class Foo:
+class Base:
     @multimethod
-    def bar(self, x: str):
-        ...
-        
-    @bar.register
-    def bar(self, x: int):
-        ...
+    def meth(self, arg: str): ...
+
+class Subclass(Base):
+    @Base.meth.register
+    def _(self, arg: int): ...
+```
+
+If the base class can not be modified, the decorator - like any - can be called explicitly.
+
+```python
+class Subclass(Base):
+    meth = multimethod(Base.meth)
+    ...
+```
+
+`multimeta` creates a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
+
+```python
+class Cls(metaclass=multimeta):
+    ... # all methods are multimethods
 ```
 
 ## Installation

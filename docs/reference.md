@@ -6,4 +6,6 @@
 
 ::: multimethod.parametric
 
+::: multimethod.multimeta
+
 ::: multimethod.DispatchError
