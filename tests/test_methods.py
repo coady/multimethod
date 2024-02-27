@@ -73,6 +73,7 @@ def test_subtype():
     assert subtype(Union[base, subclass(base)])
     assert not list(subtype.origins(subclass(subclass(Protocol))))
     assert not list(subtype.origins(subclass(Sized)))
+    assert not list(subtype.origins(subclass(Protocol[TypeVar('T')])))
 
 
 def test_signature():
