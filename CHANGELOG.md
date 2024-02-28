@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+## [1.11.2](https://pypi.org/project/multimethod/1.11.2/) - 2024-02-27
+### Fixed
+* Subclassed generics allowed
+
 ## [1.11.1](https://pypi.org/project/multimethod/1.11.1/) - 2024-02-19
 ### Fixed
 * Unions with custom metaclasses supported
