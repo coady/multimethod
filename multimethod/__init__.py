@@ -400,7 +400,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     signature: Optional[inspect.Signature]
 
     def __new__(cls, func: Callable[..., RETURN]) -> "multidispatch[RETURN]":
-        return functools.update_wrapper(dict.__new__(cls), func)
+        return functools.update_wrapper(dict.__new__(cls), func)  # type: ignore
 
     def __init__(self, func: Callable[..., RETURN]) -> None:
         self.pending = set()
