@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
+### Changed
+* `multidispatch` supports variable keyword arguments
 
 ## [1.11.2](https://pypi.org/project/multimethod/1.11.2/) - 2024-02-27
 ### Fixed

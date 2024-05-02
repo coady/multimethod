@@ -397,7 +397,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     Allows dispatching on keyword arguments based on the first function signature.
     """
 
-    signature: Optional[inspect.Signature]
+    signatures: dict[tuple, inspect.Signature]
 
     def __new__(cls, func: Callable[..., RETURN]) -> "multidispatch[RETURN]":
         return functools.update_wrapper(dict.__new__(cls), func)  # type: ignore
@@ -405,11 +405,8 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     def __init__(self, func: Callable[..., RETURN]) -> None:
         self.pending = set()
         self.generics = []
-        try:
-            self.signature = inspect.signature(func)
-        except ValueError:
-            self.signature = None
-        msg = "base implementation will eventually ignore annotations as `singledispatch does`"
+        self.signatures = {}
+        msg = "base implementation will eventually ignore annotations as `singledispatch` does"
         with contextlib.suppress(NameError, AttributeError, TypeError):
             hints = signature.from_hints(func)
             if hints and all(map(issubclass, hints, hints)):
@@ -419,9 +416,20 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
         return self if instance is None else types.MethodType(self, instance)  # type: ignore
 
+    def __setitem__(self, types: tuple, func: Callable):
+        super().__setitem__(types, func)
+        with contextlib.suppress(ValueError):
+            signature = inspect.signature(func)
+            self.signatures.setdefault(tuple(signature.parameters), signature)
+
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to best method."""
-        params = self.signature.bind(*args, **kwargs).args if (kwargs and self.signature) else args
+        params = args
+        if kwargs:
+            for signature in self.signatures.values():  # pragma: no branch
+                with contextlib.suppress(TypeError):
+                    params = signature.bind(*args, **kwargs).args
+                    break
         func = self.dispatch(*params)
         return func(*args, **kwargs)
 
