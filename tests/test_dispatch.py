@@ -99,8 +99,8 @@ def test_defaults():
     assert method(0, 1.0) == method(0, b=1.0) == 1.0
     with pytest.raises(DispatchError, match="0 methods"):
         method(0, 0)
-    with pytest.raises(DispatchError, match="0 methods"), pytest.warns(DeprecationWarning):
-        multidispatch(func)(0, b=1)
+    assert multidispatch(func)(0, b=1)
+    assert multimethod(bool)(1)
 
 
 def test_keywords():
@@ -118,7 +118,6 @@ def test_keywords():
 
     assert func(0) is func(arg=0) is int
     assert func(0, 0.0) is func(arg=0, extra=0.0) is float
-    assert multidispatch(bool)(1)
 
 
 def test_concurrency():

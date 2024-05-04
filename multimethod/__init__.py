@@ -406,12 +406,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
         self.pending = set()
         self.generics = []
         self.signatures = {}
-        msg = "base implementation will eventually ignore annotations as `singledispatch` does"
-        with contextlib.suppress(NameError, AttributeError, TypeError):
-            hints = signature.from_hints(func)
-            if hints and all(map(issubclass, hints, hints)):
-                warnings.warn(msg, DeprecationWarning)
-        super().__init__(func)
+        self[()] = func
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
         return self if instance is None else types.MethodType(self, instance)  # type: ignore
