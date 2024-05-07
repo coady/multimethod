@@ -100,16 +100,26 @@ for subclass in (float, list, list[float], tuple[int]):
     assert not issubclass(subclass, cls)
 ```
 
-If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (without caching) by registering its metaclass and bases with `subtype.origins`. `parametric` provides a convenient constructor, with support for predicate functions and checking attributes.
+If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (without caching) by registering its metaclass and bases with `subtype.origins`. `parametric` provides a convenient constructor, which will match the base class, predicate functions, and check attributes.
 
 ```python
 from multimethod import parametric
 
-coro = parametric(Callable, asyncio.iscoroutinefunction)
-ints = parametric(array, typecode='i')
+Coroutine = parametric(Callable, asyncio.iscoroutinefunction)
+IntArray = parametric(array, typecode='i')
 ```
 
-`overload` used to dispatch on annotated predicate functions. It is deprecated because a custom instance check - including using `parametric` - offers the same functionality.
+`overload` used to dispatch on annotated predicate functions. It is deprecated because a custom instance check - including using `parametric` - offers the same functionality. Any predicate function can be wrapped with the closest matching base class, including  `object` if necessary.
+
+```python
+Cls = parametric(object, predicate)
+Digits = parametric(str, str.isdigit)
+assert isinstance('0', Digits)
+assert not isinstance('a', Digits)
+
+@meth.register
+def _(arg: Digits): ...
+```
 
 ### classes
 `classmethod` and `staticmethod` may be used with a multimethod, but must be applied _last_, i.e., wrapping the final multimethod definition after all functions are registered. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
