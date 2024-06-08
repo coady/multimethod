@@ -36,6 +36,12 @@ def test_union():
     assert issubclass(subtype(int | float), subtype(int | float | None))
 
 
+@pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
+def test_type_alias():
+    Point = typing.TypeAliasType(name='Point', value=tuple[int, int])
+    assert isinstance((0, 0), subtype(Point))
+
+
 def test_type():
     @multimethod
     def func(arg: Type[int]):

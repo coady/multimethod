@@ -46,6 +46,8 @@ class subtype(abc.ABCMeta):
             return object
         if hasattr(tp, '__supertype__'):  # isinstance(..., NewType) only supported >=3.10
             tp = tp.__supertype__
+        if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
+            tp = tp.__value__
         if isinstance(tp, TypeVar):
             if not tp.__constraints__:
                 return object
