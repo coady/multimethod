@@ -1,10 +1,6 @@
-[build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "multimethod"
-dynamic = ["version"]
+version = "1.11.2"
 description = "Multiple argument dispatching."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -32,15 +28,6 @@ Documentation = "https://coady.github.io/multimethod"
 Changelog = "https://github.com/coady/multimethod/blob/main/CHANGELOG.md"
 Issues = "https://github.com/coady/multimethod/issues"
 
-[tool.setuptools]
-packages = ["multimethod"]
-
-[tool.setuptools.dynamic]
-version = {attr = "multimethod.__version__"}
-
-[tool.setuptools.package-data]
-multimethod = ["py.typed"]
-
 [tool.ruff]
 line-length = 100
 extend-include = ["*.ipynb"]
@@ -49,7 +36,6 @@ extend-include = ["*.ipynb"]
 ignore = ["F811"]
 
 [tool.ruff.format]
-preview = true
 quote-style = "preserve"
 
 [tool.coverage.run]

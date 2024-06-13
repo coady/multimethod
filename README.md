@@ -2,9 +2,9 @@
 ![image](https://img.shields.io/pypi/pyversions/multimethod.svg)
 [![image](https://pepy.tech/badge/multimethod)](https://pepy.tech/project/multimethod)
 ![image](https://img.shields.io/pypi/status/multimethod.svg)
-[![image](https://github.com/coady/multimethod/workflows/build/badge.svg)](https://github.com/coady/multimethod/actions)
+[![build](https://github.com/coady/multimethod/actions/workflows/build.yml/badge.svg)](https://github.com/coady/multimethod/actions/workflows/build.yml)
 [![image](https://codecov.io/gh/coady/multimethod/branch/main/graph/badge.svg)](https://codecov.io/gh/coady/multimethod/)
-[![image](https://github.com/coady/multimethod/workflows/codeql/badge.svg)](https://github.com/coady/multimethod/security/code-scanning)
+[![CodeQL](https://github.com/coady/multimethod/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/coady/multimethod/actions/workflows/github-code-scanning/codeql)
 [![image](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![image](https://mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
 

@@ -10,8 +10,6 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload as tp_overload
 
-__version__ = '1.11.2'
-
 
 class DispatchError(TypeError):
     pass
