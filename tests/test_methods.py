@@ -51,6 +51,7 @@ def subclass(*bases, **kwds):
     return types.new_class('', bases, kwds)
 
 
+@pytest.mark.benchmark
 def test_subtype():
     assert len({subtype(list[int]), subtype(list[int])}) == 1
     assert len({subtype(list[bool]), subtype(list[int])}) == 2
@@ -76,6 +77,7 @@ def test_subtype():
     assert not list(subtype.origins(subclass(Protocol[TypeVar('T')])))
 
 
+@pytest.mark.benchmark
 def test_signature():
     assert signature([Any, list, NewType('', int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([Union[bytes, str]])

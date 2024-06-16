@@ -36,6 +36,7 @@ def _(left, right):
     return 'paper covers rock'
 
 
+@pytest.mark.benchmark
 def test_roshambo():
     assert roshambo.__name__ == 'roshambo'
     r, p, s = rock(), paper(), scissors()
@@ -103,6 +104,7 @@ def test_defaults():
     assert multimethod(bool)(1)
 
 
+@pytest.mark.benchmark
 def test_keywords():
     @multidispatch
     def func(arg):

@@ -128,6 +128,7 @@ def test_args():
     assert subtype(typing.Callable) is Callable
 
 
+@pytest.mark.benchmark
 def test_parametric():
     coro = parametric(Callable, asyncio.iscoroutinefunction)
     assert issubclass(coro, Callable)

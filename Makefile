@@ -1,6 +1,9 @@
 check:
 	python -m pytest -s --cov
 
+bench:
+	python -m pytest --codspeed
+
 lint:
 	ruff check .
 	ruff format --check .

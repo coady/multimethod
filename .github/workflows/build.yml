@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13.0-alpha - 3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13.0-beta - 3.13']
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - run: pip install pytest-cov
+    - run: pip install -r tests/requirements.in
     - run: make check
     - run: coverage xml
     - uses: codecov/codecov-action@v4
