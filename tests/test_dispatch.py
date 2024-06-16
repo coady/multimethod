@@ -36,7 +36,6 @@ def _(left, right):
     return 'paper covers rock'
 
 
-@pytest.mark.benchmark
 def test_roshambo():
     assert roshambo.__name__ == 'roshambo'
     r, p, s = rock(), paper(), scissors()

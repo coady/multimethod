@@ -36,6 +36,7 @@ def join(seq: tree, sep: object):
     return join(seq.walk(), sep)
 
 
+@pytest.mark.benchmark
 def test_join():
     sep = '<>'
     seq = [0, tree([1]), 2]
@@ -94,7 +95,7 @@ def test_signature():
     assert (type,) - signature([object]) == (1,)
     # using EnumMeta because it is a standard, stable, metaclass
     assert signature([enum.EnumMeta]) - signature([object]) == (2,)
-    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (2,)
+    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (1,)
 
 
 class namespace:

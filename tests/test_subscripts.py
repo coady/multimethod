@@ -34,6 +34,7 @@ def test_literals():
 def test_union():
     assert issubclass(int, subtype(int | float))
     assert issubclass(subtype(int | float), subtype(int | float | None))
+    assert subtype(Iterable | Mapping | Sequence) is Iterable
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")

@@ -29,6 +29,13 @@ def get_mro(cls) -> tuple:  # `inspect.getmro` doesn't handle all cases
     return type.mro(cls) if isinstance(cls, type) else cls.mro()
 
 
+def common_bases(*bases):
+    counts = collections.Counter()
+    for base in bases:
+        counts.update(cls for cls in get_mro(base) if issubclass(abc.ABCMeta, type(cls)))
+    return tuple(cls for cls in counts if counts[cls] == len(bases))
+
+
 class subtype(abc.ABCMeta):
     """A normalized generic type which checks subscripts.
 
@@ -58,12 +65,11 @@ class subtype(abc.ABCMeta):
             return origin
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
-            bases = (subtype(Union[tuple(map(type, args))]),)
+            bases = (cls(Union[tuple(map(type, args))]),)
         if origin is Union:
-            counts = collections.Counter()
-            for arg in args:
-                counts.update(cls for cls in get_mro(arg) if issubclass(abc.ABCMeta, type(cls)))
-            bases = tuple(cls for cls in counts if counts[cls] == len(args))[:1]
+            bases = common_bases(*args)[:1]
+            if bases[0] in args:
+                return bases[0]
         if origin is Callable and args[:1] == (...,):
             args = args[1:]
         namespace = {'__origin__': origin, '__args__': args}
