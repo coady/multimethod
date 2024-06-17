@@ -2,7 +2,7 @@ import enum
 import types
 import pytest
 from collections.abc import Collection, Iterable, Mapping, Set
-from typing import Any, AnyStr, NewType, Protocol, Sized, TypeVar, Union
+from typing import Annotated, Any, AnyStr, NewType, Protocol, Sized, TypeVar, Union
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
@@ -36,7 +36,6 @@ def join(seq: tree, sep: object):
     return join(seq.walk(), sep)
 
 
-@pytest.mark.benchmark
 def test_join():
     sep = '<>'
     seq = [0, tree([1]), 2]
@@ -76,6 +75,7 @@ def test_subtype():
     assert not list(subtype.origins(subclass(subclass(Protocol))))
     assert not list(subtype.origins(subclass(Sized)))
     assert not list(subtype.origins(subclass(Protocol[TypeVar('T')])))
+    assert subtype(Annotated[str, "test"]) is str
 
 
 @pytest.mark.benchmark

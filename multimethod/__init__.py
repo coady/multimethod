@@ -50,13 +50,13 @@ class subtype(abc.ABCMeta):
         if tp is Any:
             return object
         if hasattr(tp, '__supertype__'):  # isinstance(..., NewType) only supported >=3.10
-            tp = tp.__supertype__
+            return cls(tp.__supertype__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
-            tp = tp.__value__
+            return cls(tp.__value__, *args)
         if isinstance(tp, TypeVar):
-            if not tp.__constraints__:
-                return object
-            tp = Union[tp.__constraints__]
+            return cls(Union[tp.__constraints__], *args) if tp.__constraints__ else object
+        if isinstance(tp, typing._AnnotatedAlias):
+            return cls(tp.__origin__, *args)
         origin = get_origin(tp) or tp
         if hasattr(types, 'UnionType') and isinstance(tp, types.UnionType):
             origin = Union  # `|` syntax added in 3.10
