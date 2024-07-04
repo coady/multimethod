@@ -154,7 +154,7 @@ def test_register():
     assert func(0) is int
     assert func(False) is bool
     assert func([0]) == func((0.0,)) == func({'': 0}) == func({}) == 'union'
-    assert func([0.0]) == func((0.0, 1.0)) == object
+    assert func([0.0]) is func((0.0, 1.0)) is object
 
 
 # multimeta
