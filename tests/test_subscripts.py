@@ -5,7 +5,7 @@ import pytest
 from array import array
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Generic, Literal, Type, TypeVar, Union
-from multimethod import distance, multimethod, parametric, subtype, DispatchError
+from multimethod import multimethod, parametric, subtype, DispatchError
 
 
 def test_literals():
@@ -65,7 +65,6 @@ def test_generic():
     def func(x: cls[int]):
         pass
 
-    assert distance(object, cls[int])
     obj = cls[int]()
     assert isinstance(obj, subtype(cls[int]))
     assert func(obj) is None

@@ -43,8 +43,10 @@ def test_join():
     assert join(seq, sep) == '0<>[1]<>2'
     assert join(tree(seq), sep) == '0<>1<>2'
     assert join(seq, bracket(*sep)) == '<0><[1]><2>'
-    with pytest.warns(DeprecationWarning):
+    with pytest.raises(DispatchError):
         assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
+    join[tree, bracket] = join[tree, object]
+    assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
 
 
 def subclass(*bases, **kwds):
@@ -83,19 +85,9 @@ def test_signature():
     assert signature([Any, list, NewType('', int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([Union[bytes, str]])
     assert signature([TypeVar('T')]) == signature([object])
-    assert signature([int]) - signature([Union[int, float]]) == (0,)
     assert signature([list]) <= (list,)
     assert signature([list]) <= signature([list])
     assert signature([list]) <= signature([list[int]])
-    assert signature([list[int]]) - signature([list])
-    assert signature([list]) - signature([list[int]]) == (1,)
-
-    # with metaclasses:
-    assert signature([type]) - (type,) == (0,)
-    assert (type,) - signature([object]) == (1,)
-    # using EnumMeta because it is a standard, stable, metaclass
-    assert signature([enum.EnumMeta]) - signature([object]) == (2,)
-    assert signature([Union[type, enum.EnumMeta]]) - signature([object]) == (1,)
 
 
 class namespace:

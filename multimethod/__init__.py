@@ -111,7 +111,7 @@ class subtype(abc.ABCMeta):
 
     def __instancecheck__(self, instance):
         if self.__origin__ is Literal:
-            return any(type(arg) == type(instance) and arg == instance for arg in self.__args__)
+            return any(type(arg) is type(instance) and arg == instance for arg in self.__args__)
         if self.__origin__ is Union:
             return isinstance(instance, self.__args__)
         if hasattr(instance, '__orig_class__'):  # user-defined generic type
@@ -186,14 +186,6 @@ class parametric(abc.ABCMeta):
 subtype.origins.register(parametric, lambda cls: cls.__bases__)
 
 
-def distance(cls, subclass: type) -> int:
-    """Return estimated distance between classes for tie-breaking."""
-    if get_origin(cls) is Union:
-        return min(distance(arg, subclass) for arg in cls.__args__)
-    mro = get_mro(subclass)
-    return mro.index(cls if cls in mro else object)
-
-
 class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
@@ -228,14 +220,6 @@ class signature(tuple):
 
     def __lt__(self, other: tuple) -> bool:
         return self != other and self <= other
-
-    def __sub__(self, other: tuple) -> tuple:
-        """Return relative distances, assuming self >= other."""
-        return tuple(map(distance, other, self))
-
-    def __rsub__(self, other: tuple) -> tuple:
-        """Return relative distances, assuming self <= other."""
-        return tuple(map(distance, self, other))
 
     def callable(self, *types) -> bool:
         """Check positional arity of associated function signature."""
@@ -339,14 +323,6 @@ class multimethod(dict):
     def select(self, types: tuple, keys: set[signature]) -> Callable:
         keys = {key for key in keys if key.callable(*types)}
         funcs = {self[key] for key in keys}
-        if len(funcs) > 1:
-            groups = collections.defaultdict(set)
-            for key in keys:
-                groups[types - key].add(key)
-            keys = groups[min(groups)]
-            funcs = {self[key] for key in keys}
-            if len(funcs) == 1:
-                warnings.warn("positional distance tie-breaking is deprecated", DeprecationWarning)
         if len(funcs) == 1:
             return funcs.pop()
         raise DispatchError(f"{self.__name__}: {len(keys)} methods found", types, keys)
