@@ -110,18 +110,6 @@ Coroutine = parametric(Callable, asyncio.iscoroutinefunction)
 IntArray = parametric(array, typecode='i')
 ```
 
-`overload` used to dispatch on annotated predicate functions. It is deprecated because a custom instance check - including using `parametric` - offers the same functionality. Any predicate function can be wrapped with the closest matching base class, including  `object` if necessary.
-
-```python
-Cls = parametric(object, predicate)
-Digits = parametric(str, str.isdigit)
-assert isinstance('0', Digits)
-assert not isinstance('a', Digits)
-
-@meth.register
-def _(arg: Digits): ...
-```
-
 ### classes
 `classmethod` and `staticmethod` may be used with a multimethod, but must be applied _last_, i.e., wrapping the final multimethod definition after all functions are registered. For class and instance methods, `cls` and `self` participate in the dispatch as usual. They may be left blank when using annotations, otherwise use `object` as a placeholder.
 

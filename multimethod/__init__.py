@@ -6,9 +6,8 @@ import inspect
 import itertools
 import types
 import typing
-import warnings
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload as tp_overload
+from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload
 
 
 class DispatchError(TypeError):
@@ -259,10 +258,10 @@ class multimethod(dict):
         except (NameError, AttributeError):
             self.pending.add(func)
 
-    @tp_overload
+    @overload
     def register(self, __func: REGISTERED) -> REGISTERED: ...  # pragma: no cover
 
-    @tp_overload
+    @overload
     def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...  # pragma: no cover
 
     def register(self, *args) -> Callable:
@@ -409,65 +408,6 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
                     break
         func = self.dispatch(*params)
         return func(*args, **kwargs)
-
-
-def isa(*types: type) -> Callable:
-    """Partially bound `isinstance`."""
-    types = tuple(map(subtype, types))
-    return lambda arg: isinstance(arg, types)
-
-
-class overload(dict):
-    """Ordered functions which dispatch based on their annotated predicates."""
-
-    pending: set
-    __get__ = multimethod.__get__
-
-    def __new__(cls, func):
-        namespace = inspect.currentframe().f_back.f_locals
-        if func.__name__ not in namespace:
-            warnings.warn("use `parametric(<base>, <func>)` as a type instead", DeprecationWarning)
-        self = functools.update_wrapper(super().__new__(cls), func)
-        self.pending = set()
-        return namespace.get(func.__name__, self)
-
-    def __init__(self, func: Callable):
-        try:
-            sig = self.signature(func)
-        except (NameError, AttributeError):
-            self.pending.add(func)
-        else:
-            self[sig] = func
-
-    @classmethod
-    def signature(cls, func: Callable) -> inspect.Signature:
-        for name, value in get_type_hints(func).items():
-            if not callable(value) or isinstance(value, type) or hasattr(value, '__origin__'):
-                func.__annotations__[name] = isa(value)
-        return inspect.signature(func)
-
-    def __call__(self, *args, **kwargs):
-        """Dispatch to first matching function."""
-        while self.pending:
-            func = self.pending.pop()
-            self[self.signature(func)] = func
-        for sig in reversed(self):
-            try:
-                arguments = sig.bind(*args, **kwargs).arguments
-            except TypeError:
-                continue
-            if all(
-                param.annotation is param.empty or param.annotation(arguments[name])
-                for name, param in sig.parameters.items()
-                if name in arguments
-            ):
-                return self[sig](*args, **kwargs)
-        raise DispatchError("No matching functions found")
-
-    def register(self, func: Callable) -> Callable:
-        """Decorator for registering a function."""
-        self.__init__(func)  # type: ignore
-        return self if self.__name__ == func.__name__ else func  # type: ignore
 
 
 class multimeta(type):
