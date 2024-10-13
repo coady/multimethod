@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
+
+## [2.0rc1](https://pypi.org/project/multimethod/2.0rc1/) - 2024-10-13
 ### Removed
 * Resolving ambiguity using positional distance
 * `overload` is redundant with instance checking
