@@ -25,7 +25,7 @@ def get_args(tp) -> tuple:
 
 
 def get_mro(cls) -> tuple:  # `inspect.getmro` doesn't handle all cases
-    return type.mro(cls) if isinstance(cls, type) else cls.mro()
+    return tuple(type.mro(cls)) if isinstance(cls, type) else cls.mro()
 
 
 def common_bases(*bases):

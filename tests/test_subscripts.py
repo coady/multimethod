@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import sys
 import typing
 import pytest
@@ -130,10 +131,10 @@ def test_args():
 
 @pytest.mark.benchmark
 def test_parametric():
-    coro = parametric(Callable, asyncio.iscoroutinefunction)
+    coro = parametric(Callable, inspect.iscoroutinefunction)
     assert issubclass(coro, Callable)
     assert not issubclass(Callable, coro)
-    assert not issubclass(parametric(object, asyncio.iscoroutinefunction), coro)
+    assert not issubclass(parametric(object, inspect.iscoroutinefunction), coro)
     assert isinstance(asyncio.sleep, coro)
     assert not isinstance(lambda: None, coro)
     assert list(subtype.origins(coro)) == [Callable]

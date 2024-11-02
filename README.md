@@ -106,7 +106,7 @@ If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (wi
 ```python
 from multimethod import parametric
 
-Coroutine = parametric(Callable, asyncio.iscoroutinefunction)
+Coroutine = parametric(Callable, inspect.iscoroutinefunction)
 IntArray = parametric(array, typecode='i')
 ```
 
