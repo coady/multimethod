@@ -368,6 +368,7 @@ class multimethod(dict):
         return '\n\n'.join(docs)
 
 
+del overload  # raise error on legacy import
 RETURN = TypeVar("RETURN")
 
 
