@@ -1,6 +1,6 @@
 [project]
 name = "multimethod"
-version = "2.0rc2"
+version = "2.0"
 description = "Multiple argument dispatching."
 readme = "README.md"
 requires-python = ">=3.9"
