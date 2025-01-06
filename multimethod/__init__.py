@@ -7,7 +7,7 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, Optional, TypeVar, Union, get_type_hints, overload
+from typing import Any, Literal, TypeVar, Union, get_type_hints, overload
 
 
 class DispatchError(TypeError):
@@ -57,15 +57,14 @@ class subtype(abc.ABCMeta):
         if isinstance(tp, typing._AnnotatedAlias):
             return cls(tp.__origin__, *args)
         origin = get_origin(tp) or tp
-        if hasattr(types, 'UnionType') and isinstance(tp, types.UnionType):
-            origin = Union  # `|` syntax added in 3.10
         args = tuple(map(cls, get_args(tp) or args))
         if set(args) <= {object} and not (origin is tuple and args):
             return origin
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
             bases = (cls(Union[tuple(map(type, args))]),)
-        if origin is Union:
+        if origin is Union or isinstance(tp, types.UnionType):
+            origin = types.UnionType
             bases = common_bases(*args)[:1]
             if bases[0] in args:
                 return bases[0]
@@ -90,11 +89,11 @@ class subtype(abc.ABCMeta):
         args = get_args(subclass)
         if origin is Literal:
             return all(isinstance(arg, self) for arg in args)
-        if origin is Union:
+        if origin in (Union, types.UnionType):
             return all(issubclass(cls, self) for cls in args)
         if self.__origin__ is Literal:
             return False
-        if self.__origin__ is Union:
+        if self.__origin__ is types.UnionType:
             return issubclass(subclass, self.__args__)
         if self.__origin__ is Callable:
             return (
@@ -111,7 +110,7 @@ class subtype(abc.ABCMeta):
     def __instancecheck__(self, instance):
         if self.__origin__ is Literal:
             return any(type(arg) is type(instance) and arg == instance for arg in self.__args__)
-        if self.__origin__ is Union:
+        if self.__origin__ is types.UnionType:
             return isinstance(instance, self.__args__)
         if hasattr(instance, '__orig_class__'):  # user-defined generic type
             return issubclass(instance.__orig_class__, self)
@@ -139,7 +138,7 @@ class subtype(abc.ABCMeta):
         origin = get_origin(self)
         if origin is Literal:
             yield from set(map(type, self.__args__))
-        elif origin is Union:
+        elif origin is types.UnionType:
             for arg in self.__args__:
                 yield from subtype.origins(arg)
         elif origin is not None:
@@ -192,10 +191,10 @@ class signature(tuple):
     parents: set
     sig: inspect.Signature
 
-    def __new__(cls, types: Iterable, required: Optional[int] = None):
+    def __new__(cls, types: Iterable, required: int | None = None):
         return tuple.__new__(cls, map(subtype, types))
 
-    def __init__(self, types: Iterable, required: Optional[int] = None):
+    def __init__(self, types: Iterable, required: int | None = None):
         self.required = len(self) if required is None else required
 
     @classmethod
