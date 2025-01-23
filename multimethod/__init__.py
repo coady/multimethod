@@ -400,6 +400,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
 
     def __call__(self, *args: Any, **kwargs: Any) -> RETURN:
         """Resolve and dispatch to best method."""
+        self.evaluate()
         params = args
         if kwargs:
             for signature in self.signatures.values():  # pragma: no branch
