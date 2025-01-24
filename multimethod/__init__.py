@@ -334,6 +334,7 @@ class multimethod(dict):
         return self.setdefault(types, self.select(types, self.parents(types)))
 
     def dispatch(self, *args) -> Callable:
+        self.evaluate()
         types = tuple(map(type, args))
         if not any(map(issubclass, types, self.generics)):
             return self[types]
@@ -343,7 +344,6 @@ class multimethod(dict):
 
     def __call__(self, *args, **kwargs):
         """Resolve and dispatch to best method."""
-        self.evaluate()
         func = self.dispatch(*args)
         try:
             return func(*args, **kwargs)
