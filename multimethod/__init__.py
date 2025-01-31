@@ -7,11 +7,10 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, TypeVar, Union, get_type_hints, overload
+from typing import Any, Literal, NewType, TypeVar, Union, get_type_hints, overload
 
 
-class DispatchError(TypeError):
-    pass
+class DispatchError(TypeError): ...
 
 
 def get_origin(tp):
@@ -48,7 +47,7 @@ class subtype(abc.ABCMeta):
     def __new__(cls, tp, *args):
         if tp is Any:
             return object
-        if hasattr(tp, '__supertype__'):  # isinstance(..., NewType) only supported >=3.10
+        if isinstance(tp, NewType):
             return cls(tp.__supertype__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
             return cls(tp.__value__, *args)
@@ -414,8 +413,7 @@ class multimeta(type):
     """Convert all callables in namespace to multimethods."""
 
     class __prepare__(dict):
-        def __init__(*args):
-            pass
+        def __init__(*args): ...
 
         def __setitem__(self, key, value):
             if callable(value):

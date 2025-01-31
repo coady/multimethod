@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 * Python >=3.10 required
 
+### Fixed
+* `multidispatch` allows pending references
+
 ## [2.0](https://pypi.org/project/multimethod/2.0/) - 2024-12-26
 ### Removed
 * Resolving ambiguity using positional distance
