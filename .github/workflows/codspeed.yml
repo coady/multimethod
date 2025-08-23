@@ -12,10 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - uses: actions/setup-python@v5
-      with:
-        python-version: 3.x
-    - run: pip install -r tests/requirements.in
+    - uses: astral-sh/setup-uv@v6
     - uses: CodSpeedHQ/action@v3
       with:
         token: ${{ secrets.CODSPEED_TOKEN }}

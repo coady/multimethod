@@ -1,14 +1,14 @@
 check:
-	python -m pytest -s --cov
+	uv run pytest -s --cov
 
 bench:
-	python -m pytest --codspeed
+	uv run pytest --codspeed
 
 lint:
-	ruff check .
-	ruff format --check .
-	mypy -p multimethod
-	mypy tests/static.py | grep -qv Any
+	uv run ruff check .
+	uv run ruff format --check .
+	uv run mypy -p multimethod
+	uv run mypy tests/static.py | grep -qv Any
 
 html:
-	PYTHONPATH=$(PWD) python -m mkdocs build
+	uv run --with multimethod mkdocs build
