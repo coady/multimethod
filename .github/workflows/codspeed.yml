@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - uses: astral-sh/setup-uv@v6
-    - uses: CodSpeedHQ/action@v3
+    - uses: CodSpeedHQ/action@v4
       with:
         token: ${{ secrets.CODSPEED_TOKEN }}
         run: make bench
