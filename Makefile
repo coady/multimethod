@@ -11,4 +11,4 @@ lint:
 	uv run mypy tests/static.py | grep -qv Any
 
 html:
-	uv run --with multimethod mkdocs build
+	PYTHONPATH=$(PWD) uv run mkdocs build
