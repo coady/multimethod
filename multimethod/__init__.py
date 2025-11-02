@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Literal, NewType, TypeVar, Union, get_type_hints, overload
 
 
-class DispatchError(TypeError): ...
+class DispatchError(TypeError): ...  # pragma: no branch
 
 
 def get_origin(tp):

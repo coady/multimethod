@@ -155,12 +155,12 @@ class Cls(metaclass=multimeta):
 
 ## Installation
 ```console
-% pip install multimethod
+pip install multimethod
 ```
 
 ## Tests
 100% branch coverage.
 
 ```console
-% pytest [--cov]
+pytest [--cov]
 ```
