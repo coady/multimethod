@@ -6,6 +6,7 @@ import inspect
 import itertools
 import types
 import typing
+import asyncio
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Literal, NewType, TypeVar, Union, get_type_hints, overload
 
@@ -364,6 +365,81 @@ class multimethod(dict):
             if func.__doc__:
                 docs.append(f'{func.__name__}{sig}\n    {func.__doc__}')
         return '\n\n'.join(docs)
+
+
+class async_multimethod(multimethod):
+    def __init__(self, func: Callable):
+        super().__init__(func)
+        self.async_methods = {}
+        self.sync_methods = {}
+
+        sig = signature.from_hints(func)
+        if inspect.iscoroutinefunction(func):
+            self.async_methods[sig] = func
+        else:
+            self.sync_methods[sig] = func
+
+    @overload
+    def register(self, __func: REGISTERED) -> REGISTERED: ...
+
+    @overload
+    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...
+
+    def register(self, *args: Any) -> Callable:
+        if len(args) == 1 and hasattr(args[0], "__annotations__"):
+            func = args[0]
+            sig = signature.from_hints(func)
+
+            if inspect.iscoroutinefunction(func):
+                self.async_methods[sig] = func
+            else:
+                self.sync_methods[sig] = func
+
+            super().__setitem__(sig, func)
+
+            return self if self.__name__ == func.__name__ else func
+        return lambda func: self.register(func)
+
+    def __setitem__(self, types: tuple, func: Callable):
+        sig = types if isinstance(types, signature) else signature(types)
+
+        if inspect.iscoroutinefunction(func):
+            self.async_methods[sig] = func
+        else:
+            self.sync_methods[sig] = func
+
+        super().__setitem__(types, func)
+
+    def _find_matching_signature(self, *args) -> signature:
+        self.evaluate()
+        all_sigs = set(self.sync_methods.keys()) | set(self.async_methods.keys())
+
+        for sig_key in all_sigs:
+            if isinstance(sig_key, signature) and sig_key.instances(*args):
+                return sig_key
+
+        types = tuple(map(type, args))
+        return signature(types)
+
+    def __call__(self, *args, **kwargs):
+        sig_key = self._find_matching_signature(*args)
+
+        try:
+            asyncio.get_running_loop()
+            in_async_context = True
+        except RuntimeError:
+            in_async_context = False
+
+        if in_async_context:
+            if async_func := self.async_methods.get(sig_key):
+                return async_func(*args, **kwargs)
+            else:
+                raise DispatchError(f"{self.__name__}: no async method found", sig_key)
+        else:
+            if sync_func := self.sync_methods.get(sig_key):
+                return sync_func(*args, **kwargs)
+            else:
+                raise DispatchError(f"{self.__name__}: no sync method found", sig_key)
 
 
 del overload  # raise error on legacy import
