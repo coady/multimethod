@@ -16,6 +16,7 @@ class TestBasicDispatch:
         return f"async:{x}"
 
 
+@pytest.mark.benchmark
 def test_basic_sync_async():
     obj = TestBasicDispatch()
 
