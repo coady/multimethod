@@ -47,6 +47,8 @@ class subtype(abc.ABCMeta):
     def __new__(cls, tp, *args):
         if tp is Any:
             return object
+        if isinstance(tp, cls):  # If already a subtype, return it directly
+            return tp
         if isinstance(tp, NewType):
             return cls(tp.__supertype__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
@@ -65,9 +67,8 @@ class subtype(abc.ABCMeta):
         if origin is Union or isinstance(tp, types.UnionType):
             origin = types.UnionType
             bases = common_bases(*args)[:1]
-            if bases and bases[0] in args:
+            if bases[0] in args:
                 return bases[0]
-            bases = ()
         if origin is Callable and args[:1] == (...,):
             args = args[1:]
         namespace = {'__origin__': origin, '__args__': args}

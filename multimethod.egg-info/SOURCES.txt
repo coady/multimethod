@@ -1,0 +1,13 @@
+LICENSE.txt
+README.md
+pyproject.toml
+multimethod/__init__.py
+multimethod/py.typed
+multimethod.egg-info/PKG-INFO
+multimethod.egg-info/SOURCES.txt
+multimethod.egg-info/dependency_links.txt
+multimethod.egg-info/top_level.txt
+tests/test_dispatch.py
+tests/test_docstring.py
+tests/test_methods.py
+tests/test_subscripts.py
