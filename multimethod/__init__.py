@@ -399,19 +399,17 @@ class async_multimethod(multimethod):
     def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...
 
     def register(self, *args: Any) -> Callable:
-        if len(args) == 1 and hasattr(args[0], "__annotations__"):
-            func = args[0]
-            sig = signature.from_hints(func)
+        func = args[0]
+        sig = signature.from_hints(func)
 
-            if inspect.iscoroutinefunction(func):
-                self.async_methods[sig] = func
-            else:
-                self.sync_methods[sig] = func
+        if inspect.iscoroutinefunction(func):
+            self.async_methods[sig] = func
+        else:
+            self.sync_methods[sig] = func
 
-            super().__setitem__(sig, func)
+        super().__setitem__(sig, func)
 
-            return self if self.__name__ == func.__name__ else func
-        return lambda func: self.register(func)
+        return self if self.__name__ == func.__name__ else func
 
     def __setitem__(self, types: tuple, func: Callable):
         sig = types if isinstance(types, signature) else signature(types)
