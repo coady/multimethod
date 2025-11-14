@@ -7,7 +7,6 @@ import inspect
 import itertools
 import types
 import typing
-import asyncio
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Literal, NewType, TypeVar, Union, get_type_hints, overload
 
