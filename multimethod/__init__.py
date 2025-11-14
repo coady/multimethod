@@ -1,4 +1,5 @@
 import abc
+import sys
 import collections
 import contextlib
 import functools
@@ -367,6 +368,18 @@ class multimethod(dict):
         return '\n\n'.join(docs)
 
 
+CO_COROUTINE = getattr(inspect, 'CO_COROUTINE', 0x0080)
+
+
+def _called_from_async(depth: int = 2) -> bool:
+    """Detect if caller is inside an async def."""
+    try:
+        frame = sys._getframe(depth)
+        return bool(frame.f_code.co_flags & CO_COROUTINE)
+    except (ValueError, AttributeError):
+        return False
+
+
 class async_multimethod(multimethod):
     def __init__(self, func: Callable):
         super().__init__(func)
@@ -424,11 +437,7 @@ class async_multimethod(multimethod):
     def __call__(self, *args, **kwargs):
         sig_key = self._find_matching_signature(*args)
 
-        try:
-            asyncio.get_running_loop()
-            in_async_context = True
-        except RuntimeError:
-            in_async_context = False
+        in_async_context = _called_from_async(depth=2)
 
         if in_async_context:
             if async_func := self.async_methods.get(sig_key):

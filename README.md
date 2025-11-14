@@ -16,10 +16,11 @@ There are several multiple dispatch libraries on PyPI. This one aims for simplic
 ## Usage
 There are a couple options which trade-off dispatch speed for flexibility.
 
-Decorator | Speed | Dispatch | Arguments
---------- | ----- | -------- | ---------
-[multimethod](#multimethod) | faster | cached lookup | positional only
-[multidispatch](#multidispatch) | slower | binds to first signature + cached lookup | positional + keywords
+Decorator | Speed | Dispatch | Arguments | Async Support
+--------- | ----- | -------- | --------- | -------------
+[multimethod](#multimethod) | faster | cached lookup | positional only | Yes with differents arguments
+[multidispatch](#multidispatch) | slower | binds to first signature + cached lookup | positional + keywords | Yes with differents arguments
+[async_multimethod](#async_multimethod) | faster | cached lookup + context-aware | positional only | Yes with same arguments
 
 Dispatching on simple types which use `issubclass` is cached. Advanced types which use `isinstance` require a linear scan.
 
@@ -81,6 +82,36 @@ Dispatch resolution details:
 
 ### multidispatch
 `multidispatch` is a wrapper to provide compatibility with `functools.singledispatch`. It requires a base implementation and use of the `register` method instead of namespace lookup. It also supports dispatching on keyword arguments.
+
+### async_multimethod
+```python
+import asyncio
+from multimethod import async_multimethod
+
+class AsyncClass:
+    @async_multimethod
+    def method(self, x: str):
+        return f"sync_direct:{x}"
+
+    @method.register
+    async def _(self, x: str):
+        await asyncio.sleep(0)
+        return f"async_direct:{x}"
+```
+`method` is now an `async_multimethod` which will delegate to the appropriate function based on the context it is called in. If called from a synchronous context, it will call the synchronous version of the method. If called from within an `async` function, it will call the asynchronous version.
+
+```python
+obj = AsyncClass()
+# Synchronous call
+result_sync = obj.method("test")  # Calls sync_direct
+print(result_sync)  # Output: sync_direct:test
+
+# Asynchronous call
+async def main():
+    result_async = await obj.method("test")  # Calls async_direct
+    print(result_async)  # Output: async_direct:test
+asyncio.run(main())
+```
 
 ### instance checks
 `subtype` provisionally provides `isinstance` and `issubclass` checks for generic types. When called on a non-generic, it will return the origin type.
