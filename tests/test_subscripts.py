@@ -36,6 +36,13 @@ def test_union():
     assert issubclass(subtype(int | float), subtype(int | float | None))
     assert subtype(Iterable | Mapping | Sequence) is Iterable
 
+    # Test nested subtype with UnionType base
+    union_type = int | float
+    s1 = subtype(union_type)
+    s2 = subtype(s1)
+    assert s2.__origin__.__name__ in ['Union', 'UnionType']
+    assert s2.__args__ == (int, float)
+
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
 def test_type_alias():

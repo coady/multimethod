@@ -47,6 +47,8 @@ class subtype(abc.ABCMeta):
     def __new__(cls, tp, *args):
         if tp is Any:
             return object
+        if isinstance(tp, cls):  # If already a subtype, return it directly
+            return tp
         if isinstance(tp, NewType):
             return cls(tp.__supertype__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
