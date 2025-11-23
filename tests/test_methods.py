@@ -2,7 +2,7 @@ import enum
 import types
 import pytest
 from collections.abc import Collection, Iterable, Mapping, Set
-from typing import Annotated, Any, AnyStr, NewType, Protocol, Sized, TypeVar, Union
+from typing import Annotated, Any, AnyStr, NewType, Protocol, Sized, TypeVar
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
@@ -57,8 +57,8 @@ def subclass(*bases, **kwds):
 def test_subtype():
     assert len({subtype(list[int]), subtype(list[int])}) == 1
     assert len({subtype(list[bool]), subtype(list[int])}) == 2
-    assert issubclass(int, subtype(Union[int, float]))
-    assert issubclass(Union[float, int], subtype(Union[int, float]))
+    assert issubclass(int, subtype(int | float))
+    assert issubclass(float | int, subtype(int | float))
     assert issubclass(list[bool], subtype(list[int]))
     assert isinstance((0, 0.0), subtype(tuple[int, float]))
     assert not isinstance((0,), subtype(tuple[int, float]))
@@ -69,11 +69,11 @@ def test_subtype():
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
     assert issubclass(subtype(list[int]), subtype(Iterable))
-    assert issubclass(list[bool], subtype(Union[list[int], list[float]]))
-    assert issubclass(subtype(Union[bool, int]), int)
-    assert issubclass(subtype(Union[Mapping, Set]), Collection)
+    assert issubclass(list[bool], subtype(list[int] | list[float]))
+    assert issubclass(subtype(bool | int), int)
+    assert issubclass(subtype(Mapping | Set), Collection)
     base = subclass(metaclass=subclass(type))
-    assert subtype(Union[base, subclass(base)])
+    assert subtype(base | subclass(base))
     assert not list(subtype.origins(subclass(subclass(Protocol))))
     assert not list(subtype.origins(subclass(Sized)))
     assert not list(subtype.origins(subclass(Protocol[TypeVar('T')])))
@@ -83,7 +83,7 @@ def test_subtype():
 @pytest.mark.benchmark
 def test_signature():
     assert signature([Any, list, NewType('', int)]) == (object, list, int)
-    assert signature([AnyStr]) == signature([Union[bytes, str]])
+    assert signature([AnyStr]) == signature([bytes | str])
     assert signature([TypeVar('T')]) == signature([object])
     assert signature([list]) <= (list,)
     assert signature([list]) <= signature([list])
@@ -137,7 +137,7 @@ def _(arg: int):
 
 
 @func.register
-def _(arg: Union[list[int], tuple[float], dict[str, int]]):
+def _(arg: list[int] | tuple[float] | dict[str, int]):
     return 'union'
 
 

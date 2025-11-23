@@ -62,11 +62,10 @@ method[type, ...] = func    # register function by explicit types
 ```
 
 Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc`. Note `typing` aliases do not support `issubclass` consistently, and are no longer needed for subscripts. Using ABCs instead is recommended. Subscripted generics are supported:
-* `Union[...]` or `... | ...`
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
-* `Type[...]`
+* `type[...]`
 * `Literal[...]`
 * `Callable[[...], ...]` - parameter types are contravariant, return type is covariant
 

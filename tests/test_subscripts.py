@@ -18,7 +18,7 @@ def test_literals():
     assert isinstance(0, tp)
     assert not issubclass(Literal['a', 0.0], tp)
     assert not issubclass(tuple[str, int], tp)
-    assert issubclass(tp, subtype(Union[str, int]))
+    assert issubclass(tp, subtype(str | int))
 
     @multimethod
     def func(arg: Literal['a', 0]):
@@ -32,6 +32,8 @@ def test_literals():
 
 
 def test_union():
+    if sys.version_info < (3, 14):
+        assert issubclass(int, subtype(Union[int, float]))
     assert issubclass(int, subtype(int | float))
     assert issubclass(subtype(int | float), subtype(int | float | None))
     assert subtype(Iterable | Mapping | Sequence) is Iterable
