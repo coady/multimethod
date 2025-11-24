@@ -7,7 +7,7 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, NewType, TypeVar, Union, get_type_hints, overload
+from typing import Any, Literal, TypeVar, Union, get_type_hints
 
 
 class DispatchError(TypeError): ...  # pragma: no branch
@@ -49,7 +49,7 @@ class subtype(abc.ABCMeta):
             return object
         if isinstance(tp, cls):  # If already a subtype, return it directly
             return tp
-        if isinstance(tp, NewType):
+        if isinstance(tp, typing.NewType):
             return cls(tp.__supertype__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
             return cls(tp.__value__, *args)
@@ -258,10 +258,10 @@ class multimethod(dict):
         except (NameError, AttributeError):
             self.pending.add(func)
 
-    @overload
+    @typing.overload
     def register(self, __func: REGISTERED) -> REGISTERED: ...  # pragma: no cover
 
-    @overload
+    @typing.overload
     def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...  # pragma: no cover
 
     def register(self, *args) -> Callable:
@@ -368,7 +368,6 @@ class multimethod(dict):
         return '\n\n'.join(docs)
 
 
-del overload  # raise error on legacy import
 RETURN = TypeVar("RETURN")
 
 

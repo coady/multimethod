@@ -2,11 +2,13 @@ import asyncio
 import inspect
 import sys
 import typing
-import pytest
 from array import array
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Generic, Literal, Type, TypeVar, Union
-from multimethod import multimethod, parametric, subtype, DispatchError
+
+import pytest
+
+from multimethod import DispatchError, multimethod, parametric, subtype
 
 
 def test_literals():

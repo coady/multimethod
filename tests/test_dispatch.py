@@ -1,7 +1,9 @@
 from collections.abc import Iterable
 from concurrent import futures
+
 import pytest
-from multimethod import multidispatch, multimethod, signature, DispatchError
+
+from multimethod import DispatchError, multidispatch, multimethod, signature
 
 
 def test_signature():

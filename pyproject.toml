@@ -32,6 +32,7 @@ line-length = 100
 
 [tool.ruff.lint]
 ignore = ["F811"]
+select = ["I"]
 
 [tool.ruff.format]
 quote-style = "preserve"

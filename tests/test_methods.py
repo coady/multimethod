@@ -1,8 +1,10 @@
 import enum
 import types
-import pytest
 from collections.abc import Collection, Iterable, Mapping, Set
 from typing import Annotated, Any, AnyStr, NewType, Protocol, Sized, TypeVar
+
+import pytest
+
 from multimethod import DispatchError, multimeta, multimethod, signature, subtype
 
 
