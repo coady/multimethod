@@ -4,7 +4,7 @@ import sys
 import typing
 from array import array
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Generic, Literal, Type, TypeVar, Union
+from typing import Generic, Literal, TypeVar, Union
 
 import pytest
 
@@ -53,16 +53,18 @@ def test_type_alias():
 
 def test_type():
     @multimethod
-    def func(arg: Type[int]):
-        return arg
+    def func(arg: type[list]): ...
 
-    assert isinstance(int, subtype(Type[int]))
-    assert func(int) is int
-    assert func(bool) is bool
+    @func.register
+    def _(arg: type[list[str]]):
+        return str
+
+    assert func(list) is func(list[int]) is None
+    assert func(list[str]) is str
     with pytest.raises(DispatchError):
-        func(float)
+        func(tuple)
     with pytest.raises(DispatchError):
-        func(0)
+        func([])
 
 
 def test_generic():

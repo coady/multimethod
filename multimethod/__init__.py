@@ -116,6 +116,8 @@ class subtype(abc.ABCMeta):
         if hasattr(instance, '__orig_class__'):  # user-defined generic type
             return issubclass(instance.__orig_class__, self)
         if self.__origin__ is type:  # a class argument is expected
+            if isinstance(instance, types.GenericAlias):
+                return issubclass(subtype(instance), self.__args__)
             return inspect.isclass(instance) and issubclass(instance, self.__args__)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
             return False
@@ -136,14 +138,16 @@ class subtype(abc.ABCMeta):
 
         Provisional custom usage: `subtype.origins.register(<metaclass>, lambda cls: ...)
         """
-        origin = get_origin(self)
-        if origin is Literal:
-            yield from set(map(type, self.__args__))
-        elif origin is types.UnionType:
-            for arg in self.__args__:
-                yield from subtype.origins(arg)
-        elif origin is not None:
-            yield origin
+        match origin := get_origin(self):
+            case typing.Literal:
+                yield from set(map(type, self.__args__))
+            case types.UnionType:
+                for arg in self.__args__:
+                    yield from subtype.origins(arg)
+            case _ if origin is type:
+                yield from (type, types.GenericAlias)
+            case _ if origin is not None:
+                yield origin  # type: ignore
 
 
 class parametric(abc.ABCMeta):
@@ -259,10 +263,10 @@ class multimethod(dict):
             self.pending.add(func)
 
     @typing.overload
-    def register(self, __func: REGISTERED) -> REGISTERED: ...  # pragma: no cover
+    def register(self, __func: REGISTERED) -> REGISTERED: ...
 
     @typing.overload
-    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...  # pragma: no cover
+    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...
 
     def register(self, *args) -> Callable:
         """Decorator for registering a function.
@@ -390,7 +394,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
         self[()] = func
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
-        return self if instance is None else types.MethodType(self, instance)  # type: ignore
+        return self if instance is None else types.MethodType(self, instance)
 
     def __setitem__(self, types: tuple, func: Callable):
         super().__setitem__(types, func)
