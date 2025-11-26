@@ -10,11 +10,12 @@ on:
 jobs:
   benchmarks:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
     - uses: actions/checkout@v6
     - uses: astral-sh/setup-uv@v7
     - uses: CodSpeedHQ/action@v4
       with:
-        mode: instrumentation
-        token: ${{ secrets.CODSPEED_TOKEN }}
+        mode: simulation
         run: make bench
