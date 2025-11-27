@@ -1,4 +1,5 @@
 import abc
+import builtins
 import collections
 import contextlib
 import functools
@@ -144,8 +145,8 @@ class subtype(abc.ABCMeta):
             case types.UnionType:
                 for arg in self.__args__:
                     yield from subtype.origins(arg)
-            case _ if origin is type:
-                yield from (type, types.GenericAlias)
+            case builtins.type:
+                yield from (type, types.GenericAlias, types.UnionType)
             case _ if origin is not None:
                 yield origin  # type: ignore
 

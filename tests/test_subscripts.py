@@ -65,6 +65,8 @@ def test_type():
         func(tuple)
     with pytest.raises(DispatchError):
         func([])
+    with pytest.raises(DispatchError):
+        func(list | tuple)
 
 
 def test_generic():
