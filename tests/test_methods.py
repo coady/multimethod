@@ -65,7 +65,6 @@ def test_subtype():
     assert isinstance((0, 0.0), subtype(tuple[int, float]))
     assert not isinstance((0,), subtype(tuple[int, float]))
     assert isinstance((0,), subtype(tuple[int, ...]))
-    assert not issubclass(tuple[int], subtype(tuple[int, ...]))
     assert not isinstance(iter('-'), subtype(Iterable[str]))
     assert not issubclass(tuple[int], subtype(tuple[int, float]))
     assert issubclass(Iterable[bool], subtype(Iterable[int]))

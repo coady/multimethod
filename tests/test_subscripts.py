@@ -82,6 +82,18 @@ def test_generic():
     assert func(obj) is None
 
 
+def test_tuple():
+    assert subtype(tuple) is tuple
+    assert not issubclass(tuple[int], subtype(tuple[()]))
+    assert not isinstance(tuple[int], subtype(type[tuple[()]]))
+    assert isinstance((), subtype(tuple[()]))
+    assert not isinstance((0,), subtype(tuple[()]))
+    assert issubclass(tuple[int], subtype(tuple[int, ...]))
+    assert issubclass(tuple[bool, ...], subtype(tuple[int, ...]))
+    assert isinstance(tuple[int], subtype(type[tuple[int, ...]]))
+    assert not issubclass(tuple[int, float], subtype(tuple[int, ...]))
+
+
 def test_empty():
     @multimethod
     def func(arg: list[int]):

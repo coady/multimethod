@@ -46,21 +46,22 @@ class subtype(abc.ABCMeta):
     __args__: tuple
 
     def __new__(cls, tp, *args):
-        if tp is Any:
-            return object
-        if isinstance(tp, cls):  # If already a subtype, return it directly
-            return tp
-        if isinstance(tp, typing.NewType):
-            return cls(tp.__supertype__, *args)
+        match tp:
+            case typing.Any:
+                return object
+            case subtype():  # If already a subtype, return it directly
+                return tp
+            case typing.NewType():
+                return cls(tp.__supertype__, *args)
+            case TypeVar():
+                return cls(Union[tp.__constraints__], *args) if tp.__constraints__ else object
+            case typing._AnnotatedAlias():
+                return cls(tp.__origin__, *args)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
             return cls(tp.__value__, *args)
-        if isinstance(tp, TypeVar):
-            return cls(Union[tp.__constraints__], *args) if tp.__constraints__ else object
-        if isinstance(tp, typing._AnnotatedAlias):
-            return cls(tp.__origin__, *args)
         origin = get_origin(tp) or tp
         args = tuple(map(cls, get_args(tp) or args))
-        if set(args) <= {object} and not (origin is tuple and args):
+        if set(args) <= {object} and (origin is not tuple or tp is tuple):
             return origin
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         if origin is Literal:
@@ -87,22 +88,27 @@ class subtype(abc.ABCMeta):
         return hash(self.key())
 
     def __subclasscheck__(self, subclass):
-        origin = get_origin(subclass) or subclass
         args = get_args(subclass)
-        if origin is Literal:
-            return all(isinstance(arg, self) for arg in args)
-        if origin in (Union, types.UnionType):
-            return all(issubclass(cls, self) for cls in args)
-        if self.__origin__ is Literal:
-            return False
-        if self.__origin__ is types.UnionType:
-            return issubclass(subclass, self.__args__)
-        if self.__origin__ is Callable:
-            return (
-                origin is Callable
-                and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
-                and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
-            )
+        match origin := get_origin(subclass) or subclass:
+            case typing.Literal:
+                return all(isinstance(arg, self) for arg in args)
+            case typing.Union | types.UnionType:
+                return all(issubclass(cls, self) for cls in args)
+        match self.__origin__:
+            case typing.Literal:
+                return False
+            case types.UnionType:
+                return issubclass(subclass, self.__args__)
+            case builtins.tuple:
+                if issubclass(origin, tuple) and ... in self.__args__:
+                    param = self.__args__[0]
+                    return all(arg is ... or issubclass(arg, param) for arg in args)
+            case collections.abc.Callable:
+                return (
+                    origin is Callable
+                    and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
+                    and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
+                )
         return (  # check args first to avoid recursion error: python/cpython#73407
             len(args) == len(self.__args__)
             and issubclass(origin, self.__origin__)
