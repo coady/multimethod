@@ -70,12 +70,10 @@ def test_type():
 
 
 def test_generic():
-    class cls(Generic[TypeVar('T')]):
-        pass
+    class cls(Generic[TypeVar('T')]): ...
 
     @multimethod
-    def func(x: cls[int]):
-        pass
+    def func(x: cls[int]): ...
 
     obj = cls[int]()
     assert isinstance(obj, subtype(cls[int]))

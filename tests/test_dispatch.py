@@ -108,8 +108,7 @@ def test_defaults():
 @pytest.mark.benchmark
 def test_keywords():
     @multidispatch
-    def func(arg):
-        pass
+    def func(arg): ...
 
     @func.register
     def _(arg: int):

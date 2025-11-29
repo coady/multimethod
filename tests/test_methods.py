@@ -91,8 +91,7 @@ def test_signature():
     assert signature([list]) <= signature([list[int]])
 
 
-class namespace:
-    pass
+class namespace: ...
 
 
 class cls:

@@ -6,7 +6,7 @@ def foo(bar: int):
     """
     Argument is an integer
     """
-    pass
+    ...
 
 
 @multimethod
@@ -14,12 +14,11 @@ def foo(bar: str):
     """
     Argument is a string
     """
-    pass
+    ...
 
 
 @foo.register
-def _(bar: float):
-    pass
+def _(bar: float): ...
 
 
 def test_docstring():
