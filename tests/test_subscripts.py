@@ -111,7 +111,7 @@ def test_callable():
 
     def g(arg: int) -> bool: ...
 
-    def h(arg) -> bool: ...
+    def h(arg: float) -> bool: ...
 
     @multimethod
     def func(arg: Callable[[bool], bool]):
@@ -134,6 +134,8 @@ def test_callable():
     assert func(g) == 'g'
     assert func([g]) == 'g0'
     assert func(h) is ...
+    assert issubclass(Callable[[int], int], subtype(Callable[..., int]))
+    assert not issubclass(Callable[..., int], subtype(Callable[[int], int]))
 
 
 def test_final():

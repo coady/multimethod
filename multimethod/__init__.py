@@ -8,7 +8,7 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, Literal, TypeVar, Union, get_type_hints
+from typing import Any, TypeVar, Union, get_type_hints
 
 
 class DispatchError(TypeError): ...  # pragma: no branch
@@ -45,34 +45,33 @@ class subtype(abc.ABCMeta):
     __origin__: type
     __args__: tuple
 
-    def __new__(cls, tp, *args):
+    def __new__(cls, tp):
         match tp:
             case typing.Any:
                 return object
             case subtype():  # If already a subtype, return it directly
                 return tp
             case typing.NewType():
-                return cls(tp.__supertype__, *args)
+                return cls(tp.__supertype__)
             case TypeVar():
-                return cls(Union[tp.__constraints__], *args) if tp.__constraints__ else object
+                return cls(Union[tp.__constraints__]) if tp.__constraints__ else object
             case typing._AnnotatedAlias():
-                return cls(tp.__origin__, *args)
+                return cls(tp.__origin__)
         if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
-            return cls(tp.__value__, *args)
+            return cls(tp.__value__)
         origin = get_origin(tp) or tp
-        args = tuple(map(cls, get_args(tp) or args))
+        args = tuple(map(cls, get_args(tp)))
         if set(args) <= {object} and (origin is not tuple or tp is tuple):
             return origin
         bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
-        if origin is Literal:
-            bases = (cls(Union[tuple(map(type, args))]),)
-        if origin is Union or isinstance(tp, types.UnionType):
-            origin = types.UnionType
-            bases = common_bases(*args)[:1]
-            if bases[0] in args:
-                return bases[0]
-        if origin is Callable and args[:1] == (...,):
-            args = args[1:]
+        match origin:
+            case typing.Literal:
+                bases = (cls(Union[tuple(map(type, args))]),)
+            case typing.Union | types.UnionType:
+                origin = types.UnionType
+                bases = common_bases(*args)[:1]
+                if bases[0] in args:
+                    return bases[0]
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
@@ -104,10 +103,14 @@ class subtype(abc.ABCMeta):
                     param = self.__args__[0]
                     return all(arg is ... or issubclass(arg, param) for arg in args)
             case collections.abc.Callable:
+                params = self.__args__[:-1]
                 return (
                     origin is Callable
-                    and signature(self.__args__[-1:]) <= signature(args[-1:])  # covariant return
-                    and signature(args[:-1]) <= signature(self.__args__[:-1])  # contravariant args
+                    and issubclass(args[-1], self.__args__[-1])  # covariant return
+                    and (
+                        ... in params
+                        or (... not in args and signature(args[:-1]) <= signature(params))
+                    )  # contravariant args
                 )
         return (  # check args first to avoid recursion error: python/cpython#73407
             len(args) == len(self.__args__)
@@ -116,21 +119,24 @@ class subtype(abc.ABCMeta):
         )
 
     def __instancecheck__(self, instance):
-        if self.__origin__ is Literal:
-            return any(type(arg) is type(instance) and arg == instance for arg in self.__args__)
-        if self.__origin__ is types.UnionType:
-            return isinstance(instance, self.__args__)
-        if hasattr(instance, '__orig_class__'):  # user-defined generic type
+        match self.__origin__:
+            case typing.Literal:
+                return any(type(arg) is type(instance) and arg == instance for arg in self.__args__)
+            case types.UnionType:
+                return isinstance(instance, self.__args__)
+            case builtins.type:
+                if isinstance(instance, typing.GenericAlias):
+                    return issubclass(subtype(instance), self.__args__)
+                return inspect.isclass(instance) and issubclass(instance, self.__args__)
+        if isinstance(instance, typing.Generic):  # user-defined generic type
             return issubclass(instance.__orig_class__, self)
-        if self.__origin__ is type:  # a class argument is expected
-            if isinstance(instance, types.GenericAlias):
-                return issubclass(subtype(instance), self.__args__)
-            return inspect.isclass(instance) and issubclass(instance, self.__args__)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
             return False
         if self.__origin__ is Callable:
-            return issubclass(subtype(Callable, *get_type_hints(instance).values()), self)
-        if self.__origin__ is tuple and self.__args__[-1:] != (...,):
+            hints = get_type_hints(instance)
+            args = [hints.get(name, object) for name in inspect.signature(instance).parameters]
+            return issubclass(Callable[args, hints.get('return', object)], self)
+        if self.__origin__ is tuple and ... not in self.__args__:
             if len(instance) != len(self.__args__):
                 return False
         elif issubclass(self, Mapping):
