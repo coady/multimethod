@@ -125,9 +125,10 @@ class subtype(abc.ABCMeta):
             case types.UnionType:
                 return isinstance(instance, self.__args__)
             case builtins.type:
-                if isinstance(instance, typing.GenericAlias):
+                try:
                     return issubclass(subtype(instance), self.__args__)
-                return inspect.isclass(instance) and issubclass(instance, self.__args__)
+                except TypeError:
+                    return False
         if isinstance(instance, typing.Generic):  # user-defined generic type
             return issubclass(instance.__orig_class__, self)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
@@ -158,7 +159,7 @@ class subtype(abc.ABCMeta):
                 for arg in self.__args__:
                     yield from subtype.origins(arg)
             case builtins.type:
-                yield from (type, types.GenericAlias, types.UnionType)
+                yield from (type, types.GenericAlias, typing._GenericAlias, types.UnionType)  # type: ignore
             case _ if origin is not None:
                 yield origin  # type: ignore
 

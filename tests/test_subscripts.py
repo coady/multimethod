@@ -62,10 +62,9 @@ def test_type():
 
     assert func(list) is func(list[int]) is None
     assert func(list[str]) is str
+    assert not isinstance([], subtype(type[list]))
     with pytest.raises(DispatchError):
         func(tuple)
-    with pytest.raises(DispatchError):
-        func([])
     with pytest.raises(DispatchError):
         func(list | tuple)
 
@@ -74,11 +73,14 @@ def test_generic():
     class cls(Generic[TypeVar('T')]): ...
 
     @multimethod
-    def func(x: cls[int]): ...
+    def func(_: cls[int]): ...
 
-    obj = cls[int]()
-    assert isinstance(obj, subtype(cls[int]))
-    assert func(obj) is None
+    @func.register
+    def _(_: type[cls[int]]):
+        return type
+
+    assert func(cls[int]()) is None
+    assert func(cls[int]) is type
 
 
 def test_tuple():
