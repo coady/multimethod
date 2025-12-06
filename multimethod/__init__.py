@@ -81,7 +81,7 @@ class subtype(abc.ABCMeta):
         return self.__origin__, *self.__args__
 
     def __eq__(self, other) -> bool:
-        return hasattr(other, '__origin__') and self.key() == subtype.key(other)
+        return isinstance(other, subtype) and self.key() == other.key()
 
     def __hash__(self) -> int:
         return hash(self.key())

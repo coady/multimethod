@@ -43,6 +43,7 @@ def test_union():
     # Test nested subtype with UnionType base
     tp = subtype(int | float)
     assert subtype(tp) is tp
+    assert tp != type(int | float)
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
