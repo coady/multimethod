@@ -88,7 +88,9 @@ class subtype(abc.ABCMeta):
 
     def __subclasscheck__(self, subclass):
         args = get_args(subclass)
-        match origin := get_origin(subclass) or subclass:
+        match origin := get_origin(subclass):
+            case None:
+                origin = subclass
             case typing.Literal:
                 return all(isinstance(arg, self) for arg in args)
             case typing.Union | types.UnionType:

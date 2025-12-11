@@ -39,6 +39,7 @@ def test_union():
     assert issubclass(int, subtype(int | float))
     assert issubclass(subtype(int | float), subtype(int | float | None))
     assert subtype(Iterable | Mapping | Sequence) is Iterable
+    assert not issubclass(Union, subtype(type[int]))
 
     # Test nested subtype with UnionType base
     tp = subtype(int | float)
@@ -77,10 +78,15 @@ def test_generic():
 
     @func.register
     def _(_: type[cls[int]]):
+        return int
+
+    @func.register
+    def _(_: type[cls]):
         return type
 
     assert func(cls[int]()) is None
-    assert func(cls[int]) is type
+    assert func(cls[int]) is int
+    assert func(cls) is type
 
 
 def test_tuple():
