@@ -70,6 +70,18 @@ def test_type():
         func(list | tuple)
 
 
+def test_new():
+    Str = typing.NewType('', str)
+    assert subtype(Str) is str
+    tp = subtype(type[Str])
+    assert typing.NewType in subtype.origins(tp)
+    assert not isinstance(str, tp)
+    assert isinstance(Str, tp)
+    assert isinstance(typing.NewType('', Str), tp)
+    assert not isinstance(typing.NewType('', str), tp)
+    assert isinstance(Str, subtype(Literal[Str]))
+
+
 def test_generic():
     class cls(Generic[TypeVar('T')]): ...
 

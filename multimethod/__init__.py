@@ -64,13 +64,17 @@ class subtype(abc.ABCMeta):
         bases = (origin,)
         match origin:
             case typing.Literal:
-                args = get_args(tp)
+                args = typing.get_args(tp)
                 bases = (cls(Union[tuple(map(type, args))]),)
             case typing.Union | types.UnionType:
                 origin = types.UnionType
                 bases = common_bases(*args)[:1]
                 if bases[0] in args:
                     return bases[0]
+            case builtins.type:  # special case type of `NewType`
+                (arg,) = typing.get_args(tp)
+                if isinstance(arg, typing.NewType):
+                    origin, args = typing.NewType, (arg,)
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
@@ -128,6 +132,10 @@ class subtype(abc.ABCMeta):
                     return issubclass(subtype(instance), self.__args__)
                 except TypeError:
                     return False
+            case typing.NewType:
+                return isinstance(instance, typing.NewType) and (
+                    instance in self.__args__ or isinstance(instance.__supertype__, self)
+                )
         if isinstance(instance, typing.Generic):  # user-defined generic type
             return issubclass(instance.__orig_class__, self)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
