@@ -10,6 +10,8 @@ import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, TypeVar, Union, get_type_hints
 
+TypeAliasType = getattr(typing, 'TypeAliasType', types.new_class(''))  # python <3.12
+
 
 class DispatchError(TypeError): ...  # pragma: no branch
 
@@ -24,14 +26,8 @@ def get_args(tp) -> tuple:
     return typing.get_args(tp)
 
 
-def get_mro(cls) -> tuple:  # `inspect.getmro` doesn't handle all cases
-    return tuple(type.mro(cls)) if isinstance(cls, type) else cls.mro()
-
-
 def common_bases(*bases):
-    counts = collections.Counter()
-    for base in bases:
-        counts.update(cls for cls in get_mro(base) if issubclass(abc.ABCMeta, type(cls)))
+    counts = collections.Counter(cls for base in bases for cls in base.mro())
     return tuple(cls for cls in counts if counts[cls] == len(bases))
 
 
@@ -49,23 +45,26 @@ class subtype(abc.ABCMeta):
         match tp:
             case typing.Any:
                 return object
-            case subtype():  # If already a subtype, return it directly
-                return tp
             case typing.NewType():
                 return cls(tp.__supertype__)
             case TypeVar():
                 return cls(Union[tp.__constraints__]) if tp.__constraints__ else object
             case typing._AnnotatedAlias():
                 return cls(tp.__origin__)
-        if hasattr(typing, 'TypeAliasType') and isinstance(tp, typing.TypeAliasType):
-            return cls(tp.__value__)
+            case TypeAliasType():
+                return cls(tp.__value__)
+            case typing.GenericAlias():  # python <3.11
+                ...
+            case type():
+                return tp
         origin = get_origin(tp) or tp
         args = tuple(map(cls, get_args(tp)))
-        if set(args) <= {object} and (origin is not tuple or tp is tuple):
+        if not args and origin is not tuple:
             return origin
-        bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
+        bases = (origin,)
         match origin:
             case typing.Literal:
+                args = get_args(tp)
                 bases = (cls(Union[tuple(map(type, args))]),)
             case typing.Union | types.UnionType:
                 origin = types.UnionType
@@ -75,15 +74,13 @@ class subtype(abc.ABCMeta):
         namespace = {'__origin__': origin, '__args__': args}
         return type.__new__(cls, str(tp), bases, namespace)
 
-    def __init__(self, tp, *args): ...
-
     def key(self) -> tuple:
         return self.__origin__, *self.__args__
 
     def __eq__(self, other) -> bool:
         return isinstance(other, subtype) and self.key() == other.key()
 
-    def __hash__(self) -> int:
+    def __hash__(self):
         return hash(self.key())
 
     def __subclasscheck__(self, subclass):

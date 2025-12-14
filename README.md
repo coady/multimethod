@@ -61,12 +61,12 @@ method[type, ...]           # get registered function
 method[type, ...] = func    # register function by explicit types
 ```
 
-Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc`. Note `typing` aliases do not support `issubclass` consistently, and are no longer needed for subscripts. Using ABCs instead is recommended. Subscripted generics are supported:
+Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc`. Note `typing` aliases do not support `issubclass` consistently, and are no longer needed for subscripts. Using ABCs instead is recommended. Subscripted generics are supported by custom `isinstance` checks:
 * `Mapping[...]` - the first key-value pair is checked
 * `tuple[...]` - all args are checked
 * `Iterable[...]` - the first arg is checked
-* `type[...]`
-* `Literal[...]`
+* `type[...]` - `issubclass` of type
+* `Literal[...]` - equality and type match
 * `Callable[[...], ...]` - parameter types are contravariant, return type is covariant
 
 Naturally checking subscripts is slower, but the implementation is optimized, cached, and bypassed if no subscripts are in use in the parameter. Empty iterables match any subscript, but don't special-case how the types are normally resolved.
