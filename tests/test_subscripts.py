@@ -40,6 +40,7 @@ def test_union():
     assert issubclass(subtype(int | float), subtype(int | float | None))
     assert subtype(Iterable | Mapping | Sequence) is Iterable
     assert not issubclass(Union, subtype(type[int]))
+    assert isinstance(bool, subtype(type[int] | type[float]))
 
     # Test nested subtype with UnionType base
     tp = subtype(int | float)

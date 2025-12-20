@@ -27,7 +27,7 @@ def get_args(tp) -> tuple:
 
 
 def common_bases(*bases):
-    counts = collections.Counter(cls for base in bases for cls in base.mro())
+    counts = collections.Counter(cls for base in bases for cls in base.__mro__)
     return tuple(cls for cls in counts if counts[cls] == len(bases))
 
 
