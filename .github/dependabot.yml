@@ -5,6 +5,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      action-updates:
+        patterns: ["*"]
 
   - package-ecosystem: "pip"
     directory: "/"

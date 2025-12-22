@@ -5,10 +5,10 @@ bench:
 	uv run pytest --codspeed
 
 lint:
-	uv run ruff check
-	uv run ruff format --check
-	uv run mypy -p multimethod
-	uv run mypy tests/static.py | grep -qv Any
+	uvx ruff check
+	uvx ruff format --check
+	uvx mypy -p multimethod
+	uvx mypy tests/static.py | grep -qv Any
 
 html:
-	uv run -w . mkdocs build
+	uv run --group docs -w . mkdocs build

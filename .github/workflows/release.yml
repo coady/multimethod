@@ -1,16 +1,27 @@
 name: release
 
-on:
-  push:
-    tags: ['v*']
+permissions:
+  id-token: write
+  pages: write
+
+on: [workflow_dispatch]
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions: write-all
     steps:
     - uses: actions/checkout@v6
     - uses: astral-sh/setup-uv@v7
     - run: uv build
-    - run: uv run -w . mkdocs gh-deploy --force
     - uses: pypa/gh-action-pypi-publish@release/v1
+
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v7
+    - run: make html
+    - uses: actions/upload-pages-artifact@v4
+      with:
+        path: site/
+    - uses: actions/deploy-pages@v4

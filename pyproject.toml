@@ -45,11 +45,5 @@ branch = true
 markers = ["benchmark"]
 
 [dependency-groups]
-dev = [
-    "pytest-cov",
-    "pytest-codspeed",
-    "ruff",
-    "mypy",
-    "mkdocstrings[python]",
-    "mkdocs-jupyter",
-]
+dev = ["pytest-cov", "pytest-codspeed"]
+docs = ["mkdocstrings[python]", "mkdocs-jupyter"]

@@ -1,13 +1,9 @@
 name: build
 
-permissions: read-all
+permissions:
+  id-token: write
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+on: [workflow_dispatch, push, pull_request]
 
 jobs:
   test:
@@ -18,11 +14,13 @@ jobs:
     steps:
     - uses: actions/checkout@v6
     - uses: astral-sh/setup-uv@v7
+      with:
+        python-version: ${{ matrix.python-version }}
     - run: make check
     - run: uv run coverage xml
     - uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
+        use_oidc: true
 
   lint:
     runs-on: ubuntu-latest
@@ -37,3 +35,13 @@ jobs:
     - uses: actions/checkout@v6
     - uses: astral-sh/setup-uv@v7
     - run: make html
+
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: astral-sh/setup-uv@v7
+    - uses: CodSpeedHQ/action@v4
+      with:
+        mode: simulation
+        run: make bench
