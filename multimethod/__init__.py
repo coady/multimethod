@@ -166,9 +166,9 @@ class subtype(abc.ABCMeta):
                 for arg in self.__args__:
                     yield from subtype.origins(arg)
             case builtins.type:
-                yield from (type, types.GenericAlias, typing._GenericAlias, types.UnionType)  # type: ignore
+                yield from (type, types.GenericAlias, typing._GenericAlias, types.UnionType)
             case _ if origin is not None:
-                yield origin  # type: ignore
+                yield origin
 
 
 class parametric(abc.ABCMeta):
@@ -268,7 +268,7 @@ class multimethod(dict):
     generics: list[tuple]  # positional bases which require instance checks
 
     def __new__(cls, func):
-        homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)
+        homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)  # type: ignore
         if isinstance(homonym, multimethod):
             return homonym
 

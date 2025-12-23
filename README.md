@@ -7,7 +7,7 @@
 [![CodeQL](https://github.com/coady/multimethod/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/coady/multimethod/actions/workflows/github-code-scanning/codeql)
 [![CodSpeed Badge](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://codspeed.io/coady/multimethod)
 [![image](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![image](https://mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
+[![ty](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json)](https://github.com/astral-sh/ty)
 
 Multimethod provides a decorator for adding multiple argument dispatching to functions. The decorator creates a multimethod object as needed, and registers the function with its annotations.
 
@@ -40,7 +40,7 @@ def func(x: float, y: int):
     ...
 ```
 
-Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). This syntax is also compatible with [mypy](https://mypy-lang.org), which by default checks that [each name is defined once](https://mypy.readthedocs.io/en/stable/error_code_list.html#check-that-each-name-is-defined-once-no-redef).
+Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). Some static type checkers enforce that each name is defined only once.
 
 ```python
 @func.register

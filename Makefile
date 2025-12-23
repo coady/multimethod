@@ -7,7 +7,7 @@ bench:
 lint:
 	uvx ruff check
 	uvx ruff format --check
-	uvx mypy -p multimethod
+	uvx ty check multimethod
 	uvx mypy tests/static.py | grep -qv Any
 
 html:
