@@ -1,4 +1,4 @@
-from multimethod import multimethod
+from multimethod import multidispatch, multimethod
 
 
 @multimethod
@@ -28,3 +28,9 @@ def test_docstring():
     assert "Argument is an integer" in foo.__doc__
     assert "Argument is a string" in foo.__doc__
     assert "float" not in foo.__doc__
+
+
+def test_return():
+    func = multidispatch.__new__.__annotations__['func']
+    assert multidispatch.__get__.__annotations__['return'] == func
+    assert multidispatch.__call__.__annotations__['return'] in func.__args__
