@@ -137,7 +137,7 @@ class subtype(abc.ABCMeta):
                     instance in self.__args__ or isinstance(instance.__supertype__, self)
                 )
         if isinstance(instance, typing.Generic):  # user-defined generic type
-            return issubclass(instance.__orig_class__, self)
+            return issubclass(getattr(instance, '__orig_class__', type(instance)), self)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
             return False
         if self.__origin__ is Callable:

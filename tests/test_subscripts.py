@@ -90,6 +90,10 @@ def test_generic():
     def func(_: cls[int]): ...
 
     @func.register
+    def _(_: cls):
+        return Generic
+
+    @func.register
     def _(_: type[cls[int]]):
         return int
 
@@ -98,6 +102,7 @@ def test_generic():
         return type
 
     assert func(cls[int]()) is None
+    assert func(cls()) is Generic
     assert func(cls[int]) is int
     assert func(cls) is type
 
