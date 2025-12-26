@@ -12,18 +12,18 @@ from multimethod import DispatchError, multimethod, parametric, subtype
 
 
 def test_literals():
-    assert issubclass(subtype(Literal['a', 'b']), str)
-    assert not issubclass(subtype(Literal['a']), subtype(list[int]))
+    assert issubclass(subtype(Literal["a", "b"]), str)
+    assert not issubclass(subtype(Literal["a"]), subtype(list[int]))
     assert issubclass(Literal[[0]], subtype(Iterable[int]))
-    tp = subtype(Literal['a', 0])
-    assert isinstance('a', tp)
+    tp = subtype(Literal["a", 0])
+    assert isinstance("a", tp)
     assert isinstance(0, tp)
-    assert not issubclass(Literal['a', 0.0], tp)
+    assert not issubclass(Literal["a", 0.0], tp)
     assert not issubclass(tuple[str, int], tp)
     assert issubclass(tp, subtype(str | int))
 
     @multimethod
-    def func(arg: Literal['a', 0]):
+    def func(arg: Literal["a", 0]):
         return arg
 
     assert func(0) == 0
@@ -50,7 +50,7 @@ def test_union():
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
 def test_type_alias():
-    Point = typing.TypeAliasType(name='Point', value=tuple[int, int])
+    Point = typing.TypeAliasType(name="Point", value=tuple[int, int])
     assert isinstance((0, 0), subtype(Point))
 
 
@@ -72,19 +72,19 @@ def test_type():
 
 
 def test_new():
-    Str = typing.NewType('', str)
+    Str = typing.NewType("", str)
     assert subtype(Str) is str
     tp = subtype(type[Str])
     assert typing.NewType in subtype.origins(tp)
     assert not isinstance(str, tp)
     assert isinstance(Str, tp)
-    assert isinstance(typing.NewType('', Str), tp)
-    assert not isinstance(typing.NewType('', str), tp)
+    assert isinstance(typing.NewType("", Str), tp)
+    assert not isinstance(typing.NewType("", str), tp)
     assert isinstance(Str, subtype(Literal[Str]))
 
 
 def test_generic():
-    class cls(Generic[TypeVar('T')]): ...
+    class cls(Generic[TypeVar("T")]): ...
 
     @multimethod
     def func(_: cls[int]): ...
@@ -150,7 +150,7 @@ def test_callable():
 
     @func.register
     def _(arg: int):
-        return 'int'
+        return "int"
 
     @func.register
     def _(arg: Sequence[Callable[[bool], bool]]):
@@ -158,8 +158,8 @@ def test_callable():
 
     with pytest.raises(DispatchError):
         func(f)
-    assert func(g) == 'g'
-    assert func([g]) == 'g0'
+    assert func(g) == "g"
+    assert func([g]) == "g0"
     assert func(h) is ...
     assert issubclass(Callable[[int], int], subtype(Callable[..., int]))
     assert not issubclass(Callable[..., int], subtype(Callable[[int], int]))
@@ -167,13 +167,13 @@ def test_callable():
 
 def test_final():
     tp = subtype(Iterable[str])
-    d = {'': 0}
+    d = {"": 0}
     assert isinstance(d, subtype(Mapping[str, int]))
     assert isinstance(d.keys(), tp)
 
 
 def test_args():
-    tp = type('', (), {'__args__': None})
+    tp = type("", (), {"__args__": None})
     assert subtype(tp) is tp
     assert not issubclass(tp, subtype(list[int]))
     assert subtype(typing.Callable) is Callable
@@ -189,13 +189,13 @@ def test_parametric():
     assert not isinstance(lambda: None, coro)
     assert list(subtype.origins(coro)) == [Callable]
 
-    ints = parametric(array, typecode='i')
+    ints = parametric(array, typecode="i")
     assert issubclass(ints, array)
     assert not issubclass(array, ints)
     sized = parametric(array, itemsize=4)
     assert issubclass(sized & ints, ints)
     assert not issubclass(ints, sized & ints)
-    assert not issubclass(parametric(object, typecode='i'), array)
-    assert isinstance(array('i'), ints)
-    assert not isinstance(array('l'), ints)
+    assert not issubclass(parametric(object, typecode="i"), array)
+    assert isinstance(array("i"), ints)
+    assert not isinstance(array("l"), ints)
     assert list(subtype.origins(ints)) == [array]

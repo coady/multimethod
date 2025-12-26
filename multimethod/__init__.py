@@ -10,7 +10,7 @@ import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, TypeVar, Union, get_type_hints
 
-TypeAliasType = getattr(typing, 'TypeAliasType', types.new_class(''))  # python <3.12
+TypeAliasType = getattr(typing, "TypeAliasType", types.new_class(""))  # python <3.12
 
 
 class DispatchError(TypeError): ...  # pragma: no branch
@@ -22,7 +22,7 @@ def get_origin(tp):
 
 def get_args(tp) -> tuple:
     if isinstance(tp, subtype) or typing.get_origin(tp) is Callable:
-        return getattr(tp, '__args__', ())
+        return getattr(tp, "__args__", ())
     return typing.get_args(tp)
 
 
@@ -75,7 +75,7 @@ class subtype(abc.ABCMeta):
                 (arg,) = typing.get_args(tp)
                 if isinstance(arg, typing.NewType):
                     origin, args = typing.NewType, (arg,)
-        namespace = {'__origin__': origin, '__args__': args}
+        namespace = {"__origin__": origin, "__args__": args}
         return type.__new__(cls, str(tp), bases, namespace)
 
     def key(self) -> tuple:
@@ -137,13 +137,13 @@ class subtype(abc.ABCMeta):
                     instance in self.__args__ or isinstance(instance.__supertype__, self)
                 )
         if isinstance(instance, typing.Generic):  # user-defined generic type
-            return issubclass(getattr(instance, '__orig_class__', type(instance)), self)
+            return issubclass(getattr(instance, "__orig_class__", type(instance)), self)
         if not isinstance(instance, self.__origin__) or isinstance(instance, Iterator):
             return False
         if self.__origin__ is Callable:
             hints = get_type_hints(instance)
             args = [hints.get(name, object) for name in inspect.signature(instance).parameters]
-            return issubclass(Callable[args, hints.get('return', object)], self)
+            return issubclass(Callable[args, hints.get("return", object)], self)
         if self.__origin__ is tuple and ... not in self.__args__:
             if len(instance) != len(self.__args__):
                 return False
@@ -181,16 +181,16 @@ class parametric(abc.ABCMeta):
     """
 
     def __new__(cls, base: type, *funcs: Callable, **attrs):
-        return super().__new__(cls, base.__name__, (base,), {'funcs': funcs, 'attrs': attrs})
+        return super().__new__(cls, base.__name__, (base,), {"funcs": funcs, "attrs": attrs})
 
     def __init__(self, *_, **__): ...
 
     def __subclasscheck__(self, subclass):
         missing = object()
-        attrs = getattr(subclass, 'attrs', {})
+        attrs = getattr(subclass, "attrs", {})
         return (
             set(subclass.__bases__).issuperset(self.__bases__)  # python/cpython#73407
-            and set(getattr(subclass, 'funcs', ())).issuperset(self.funcs)
+            and set(getattr(subclass, "funcs", ())).issuperset(self.funcs)
             and all(attrs.get(name, missing) == self.attrs[name] for name in self.attrs)
         )
 
@@ -224,9 +224,9 @@ class signature(tuple):
         self.required = len(self) if required is None else required
 
     @classmethod
-    def from_hints(cls, func: Callable) -> 'signature':
+    def from_hints(cls, func: Callable) -> "signature":
         """Return evaluated type hints for positional parameters in order."""
-        if not hasattr(func, '__annotations__'):
+        if not hasattr(func, "__annotations__"):
             return cls(())
         type_hints = get_type_hints(func)
         positionals = {inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD}
@@ -248,7 +248,7 @@ class signature(tuple):
     def callable(self, *types) -> bool:
         """Check positional arity of associated function signature."""
         try:
-            return not hasattr(self, 'sig') or bool(self.sig.bind_partial(*types))
+            return not hasattr(self, "sig") or bool(self.sig.bind_partial(*types))
         except TypeError:
             return False
 
@@ -294,7 +294,7 @@ class multimethod(dict):
 
         Optionally call with types to return a decorator for unannotated functions.
         """
-        if len(args) == 1 and hasattr(args[0], '__annotations__'):
+        if len(args) == 1 and hasattr(args[0], "__annotations__"):
             multimethod.__init__(self, *args)
             return self if self.__name__ == args[0].__name__ else args[0]
         return lambda func: self.__setitem__(args, func) or func
@@ -387,10 +387,10 @@ class multimethod(dict):
         """a descriptive docstring of all registered functions"""
         docs = []
         for key, func in self.items():
-            sig = getattr(key, 'sig', '')
+            sig = getattr(key, "sig", "")
             if func.__doc__:
-                docs.append(f'{func.__name__}{sig}\n    {func.__doc__}')
-        return '\n\n'.join(docs)
+                docs.append(f"{func.__name__}{sig}\n    {func.__doc__}")
+        return "\n\n".join(docs)
 
 
 RETURN = TypeVar("RETURN")
@@ -443,5 +443,5 @@ class multimeta(type):
 
         def __setitem__(self, key, value):
             if callable(value):
-                value = getattr(self.get(key), 'register', multimethod)(value)
+                value = getattr(self.get(key), "register", multimethod)(value)
             super().__setitem__(key, value)

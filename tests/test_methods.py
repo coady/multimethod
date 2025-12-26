@@ -39,20 +39,20 @@ def join(seq: tree, sep: object):
 
 
 def test_join():
-    sep = '<>'
+    sep = "<>"
     seq = [0, tree([1]), 2]
     assert list(tree(seq).walk()) == list(range(3))
-    assert join(seq, sep) == '0<>[1]<>2'
-    assert join(tree(seq), sep) == '0<>1<>2'
-    assert join(seq, bracket(*sep)) == '<0><[1]><2>'
+    assert join(seq, sep) == "0<>[1]<>2"
+    assert join(tree(seq), sep) == "0<>1<>2"
+    assert join(seq, bracket(*sep)) == "<0><[1]><2>"
     with pytest.raises(DispatchError):
-        assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
+        assert join(tree(seq), bracket(*sep)) == "<0><1><2>"
     join[tree, bracket] = join[tree, object]
-    assert join(tree(seq), bracket(*sep)) == '<0><1><2>'
+    assert join(tree(seq), bracket(*sep)) == "<0><1><2>"
 
 
 def subclass(*bases, **kwds):
-    return types.new_class('', bases, kwds)
+    return types.new_class("", bases, kwds)
 
 
 @pytest.mark.benchmark
@@ -65,7 +65,7 @@ def test_subtype():
     assert isinstance((0, 0.0), subtype(tuple[int, float]))
     assert not isinstance((0,), subtype(tuple[int, float]))
     assert isinstance((0,), subtype(tuple[int, ...]))
-    assert not isinstance(iter('-'), subtype(Iterable[str]))
+    assert not isinstance(iter("-"), subtype(Iterable[str]))
     assert not issubclass(tuple[int], subtype(tuple[int, float]))
     assert issubclass(Iterable[bool], subtype(Iterable[int]))
     assert issubclass(subtype(Iterable[int]), subtype(Iterable))
@@ -77,15 +77,15 @@ def test_subtype():
     assert subtype(base | subclass(base))
     assert not list(subtype.origins(subclass(subclass(Protocol))))
     assert not list(subtype.origins(subclass(Sized)))
-    assert not list(subtype.origins(subclass(Protocol[TypeVar('T')])))
+    assert not list(subtype.origins(subclass(Protocol[TypeVar("T")])))
     assert subtype(Annotated[str, "test"]) is str
 
 
 @pytest.mark.benchmark
 def test_signature():
-    assert signature([Any, list, NewType('', int)]) == (object, list, int)
+    assert signature([Any, list, NewType("", int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([bytes | str])
-    assert signature([TypeVar('T')]) == signature([object])
+    assert signature([TypeVar("T")]) == signature([object])
     assert signature([list]) <= (list,)
     assert signature([list]) <= signature([list])
     assert signature([list]) <= signature([list[int]])
@@ -100,11 +100,11 @@ class cls:
         return object, int
 
     @multimethod
-    def method(x: 'cls', y: 'list[float]'):
+    def method(x: "cls", y: "list[float]"):
         return type(x), list
 
     @multimethod
-    def dotted(x: 'namespace.cls'):
+    def dotted(x: "namespace.cls"):
         return type(x), float
 
 
@@ -138,14 +138,14 @@ def _(arg: int):
 
 @func.register
 def _(arg: list[int] | tuple[float] | dict[str, int]):
-    return 'union'
+    return "union"
 
 
 def test_register():
     assert func(0.0) is object
     assert func(0) is int
     assert func(False) is bool
-    assert func([0]) == func((0.0,)) == func({'': 0}) == func({}) == 'union'
+    assert func([0]) == func((0.0,)) == func({"": 0}) == func({}) == "union"
     assert func([0.0]) is func((0.0, 1.0)) is object
 
 
@@ -155,21 +155,21 @@ def test_register():
 def test_meta():
     class meta(metaclass=multimeta):
         def method(self, x: str):
-            return 'STR'
+            return "STR"
 
         def method(self, x: int):
-            return 'INT'
+            return "INT"
 
         def normal(self, y):
-            return 'OBJECT'
+            return "OBJECT"
 
         def rebind(self, x: str):
-            return 'INITIAL'
+            return "INITIAL"
 
         rebind = 2
 
         def rebind(self, x):
-            return 'REBOUND'
+            return "REBOUND"
 
     assert isinstance(meta.method, multimethod)
     assert isinstance(meta.normal, multimethod)
@@ -177,10 +177,10 @@ def test_meta():
 
     m = meta()
 
-    assert m.method('') == 'STR'
-    assert m.method(12) == 'INT'
-    assert m.normal('') == 'OBJECT'
-    assert m.rebind('') == 'REBOUND'
+    assert m.method("") == "STR"
+    assert m.method(12) == "INT"
+    assert m.normal("") == "OBJECT"
+    assert m.rebind("") == "REBOUND"
 
 
 def test_ellipsis():

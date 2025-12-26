@@ -31,6 +31,6 @@ def test_docstring():
 
 
 def test_return():
-    func = multidispatch.__new__.__annotations__['func']
-    assert multidispatch.__get__.__annotations__['return'] == func
-    assert multidispatch.__call__.__annotations__['return'] in func.__args__
+    func = multidispatch.__new__.__annotations__["func"]
+    assert multidispatch.__get__.__annotations__["return"] == func
+    assert multidispatch.__call__.__annotations__["return"] in func.__args__

@@ -34,9 +34,6 @@ line-length = 100
 ignore = ["F811"]
 select = ["I"]
 
-[tool.ruff.format]
-quote-style = "preserve"
-
 [tool.ty.rules]
 unused-ignore-comment = "error"
 unresolved-attribute = "ignore"
