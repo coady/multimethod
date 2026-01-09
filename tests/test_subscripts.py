@@ -11,13 +11,18 @@ import pytest
 from multimethod import DispatchError, multimethod, parametric, subtype
 
 
+def matches(instance, cls):
+    origins = tuple(subtype.origins(cls)) or cls
+    return isinstance(instance, cls) and issubclass(type(instance), origins)
+
+
 def test_literals():
     assert issubclass(subtype(Literal["a", "b"]), str)
     assert not issubclass(subtype(Literal["a"]), subtype(list[int]))
     assert issubclass(Literal[[0]], subtype(Iterable[int]))
     tp = subtype(Literal["a", 0])
-    assert isinstance("a", tp)
-    assert isinstance(0, tp)
+    assert matches("a", tp)
+    assert matches(0, tp)
     assert not issubclass(Literal["a", 0.0], tp)
     assert not issubclass(tuple[str, int], tp)
     assert issubclass(tp, subtype(str | int))
@@ -40,7 +45,8 @@ def test_union():
     assert issubclass(subtype(int | float), subtype(int | float | None))
     assert subtype(Iterable | Mapping | Sequence) is Iterable
     assert not issubclass(Union, subtype(type[int]))
-    assert isinstance(bool, subtype(type[int] | type[float]))
+    assert matches(bool, subtype(type[int] | type[float]))
+    assert matches(bool | float, subtype(type[int | float]))
 
     # Test nested subtype with UnionType base
     tp = subtype(int | float)
@@ -51,7 +57,7 @@ def test_union():
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
 def test_type_alias():
     Point = typing.TypeAliasType(name="Point", value=tuple[int, int])
-    assert isinstance((0, 0), subtype(Point))
+    assert matches((0, 0), subtype(Point))
 
 
 def test_type():
@@ -64,7 +70,7 @@ def test_type():
 
     assert func(list) is func(list[int]) is None
     assert func(list[str]) is str
-    assert not isinstance([], subtype(type[list]))
+    assert not matches([], subtype(type[list]))
     with pytest.raises(DispatchError):
         func(tuple)
     with pytest.raises(DispatchError):
@@ -76,11 +82,11 @@ def test_new():
     assert subtype(Str) is str
     tp = subtype(type[Str])
     assert typing.NewType in subtype.origins(tp)
-    assert not isinstance(str, tp)
-    assert isinstance(Str, tp)
-    assert isinstance(typing.NewType("", Str), tp)
-    assert not isinstance(typing.NewType("", str), tp)
-    assert isinstance(Str, subtype(Literal[Str]))
+    assert not matches(str, tp)
+    assert matches(Str, tp)
+    assert matches(typing.NewType("", Str), tp)
+    assert not matches(typing.NewType("", str), tp)
+    assert matches(Str, subtype(Literal[Str]))
 
 
 def test_generic():
@@ -110,12 +116,12 @@ def test_generic():
 def test_tuple():
     assert subtype(tuple) is tuple
     assert not issubclass(tuple[int], subtype(tuple[()]))
-    assert not isinstance(tuple[int], subtype(type[tuple[()]]))
-    assert isinstance((), subtype(tuple[()]))
-    assert not isinstance((0,), subtype(tuple[()]))
+    assert not matches(tuple[int], subtype(type[tuple[()]]))
+    assert matches((), subtype(tuple[()]))
+    assert not matches((0,), subtype(tuple[()]))
     assert issubclass(tuple[int], subtype(tuple[int, ...]))
     assert issubclass(tuple[bool, ...], subtype(tuple[int, ...]))
-    assert isinstance(tuple[int], subtype(type[tuple[int, ...]]))
+    assert matches(tuple[int], subtype(type[tuple[int, ...]]))
     assert not issubclass(tuple[int, float], subtype(tuple[int, ...]))
 
 
@@ -168,8 +174,8 @@ def test_callable():
 def test_final():
     tp = subtype(Iterable[str])
     d = {"": 0}
-    assert isinstance(d, subtype(Mapping[str, int]))
-    assert isinstance(d.keys(), tp)
+    assert matches(d, subtype(Mapping[str, int]))
+    assert matches(d.keys(), tp)
 
 
 def test_args():
@@ -185,8 +191,8 @@ def test_parametric():
     assert issubclass(coro, Callable)
     assert not issubclass(Callable, coro)
     assert not issubclass(parametric(object, inspect.iscoroutinefunction), coro)
-    assert isinstance(asyncio.sleep, coro)
-    assert not isinstance(lambda: None, coro)
+    assert matches(asyncio.sleep, coro)
+    assert not matches(lambda: None, coro)
     assert list(subtype.origins(coro)) == [Callable]
 
     ints = parametric(array, typecode="i")
@@ -196,6 +202,6 @@ def test_parametric():
     assert issubclass(sized & ints, ints)
     assert not issubclass(ints, sized & ints)
     assert not issubclass(parametric(object, typecode="i"), array)
-    assert isinstance(array("i"), ints)
-    assert not isinstance(array("l"), ints)
+    assert matches(array("i"), ints)
+    assert not matches(array("l"), ints)
     assert list(subtype.origins(ints)) == [array]
