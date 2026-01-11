@@ -8,7 +8,7 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
-from typing import Any, TypeVar, Union, get_type_hints
+from typing import Any, Self, TypeVar, Union, get_type_hints
 
 TypeAliasType = getattr(typing, "TypeAliasType", types.new_class(""))  # python <3.12
 
@@ -53,8 +53,6 @@ class subtype(abc.ABCMeta):
                 return cls(tp.__origin__)
             case TypeAliasType():
                 return cls(tp.__value__)
-            case typing.GenericAlias():  # python <3.11
-                ...
             case type():
                 return tp
         origin = get_origin(tp) or tp
@@ -224,7 +222,7 @@ class signature(tuple):
         self.required = len(self) if required is None else required
 
     @classmethod
-    def from_hints(cls, func: Callable) -> "signature":
+    def from_hints(cls, func: Callable) -> Self:
         """Return evaluated type hints for positional parameters in order."""
         if not hasattr(func, "__annotations__"):
             return cls(())

@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 ### Changed
+* Python >=3.11 required
 * Nested literal types supported
 * Variable-length and empty tuples supported
 * Variadic functions supported
