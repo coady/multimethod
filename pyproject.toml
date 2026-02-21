@@ -32,7 +32,7 @@ line-length = 100
 
 [tool.ruff.lint]
 ignore = ["F811"]
-select = ["I"]
+extend-select = ["I"]
 
 [tool.ty.rules]
 unresolved-attribute = "ignore"

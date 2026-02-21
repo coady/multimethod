@@ -266,7 +266,7 @@ class multimethod(dict):
     generics: list[tuple]  # positional bases which require instance checks
 
     def __new__(cls, func):
-        homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)  # type: ignore
+        homonym = inspect.currentframe().f_back.f_locals.get(func.__name__)
         if isinstance(homonym, multimethod):
             return homonym
 
