@@ -86,9 +86,8 @@ def test_signature():
     assert signature([Any, list, NewType("", int)]) == (object, list, int)
     assert signature([AnyStr]) == signature([bytes | str])
     assert signature([TypeVar("T")]) == signature([object])
-    assert signature([list]) <= (list,)
-    assert signature([list]) <= signature([list])
-    assert signature([list]) <= signature([list[int]])
+    assert signature([list]).subtypes(list)
+    assert signature([list]).subtypes(subtype(list[int]))
 
 
 class namespace: ...

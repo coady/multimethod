@@ -110,7 +110,7 @@ class subtype(abc.ABCMeta):
                     and issubclass(args[-1], self.__args__[-1])  # covariant return
                     and (
                         ... in params
-                        or (... not in args and signature(args[:-1]) <= signature(params))
+                        or (... not in args and signature(args[:-1]).subtypes(*params))
                     )  # contravariant args
                 )
         return (  # check args first to avoid recursion error: python/cpython#73407
@@ -237,11 +237,9 @@ class signature(tuple):
         required = sum(param.default is param.empty for param in params)
         return cls(hints, required)
 
-    def __le__(self, other: tuple) -> bool:
+    def subtypes(self, *other) -> bool:
+        """Return whether all types are subclasses."""
         return self.required <= len(other) and all(map(issubclass, other, self))
-
-    def __lt__(self, other: tuple) -> bool:
-        return self != other and self <= other
 
     def callable(self, *types) -> bool:
         """Check positional arity of associated function signature."""
@@ -302,7 +300,8 @@ class multimethod(dict):
 
     def parents(self, types: tuple) -> set:
         """Find immediate parents of potential key."""
-        parents = {key for key in list(self) if isinstance(key, signature) and key < types}
+        parents = {key for key in list(self) if isinstance(key, signature) and key.subtypes(*types)}
+        parents.discard(types)
         return parents - {ancestor for parent in parents for ancestor in parent.parents}
 
     def clean(self):
@@ -324,7 +323,7 @@ class multimethod(dict):
             types.sig = inspect.signature(func)
         self.pop(types, None)  # ensure key is overwritten
         for key in self:
-            if types < key and (not parents or parents & key.parents):
+            if types.subtypes(*key) and (not parents or parents & key.parents):
                 key.parents -= parents
                 key.parents.add(types)
         for index, cls in enumerate(types):
