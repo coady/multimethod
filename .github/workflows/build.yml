@@ -18,7 +18,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - run: make check
     - run: uv run coverage xml
-    - uses: codecov/codecov-action@v5
+    - uses: codecov/codecov-action@v6
       with:
         use_oidc: true
 
