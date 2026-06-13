@@ -5,7 +5,7 @@ description = "Multiple argument dispatching."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-authors = [{name = "Aric Coady", email = "aric.coady@gmail.com"}]
+authors = [{name = "A. Coady"}]
 keywords = ["multiple", "dispatch", "multidispatch", "generic", "functions", "methods", "overload"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -46,4 +46,4 @@ markers = ["benchmark"]
 
 [dependency-groups]
 dev = ["pytest-cov", "pytest-codspeed"]
-docs = ["mkdocstrings[python]", "mkdocs-jupyter"]
+docs = ["great-docs"]

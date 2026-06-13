@@ -1,0 +1,14 @@
+user_guide: docs
+inline_methods: true
+
+authors:
+- name: A. Coady
+  github: coady
+
+reference:
+- title: Classes
+  contents:
+  - multimethod
+  - multidispatch
+  - subtype
+  - parametric

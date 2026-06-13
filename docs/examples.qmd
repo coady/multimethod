@@ -1,0 +1,154 @@
+---
+title: "Examples"
+---
+
+## multimethod
+Multimethods are a mapping of signatures (tuple of types) to functions. They maintain an efficient dispatch tree, and cache the called signatures.
+
+```{python}
+import operator
+
+from multimethod import multimethod
+
+classic_div = multimethod(operator.truediv)
+classic_div[int, int] = operator.floordiv
+classic_div
+```
+
+```{python}
+classic_div(3, 2)
+```
+
+```{python}
+classic_div(3.0, 2)
+```
+
+```{python}
+classic_div
+```
+
+Multimethods introspect type annotations and use the name to find existing multimethods.
+
+```{python}
+import itertools
+from collections.abc import Iterable, Sequence
+
+
+@multimethod
+def batched(values: Iterable, size):
+    it = iter(values)
+    return iter(lambda: list(itertools.islice(it, size)), [])
+
+
+@multimethod
+def batched(values: Sequence, size):
+    for index in range(0, len(values), size):
+        yield values[index : index + size]
+
+
+list(batched(iter("abcde"), 3))
+```
+
+```{python}
+list(batched("abcde", 3))
+```
+
+Multimethods also have an explicit `register` method similar to `functools.singledispatch`.
+
+```{python}
+@multimethod
+def window(values, size=2):
+    its = itertools.tee(values, size)
+    return zip(*(itertools.islice(it, index, None) for index, it in enumerate(its)))
+
+
+@window.register
+def _(values: Sequence, size=2):
+    for index in range(len(values) - size + 1):
+        yield values[index : index + size]
+
+
+list(window(iter("abcde")))
+```
+
+```{python}
+list(window("abcde"))
+```
+
+## parametric
+In addition to `issubclass`, multimethods can dispatch on `isinstance` with parametric checks.
+
+```{python}
+import asyncio
+import inspect
+import time
+from collections.abc import Callable
+from concurrent import futures
+
+from multimethod import parametric
+
+Coroutine = parametric(Callable, inspect.iscoroutinefunction)
+
+
+@multimethod
+def wait(timeout, func, *args):
+    return futures.ThreadPoolExecutor().submit(func, *args).result(timeout)
+
+
+@multimethod
+async def wait(timeout, func: Coroutine, *args):
+    return await asyncio.wait_for(func(*args), timeout)
+
+
+wait(0.5, time.sleep, 0.01)
+```
+
+```{python}
+wait(0.5, asyncio.sleep, 0.01)
+```
+
+```{python}
+from array import array
+
+IntArray = parametric(array, typecode="i")
+isinstance(array("i"), IntArray)
+```
+
+```{python}
+isinstance(array("f"), IntArray)
+```
+
+## typing subscripts
+Support for type hints with subscripts.
+
+```{python}
+import bisect
+import random
+
+
+@multimethod
+def samples(weights: dict):
+    """Generate weighted random samples using bisection."""
+    keys = list(weights)
+    totals = list(itertools.accumulate(weights.values()))
+    values = [total / totals[-1] for total in totals]
+    while True:
+        yield keys[bisect.bisect_right(values, random.random())]
+
+
+@multimethod
+def samples(weights: dict[object, int]):
+    """Generate weighted random samples more efficiently."""
+    keys = list(itertools.chain.from_iterable([key] * weights[key] for key in weights))
+    while True:
+        yield random.choice(keys)
+
+
+weights = {"a": 1, "b": 2, "c": 3}
+next(samples(weights))
+```
+
+```{python}
+weights = {"a": 1.0, "b": 2.0, "c": 3.0}
+next(samples(weights))
+```
