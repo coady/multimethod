@@ -12,7 +12,7 @@ jobs:
       matrix:
         python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v7
       with:
         python-version: ${{ matrix.python-version }}
@@ -25,14 +25,14 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v7
     - run: make lint
 
   docs:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v7
     - uses: quarto-dev/quarto-actions/setup@v2
     - run: make html
@@ -40,7 +40,7 @@ jobs:
   bench:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v7
     - uses: CodSpeedHQ/action@v4
       with:
