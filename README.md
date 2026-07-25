@@ -27,25 +27,23 @@ Dispatching on simple types which use `issubclass` is cached. Advanced types whi
 ```python
 from multimethod import multimethod
 
+
 @multimethod
-def func(x: int, y: float):
-    ...
+def func(x: int, y: float): ...
 ```
 
 `func` is now a `multimethod` which will delegate to the above function, when called with arguments of the specified types. Subsequent usage will register new types and functions to the existing multimethod of the same name.
 
 ```python
 @multimethod
-def func(x: float, y: int):
-    ...
+def func(x: float, y: int): ...
 ```
 
 Alternatively, functions can be explicitly registered in the same style as [functools.singledispatch](https://docs.python.org/3/library/functools.html#functools.singledispatch). Some static type checkers enforce that each name is defined only once.
 
 ```python
 @func.register
-def _(x: bool, y: bool):
-    ...
+def _(x: bool, y: bool): ...
 
 
 @func.register(object, bool)
@@ -57,8 +55,8 @@ def _(x, y):  # stackable without annotations
 Multimethods are implemented as mappings from signatures to functions, and can be introspected as such.
 
 ```python
-method[type, ...]           # get registered function
-method[type, ...] = func    # register function by explicit types
+method[type, ...]  # get registered function
+method[type, ...] = func  # register function by explicit types
 ```
 
 Multimethods support any types that satisfy the `issubclass` relation, including abstract base classes in `collections.abc`. Note `typing` aliases do not support `issubclass` consistently, and are no longer needed for subscripts. Using ABCs instead is recommended. Subscripted generics are supported by custom `isinstance` checks:
@@ -106,7 +104,7 @@ If a type implements a custom `__instancecheck__`, it can opt-in to dispatch (wi
 from multimethod import parametric
 
 Coroutine = parametric(Callable, inspect.iscoroutinefunction)
-IntArray = parametric(array, typecode='i')
+IntArray = parametric(array, typecode="i")
 ```
 
 ### classes
@@ -132,6 +130,7 @@ class Base:
     @multimethod
     def meth(self, arg: str): ...
 
+
 class Subclass(Base):
     @Base.meth.register
     def _(self, arg: int): ...
@@ -148,8 +147,7 @@ class Subclass(Base):
 `multimeta` creates a class with a special namespace which converts callables to multimethods, and registers duplicate callables with the original.
 
 ```python
-class Cls(metaclass=multimeta):
-    ... # all methods are multimethods
+class Cls(metaclass=multimeta): ...  # all methods are multimethods
 ```
 
 ## Installation

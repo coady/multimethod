@@ -6,7 +6,6 @@ def foo(bar: int):
     """
     Argument is an integer
     """
-    ...
 
 
 @multimethod
@@ -14,7 +13,6 @@ def foo(bar: str):
     """
     Argument is a string
     """
-    ...
 
 
 @foo.register

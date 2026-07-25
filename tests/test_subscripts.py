@@ -78,7 +78,7 @@ def test_type():
 
 
 def test_new():
-    Str = typing.NewType("", str)
+    Str = typing.NewType("Str", str)
     assert subtype(Str) is str
     tp = subtype(type[Str])
     assert typing.NewType in subtype.origins(tp)

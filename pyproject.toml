@@ -31,8 +31,10 @@ Issues = "https://github.com/coady/multimethod/issues"
 line-length = 100
 
 [tool.ruff.lint]
-ignore = ["F811"]
-extend-select = ["I"]
+ignore = ["F811", "PLE1519", "PYI063", "UP007"]
+
+[tool.ruff.lint.per-file-ignores]
+"test_*.py" = ["B015", "PYI025"]
 
 [tool.ty.rules]
 unresolved-attribute = "ignore"

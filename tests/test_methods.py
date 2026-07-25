@@ -1,7 +1,7 @@
 import enum
 import types
-from collections.abc import Collection, Iterable, Mapping, Set
-from typing import Annotated, Any, AnyStr, NewType, Protocol, Sized, TypeVar
+from collections.abc import Collection, Iterable, Mapping, Set, Sized
+from typing import Annotated, Any, AnyStr, NewType, Protocol, TypeVar
 
 import pytest
 
