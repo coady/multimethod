@@ -396,7 +396,7 @@ RETURN = TypeVar("RETURN")
 class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     """Wrapper for compatibility with `functools.singledispatch`.
 
-    Only uses the [register][multimethod.multimethod.register] method instead of namespace lookup.
+    Only uses the `register` method instead of namespace lookup.
     Allows dispatching on keyword arguments based on the first function signature.
     """
 
