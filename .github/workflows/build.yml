@@ -42,7 +42,7 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: astral-sh/setup-uv@v7
-    - uses: CodSpeedHQ/action@v5.0.1
+    - uses: CodSpeedHQ/action@v5
       with:
         mode: simulation
         run: make bench
