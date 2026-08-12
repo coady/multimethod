@@ -1,0 +1,101 @@
+---
+title: "Customize"
+---
+
+## parametric
+In addition to `issubclass`, multimethods can dispatch on `isinstance` with custom hooks. `parametric` transforms any predicate function(s) into a type. A base class is required - though it can be `object` - to optimize skipping the instance check when irrelevant.
+
+The example below demonstrates how to distinguish a coroutine function from a regular function, though they are the same type.
+
+```{python}
+import asyncio
+import inspect
+import time
+from collections.abc import Callable
+from concurrent import futures
+
+from multimethod import multimethod, parametric
+
+Coroutine = parametric(Callable, inspect.iscoroutinefunction)
+
+
+@multimethod
+def wait(timeout, func, *args):
+    return futures.ThreadPoolExecutor().submit(func, *args).result(timeout)
+
+
+@multimethod
+async def wait(timeout, func: Coroutine, *args):
+    return await asyncio.wait_for(func(*args), timeout)
+
+
+wait(0.5, time.sleep, 0.01)
+```
+
+```{python}
+wait(0.5, asyncio.sleep, 0.01)
+```
+
+`parametric` also has syntactic support for checking attributes. The example below shows typed arrays.
+
+```{python}
+from array import array
+
+IntArray = parametric(array, typecode="i")
+isinstance(array("i"), IntArray)
+```
+
+```{python}
+isinstance(array("f"), IntArray)
+```
+
+## dispatch
+Ambiguous methods raise a `DispatchError` by default. The `select` method can provisionally be overridden to change that policy. It receives the argument types and the most specific matching signatures; it must return a callable or raise.
+
+The example below demonstrates resolving the multiple inheritance [diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem) using [method resolution order](https://docs.python.org/3/glossary.html#term-method-resolution-order).
+
+```{python}
+import collections
+
+from multimethod import DispatchError, multimethod, signature
+
+
+def distance(cls, subclass):
+    mro = subclass.__mro__
+    return mro.index(cls if cls in mro else object)
+
+
+class mromethod(multimethod):
+    def select(self, types: tuple, keys: set[signature]):
+        funcs = {key: self[key] for key in keys if key.callable(*types)}
+        if len(set(funcs.values())) > 1:
+            groups = collections.defaultdict(dict)
+            for key in funcs:
+                groups[tuple(map(distance, key, types))][key] = funcs[key]
+            funcs = groups[min(groups)]
+        if len(set(funcs.values())) == 1:
+            return funcs.popitem()[1]
+        raise DispatchError(f"{self.__name__}: {len(funcs)} methods found", types, set(funcs))
+```
+
+```{python}
+class A: ...
+
+
+class B: ...
+
+
+class AB(A, B): ...
+
+
+@mromethod
+def test(arg: A):
+    return "A"
+
+
+@test.register
+def _(arg: B):
+    return "B"
+
+test(AB())
+```

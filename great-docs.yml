@@ -12,3 +12,4 @@ reference:
   - multidispatch
   - subtype
   - parametric
+  - DispatchError

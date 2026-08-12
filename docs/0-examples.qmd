@@ -75,49 +75,6 @@ list(window(iter("abcde")))
 list(window("abcde"))
 ```
 
-## parametric
-In addition to `issubclass`, multimethods can dispatch on `isinstance` with parametric checks.
-
-```{python}
-import asyncio
-import inspect
-import time
-from collections.abc import Callable
-from concurrent import futures
-
-from multimethod import parametric
-
-Coroutine = parametric(Callable, inspect.iscoroutinefunction)
-
-
-@multimethod
-def wait(timeout, func, *args):
-    return futures.ThreadPoolExecutor().submit(func, *args).result(timeout)
-
-
-@multimethod
-async def wait(timeout, func: Coroutine, *args):
-    return await asyncio.wait_for(func(*args), timeout)
-
-
-wait(0.5, time.sleep, 0.01)
-```
-
-```{python}
-wait(0.5, asyncio.sleep, 0.01)
-```
-
-```{python}
-from array import array
-
-IntArray = parametric(array, typecode="i")
-isinstance(array("i"), IntArray)
-```
-
-```{python}
-isinstance(array("f"), IntArray)
-```
-
 ## typing subscripts
 Support for type hints with subscripts.
 

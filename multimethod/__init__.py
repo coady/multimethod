@@ -13,7 +13,8 @@ from typing import Any, Self, TypeVar, Union, get_type_hints
 TypeAliasType = getattr(typing, "TypeAliasType", types.new_class(""))  # python <3.12
 
 
-class DispatchError(TypeError): ...  # pragma: no branch
+class DispatchError(TypeError):
+    """A `TypeError` raised when no single applicable method is found."""
 
 
 def get_origin(tp):
@@ -342,11 +343,18 @@ class multimethod(dict):
         self.__doc__ = self.docstring
 
     def select(self, types: tuple, keys: set[signature]) -> Callable:
-        keys = {key for key in keys if key.callable(*types)}
-        funcs = {self[key] for key in keys}
-        if len(funcs) == 1:
-            return funcs.pop()
-        raise DispatchError(f"{self.__name__}: {len(keys)} methods found", types, keys)
+        """Return the next applicable method of given types, or raise `DispatchError`.
+
+        Provisional: override to customize ambiguity resolution.
+
+        Args:
+            types: the types to dispatch on
+            keys: the most specific matching signatures, with no strict precedence
+        """
+        funcs = {key: self[key] for key in keys if key.callable(*types)}
+        if len(set(funcs.values())) == 1:
+            return funcs.popitem()[1]
+        raise DispatchError(f"{self.__name__}: {len(funcs)} methods found", types, set(funcs))
 
     def __missing__(self, types: tuple) -> Callable:
         """Find and cache the next applicable method of given types."""
