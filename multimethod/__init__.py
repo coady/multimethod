@@ -8,6 +8,7 @@ import itertools
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
+from copy import copy
 from typing import Any, Self, TypeVar, Union, get_type_hints
 
 TypeAliasType = getattr(typing, "TypeAliasType", types.new_class(""))  # python <3.12
@@ -313,7 +314,16 @@ class multimethod(dict):
 
     def copy(self):
         """Return a new multimethod with the same methods."""
-        return dict.__new__(type(self)).__ior__(self)
+        other = dict.__new__(type(self))
+        other.__dict__.update(self.__dict__)
+        other.pending = self.pending.copy()
+        other.generics = self.generics.copy()
+        # Registrations mutate signature parents, so active keys must be independent.
+        keys = {key: copy(key) for key in self if isinstance(key, signature)}
+        for key, copied in keys.items():
+            copied.parents = {keys[parent] for parent in key.parents if parent in keys}
+        dict.update(other, ((keys.get(key, key), func) for key, func in self.items()))
+        return other
 
     def __setitem__(self, types: tuple, func: Callable):
         self.clean()
@@ -421,6 +431,11 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
 
     def __get__(self, instance, owner) -> Callable[..., RETURN]:
         return self if instance is None else types.MethodType(self, instance)
+
+    def copy(self):
+        other = super().copy()
+        other.signatures = self.signatures.copy()
+        return other
 
     def __setitem__(self, types: tuple, func: Callable):
         super().__setitem__(types, func)
