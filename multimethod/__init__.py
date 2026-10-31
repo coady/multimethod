@@ -60,7 +60,7 @@ class subtype(abc.ABCMeta):
         args = tuple(map(cls, get_args(tp)))
         if not args and origin is not tuple:
             return origin
-        bases = (origin,)
+        bases = (origin,) if type(origin) in (type, abc.ABCMeta) else ()
         match origin:
             case typing.Literal:
                 args = typing.get_args(tp)
