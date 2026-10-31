@@ -379,7 +379,7 @@ class multimethod(dict):
         try:
             return func(*args, **kwargs)
         except TypeError as ex:
-            raise DispatchError(f"Function {func.__code__}") from ex
+            raise DispatchError(f"Function {getattr(func, '__code__', func)}") from ex
 
     def evaluate(self):
         """Evaluate any pending forward references."""

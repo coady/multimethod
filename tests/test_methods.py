@@ -267,3 +267,26 @@ def test_dispatch_exception():
         return "optional"
 
     assert temp(True, 1.0) == "optional"
+
+
+def test_dispatch_exception_without_code_object():
+    @multimethod
+    def convert(value: object):
+        return value
+
+    convert.register(str)(int)
+    assert convert("12") == 12
+    with pytest.raises(DispatchError, match="int") as error:
+        convert("12", unknown=True)
+    assert isinstance(error.value.__cause__, TypeError)
+    assert "unknown" in str(error.value.__cause__)
+
+    class BrokenCallable:
+        def __call__(self, value):
+            raise TypeError("call failed")
+
+    convert.register(float)(BrokenCallable())
+    with pytest.raises(DispatchError, match="BrokenCallable") as error:
+        convert(1.0)
+    assert isinstance(error.value.__cause__, TypeError)
+    assert str(error.value.__cause__) == "call failed"
