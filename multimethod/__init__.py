@@ -142,7 +142,7 @@ class subtype(abc.ABCMeta):
         if self.__origin__ is Callable:
             hints = get_type_hints(instance)
             args = [hints.get(name, object) for name in inspect.signature(instance).parameters]
-            return issubclass(Callable[args, hints.get("return", object)], self)
+            return issubclass(Callable[args, hints.get("return", object)], self)  # type: ignore
         if self.__origin__ is tuple and ... not in self.__args__:
             if len(instance) != len(self.__args__):
                 return False
@@ -443,7 +443,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
 class multimeta(type):
     """Convert all callables in namespace to multimethods."""
 
-    class __prepare__(dict):
+    class __prepare__(dict):  # type: ignore
         def __init__(*args): ...
 
         def __setitem__(self, key, value):
