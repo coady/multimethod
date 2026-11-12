@@ -10,8 +10,6 @@ import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from typing import Any, Self, TypeVar, Union, get_type_hints
 
-TypeAliasType = getattr(typing, "TypeAliasType", types.new_class(""))  # python <3.12
-
 
 class DispatchError(TypeError):
     """A `TypeError` raised when no single applicable method is found."""
@@ -52,7 +50,7 @@ class subtype(abc.ABCMeta):
                 return cls(Union[tp.__constraints__]) if tp.__constraints__ else object
             case typing._AnnotatedAlias():
                 return cls(tp.__origin__)
-            case TypeAliasType():
+            case typing.TypeAliasType():
                 return cls(tp.__value__)
             case type():
                 return tp

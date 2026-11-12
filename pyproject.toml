@@ -3,7 +3,7 @@ name = "multimethod"
 version = "2.1"
 description = "Multiple argument dispatching."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = "Apache-2.0"
 authors = [{name = "A. Coady"}]
 keywords = ["multiple", "dispatch", "multidispatch", "generic", "functions", "methods", "overload"]
@@ -12,7 +12,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
@@ -37,7 +36,8 @@ ignore = ["F811", "PLE1519", "PYI063", "UP007"]
 "test_*.py" = ["B015", "PYI025"]
 
 [tool.ty.rules]
-unresolved-attribute = "ignore"
+missing-attribute = "ignore"
+missing-union-attribute = "ignore"
 
 [tool.coverage.run]
 source = ["multimethod"]

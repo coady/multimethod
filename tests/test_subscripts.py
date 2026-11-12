@@ -54,7 +54,6 @@ def test_union():
     assert tp is not type(int | float)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 12), reason="Type aliases added in 3.12")
 def test_type_alias():
     Point = typing.TypeAliasType(name="Point", value=tuple[int, int])
     assert matches((0, 0), subtype(Point))
