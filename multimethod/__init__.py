@@ -106,6 +106,7 @@ class subtype(abc.ABCMeta):
                 params = self.__args__[:-1]
                 return (
                     origin is Callable
+                    and bool(args)
                     and issubclass(args[-1], self.__args__[-1])  # covariant return
                     and (
                         ... in params
