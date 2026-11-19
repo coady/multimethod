@@ -168,6 +168,7 @@ def test_callable():
     assert func(h) is ...
     assert issubclass(Callable[[int], int], subtype(Callable[..., int]))
     assert not issubclass(Callable[..., int], subtype(Callable[[int], int]))
+    assert not issubclass(Callable, subtype(Callable[[], int]))
 
 
 def test_final():
