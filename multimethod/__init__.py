@@ -5,6 +5,7 @@ import contextlib
 import functools
 import inspect
 import itertools
+import operator
 import types
 import typing
 from collections.abc import Callable, Iterable, Iterator, Mapping
@@ -212,7 +213,6 @@ class signature(tuple):
     """A tuple of types that supports partial ordering."""
 
     required: int
-    parents: set
     sig: inspect.Signature
 
     def __new__(cls, types: Iterable, required: int | None = None):
@@ -298,12 +298,6 @@ class multimethod(dict):
     def __get__(self, instance, owner):
         return self if instance is None else types.MethodType(self, instance)
 
-    def parents(self, types: tuple) -> set:
-        """Find immediate parents of potential key."""
-        parents = {key for key in list(self) if isinstance(key, signature) and key.subtypes(*types)}
-        parents.discard(types)
-        return parents - {ancestor for parent in parents for ancestor in parent.parents}
-
     def clean(self):
         """Empty the cache."""
         for key in list(self):
@@ -314,14 +308,9 @@ class multimethod(dict):
         self.clean()
         if not isinstance(types, signature):
             types = signature(types)
-        parents = types.parents = self.parents(types)
         with contextlib.suppress(ValueError):
             types.sig = inspect.signature(func)
         self.pop(types, None)  # ensure key is overwritten
-        for key in self:
-            if types.subtypes(*key) and (not parents or parents & key.parents):
-                key.parents -= parents
-                key.parents.add(types)
         for index, cls in enumerate(types):
             if origins := set(subtype.origins(cls)):
                 self.generics += [()] * (index + 1 - len(self.generics))
@@ -332,9 +321,6 @@ class multimethod(dict):
     def __delitem__(self, types: tuple):
         self.clean()
         super().__delitem__(types)
-        for key in self:
-            if types in key.parents:
-                key.parents = self.parents(key)
         self.__doc__ = self.docstring
 
     def select(self, types: tuple, keys: set[signature]) -> Callable:
@@ -351,21 +337,30 @@ class multimethod(dict):
             return funcs.popitem()[1]
         raise DispatchError(f"{self.__name__}: {len(funcs)} methods found", types, set(funcs))
 
+    def matches(self, predicate: Callable) -> set[signature]:
+        matches = set()
+        for key in list(self):
+            check = isinstance(key, signature) and predicate(key)
+            if check and not any(key.subtypes(*match) for match in matches):
+                matches -= {match for match in matches if match.subtypes(*key)}
+                matches.add(key)
+        return matches
+
     def __missing__(self, types: tuple) -> Callable:
         """Find and cache the next applicable method of given types."""
         self.evaluate()
         types = tuple(map(subtype, types))
         if types in self:
             return self[types]
-        return self.setdefault(types, self.select(types, self.parents(types)))
+        matches = self.matches(operator.methodcaller("subtypes", *types))
+        return self.setdefault(types, self.select(types, matches))
 
     def dispatch(self, *args) -> Callable:
         self.evaluate()
         types = tuple(map(type, args))
         if not any(map(issubclass, types, self.generics)):
             return self[types]
-        matches = {key for key in list(self) if isinstance(key, signature) and key.instances(*args)}
-        matches -= {ancestor for match in matches for ancestor in match.parents}
+        matches = self.matches(operator.methodcaller("instances", *args))
         return self.select(types, matches)
 
     def __call__(self, *args, **kwargs):
