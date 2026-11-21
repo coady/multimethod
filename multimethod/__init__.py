@@ -48,7 +48,9 @@ class subtype(abc.ABCMeta):
             case typing.NewType():
                 return cls(tp.__supertype__)
             case TypeVar():
-                return cls(Union[tp.__constraints__]) if tp.__constraints__ else object
+                if tp.__constraints__:
+                    return cls(Union[tp.__constraints__])
+                return object if tp.__bound__ is None else cls(tp.__bound__)
             case typing._AnnotatedAlias():
                 return cls(tp.__origin__)
             case typing.TypeAliasType():

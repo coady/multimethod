@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 * Dispatch cache invalidates on `ABC.register`
+* Bound `TypeVar` supported
 
 ## [2.1](https://pypi.org/project/multimethod/2.1/) - 2026-07-28
 ### Changed
