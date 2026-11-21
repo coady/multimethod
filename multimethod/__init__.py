@@ -258,9 +258,6 @@ class signature(tuple):
         return self.required <= len(args) and all(map(isinstance, args, self))
 
 
-REGISTERED = TypeVar("REGISTERED", bound=Callable[..., Any])
-
-
 class multimethod(dict):
     """A callable directed acyclic graph of methods."""
 
@@ -287,10 +284,12 @@ class multimethod(dict):
             self.pending.add(func)
 
     @typing.overload
-    def register(self, __func: REGISTERED) -> REGISTERED: ...
+    def register[REGISTERED: Callable[..., Any]](self, __func: REGISTERED) -> REGISTERED: ...
 
     @typing.overload
-    def register(self, *args: type) -> Callable[[REGISTERED], REGISTERED]: ...
+    def register[REGISTERED: Callable[..., Any]](
+        self, *args: type
+    ) -> Callable[[REGISTERED], REGISTERED]: ...
 
     def register(self, *args) -> Callable:
         """Decorator for registering a function.
@@ -401,10 +400,7 @@ class multimethod(dict):
         return "\n\n".join(docs)
 
 
-RETURN = TypeVar("RETURN")
-
-
-class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
+class multidispatch[RETURN](multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
     """Wrapper for compatibility with `functools.singledispatch`.
 
     Only uses the `register` method instead of namespace lookup.

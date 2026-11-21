@@ -4,7 +4,7 @@ import sys
 import typing
 from array import array
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Generic, Literal, TypeVar, Union
+from typing import Literal, Union
 
 import pytest
 
@@ -55,7 +55,7 @@ def test_union():
 
 
 def test_type_alias():
-    Point = typing.TypeAliasType(name="Point", value=tuple[int, int])
+    type Point = tuple[int, int]
     assert matches((0, 0), subtype(Point))
 
 
@@ -89,14 +89,14 @@ def test_new():
 
 
 def test_generic():
-    class cls(Generic[TypeVar("T")]): ...
+    class cls[T]: ...
 
     @multimethod
     def func(_: cls[int]): ...
 
     @func.register
     def _(_: cls):
-        return Generic
+        return object
 
     @func.register
     def _(_: type[cls[int]]):
@@ -107,7 +107,7 @@ def test_generic():
         return type
 
     assert func(cls[int]()) is None
-    assert func(cls()) is Generic
+    assert func(cls()) is object
     assert func(cls[int]) is int
     assert func(cls) is type
 
