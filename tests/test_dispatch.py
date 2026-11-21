@@ -1,3 +1,4 @@
+import abc
 from collections.abc import Iterable
 from concurrent import futures
 
@@ -127,3 +128,20 @@ def test_concurrency():
     args = [type("", (int,), {})() for _ in range(500)]
     fs = [submit(func, arg) for arg in args]
     assert all(future.result() is None for future in fs)
+
+
+def test_abc_cache():
+    class Plugin(abc.ABC): ...
+
+    @multimethod
+    def func(value: object):
+        return "base"
+
+    @func.register
+    def _(value: Plugin | str):
+        return "plugin"
+
+    assert func.cache_token is not None
+    assert func(0) == "base"
+    Plugin.register(int)
+    assert func(0) == "plugin"

@@ -169,6 +169,11 @@ class subtype(abc.ABCMeta):
             case _ if origin is not None:
                 yield origin
 
+    def abstract(self):
+        if get_origin(self) is types.UnionType:
+            return any(map(subtype.abstract, self.__args__))
+        return hasattr(self, "__abstractmethods__")
+
 
 class parametric(abc.ABCMeta):
     """A type which further customizes `issubclass` and `isinstance` beyond the base type.
@@ -261,6 +266,7 @@ class multimethod(dict):
 
     __name__: str
     pending: set
+    cache_token: object  # abc.get_cache_token() once an ABC is registered
     generics: list[tuple]  # positional bases which require instance checks
 
     def __new__(cls, func):
@@ -270,6 +276,7 @@ class multimethod(dict):
 
         self = functools.update_wrapper(dict.__new__(cls), func)
         self.pending = set()
+        self.cache_token = None
         self.generics = []
         return self
 
@@ -300,6 +307,8 @@ class multimethod(dict):
 
     def clean(self):
         """Empty the cache."""
+        if self.cache_token is not None:
+            self.cache_token = abc.get_cache_token()
         for key in list(self):
             if not isinstance(key, signature):
                 super().__delitem__(key)
@@ -315,6 +324,8 @@ class multimethod(dict):
             if origins := set(subtype.origins(cls)):
                 self.generics += [()] * (index + 1 - len(self.generics))
                 self.generics[index] = tuple(origins.union(self.generics[index]))
+            if self.cache_token is None and subtype.abstract(cls):
+                self.cache_token = abc.get_cache_token()
         super().__setitem__(types, func)
         self.__doc__ = self.docstring
 
@@ -373,6 +384,8 @@ class multimethod(dict):
 
     def evaluate(self):
         """Evaluate any pending forward references."""
+        if self.cache_token is not None and self.cache_token != abc.get_cache_token():
+            self.clean()
         while self.pending:
             func = self.pending.pop()
             self[signature.from_hints(func)] = func
@@ -405,6 +418,7 @@ class multidispatch(multimethod, dict[tuple[type, ...], Callable[..., RETURN]]):
 
     def __init__(self, func: Callable[..., RETURN]) -> None:
         self.pending = set()
+        self.cache_token = None
         self.generics = []
         self.signatures = {}
         self[()] = func
