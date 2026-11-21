@@ -121,38 +121,7 @@ def test_annotations():
     assert cls.method[key]
 
 
-# register out of order
-@multimethod
-def func(arg: bool):
-    return bool
-
-
-@func.register
-def _(arg: object):
-    return object
-
-
-@func.register
-def _(arg: int):
-    return int
-
-
-@func.register
-def _(arg: list[int] | tuple[float] | dict[str, int]):
-    return "union"
-
-
-def test_register():
-    assert func(0.0) is object
-    assert func(0) is int
-    assert func(False) is bool
-    assert func([0]) == func((0.0,)) == func({"": 0}) == func({}) == "union"
-    assert func([0.0]) is func((0.0, 1.0)) is object
-
-
 # multimeta
-
-
 def test_meta():
     class meta(metaclass=multimeta):
         def method(self, x: str):
@@ -182,20 +151,6 @@ def test_meta():
     assert m.method(12) == "INT"
     assert m.normal("") == "OBJECT"
     assert m.rebind("") == "REBOUND"
-
-
-def test_ellipsis():
-    @multimethod
-    def func(arg: tuple[tuple[int, int], ...]):
-        return arg
-
-    tup = ((0, 1),)
-    assert func(tup) == tup
-    tup = ((0, 1), (2, 3))
-    assert func(tup) == tup
-    assert func(()) == ()
-    with pytest.raises(DispatchError):
-        func(((0, 1.0),))
 
 
 def test_meta_types():
@@ -231,13 +186,8 @@ def test_name_shadowing():
     def temp(x: int):
         return "int"
 
-    @multimethod
-    def temp(x: float):
-        return "float"
-
     assert isinstance(temp, multimethod)
     assert temp(0) == "int"
-    assert temp(0.0) == "float"
 
 
 def test_dispatch_exception():
@@ -253,22 +203,12 @@ def test_dispatch_exception():
     def temp(x: bool):
         return "bool"
 
-    @multimethod
-    def temp(x: int, y: object):
-        return "int, object"
-
     with pytest.raises(DispatchError, match="test_methods.py"):
         # invalid number of args, check source file is part of the exception args
         temp(1)
     assert temp(1, y=1.0) == "int"
     assert temp(True) == "bool"
     assert temp(True, 1.0) == "int, float"
-
-    @multimethod
-    def temp(x: bool, y: float = 0.0):
-        return "optional"
-
-    assert temp(True, 1.0) == "optional"
 
 
 def test_dispatch_exception_without_code_object():

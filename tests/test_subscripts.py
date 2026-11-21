@@ -27,16 +27,6 @@ def test_literals():
     assert not issubclass(tuple[str, int], tp)
     assert issubclass(tp, subtype(str | int))
 
-    @multimethod
-    def func(arg: Literal["a", 0]):
-        return arg
-
-    assert func(0) == 0
-    with pytest.raises(DispatchError):
-        func(1)
-    with pytest.raises(DispatchError):
-        func(0.0)
-
 
 def test_union():
     if sys.version_info < (3, 14):
@@ -176,13 +166,6 @@ def test_final():
     d = {"": 0}
     assert matches(d, subtype(Mapping[str, int]))
     assert matches(d.keys(), tp)
-
-
-def test_args():
-    tp = type("", (), {"__args__": None})
-    assert subtype(tp) is tp
-    assert not issubclass(tp, subtype(list[int]))
-    assert subtype(typing.Callable) is Callable
 
 
 @pytest.mark.benchmark

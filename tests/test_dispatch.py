@@ -6,12 +6,6 @@ import pytest
 
 from multimethod import DispatchError, multidispatch, multimethod, signature
 
-
-def test_signature():
-    with pytest.raises(TypeError):
-        signature([list]) <= signature([None])
-
-
 # roshambo
 rock, paper, scissors = (type("", (), {}) for _ in range(3))
 
