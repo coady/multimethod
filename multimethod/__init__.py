@@ -388,8 +388,9 @@ class multimethod(dict):
         if self.cache_token is not None and self.cache_token != abc.get_cache_token():
             self.clean()
         while self.pending:
-            func = self.pending.pop()
+            func = next(iter(self.pending))
             self[signature.from_hints(func)] = func
+            self.pending.remove(func)
 
     @property
     def docstring(self):
